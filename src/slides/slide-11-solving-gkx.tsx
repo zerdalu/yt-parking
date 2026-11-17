@@ -1,4 +1,5 @@
 import { CutPlaneCar, CutPlaneCarDefs } from "@/components/cut-plane-car";
+import { MasterFormula } from "@/components/math-formula";
 import {
   CarSectionVariants,
   computeAckermannAngles,
@@ -52,8 +53,8 @@ const LENGTH_KX = POINT_K.x - POINT_X.x; // 158.72
 const LENGTH_GX = Math.hypot(LENGTH_KX, LENGTH_GK); // 307.712
 const LENGTH_AH = POINT_A.y - POINT_H.y; // 84.097
 
-const TRIANGLE_GKX_PATH = `M ${POINT_X.x} ${POINT_X.y} L ${POINT_K.x} ${POINT_K.y} L ${POINT_G.x} ${POINT_G.y} Z`;
-const TRIANGLE_GKX_PERIMETER = LENGTH_KX + LENGTH_GK + LENGTH_GX;
+const TRIANGLE_GKX_PATH = `M ${POINT_G.x} ${POINT_G.y} L ${POINT_K.x} ${POINT_K.y} L ${POINT_X.x} ${POINT_X.y} Z`;
+const TRIANGLE_GKX_PERIMETER = LENGTH_GK + LENGTH_KX + LENGTH_GX;
 
 const VIRTUAL_STEER_DEG = -((Math.atan2(LENGTH_EF, CAR_CENTER_X - POINT_X.x) * 180) / Math.PI);
 const ACKERMANN = computeAckermannAngles(VIRTUAL_STEER_DEG, DEFAULT_VEHICLE_DIMENSIONS);
@@ -63,9 +64,6 @@ const ANGLE_G_DEG = (Math.atan2(POINT_G.y - POINT_X.y, POINT_G.x - POINT_X.x) * 
 
 const CALIPER_X = 658;
 const TOTAL_HF_X = 736;
-
-const OUTER_RADICAL_PATH = "M -224 1 L -219 1 L -213 13 L -199 -41 L 236 -41 L 236 -35";
-const INNER_RADICAL_PATH = "M 74 0 L 78 0 L 82 9 L 92 -27 L 164 -27";
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -197,7 +195,7 @@ function VertexNode({
 export function Slide11SolvingGkx(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
 
-  // Beat 1 (0.00s - 7.16s): Carry over Figure 3 stage & illuminate right-angled triangle GKX
+  // Beat 1 (0.00s - 7.16s): Carry over Figure 3 stage & illuminate right-angled triangle GKX in order G -> K -> X
   const stageFadeIn = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 0.9));
   const gkxDraw = easeInOutCubic(progressBetween(elapsedSeconds, 2.2, 5.8));
   const step7Transition = easeInOutCubic(progressBetween(elapsedSeconds, 19.6, 21.8));
@@ -270,14 +268,14 @@ export function Slide11SolvingGkx(): ReactElement {
   const lhsGkOpacity = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 24.6, 25.2));
   const lhsHfOpacity =
     easeOutCubic(progressBetween(elapsedSeconds, 24.9, 25.4)) *
-    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 31.6, 32.1)));
+    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 31.3, 31.8)));
   const shiftHfLeft = easeInOutCubic(progressBetween(elapsedSeconds, 27.2, 27.9));
   const lhsMinusLReveal =
     easeOutCubic(progressBetween(elapsedSeconds, 27.8, 28.5)) *
-    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 31.6, 32.1)));
+    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 31.3, 31.8)));
   const lhsMinusKReveal =
     easeOutCubic(progressBetween(elapsedSeconds, 29.4, 30.1)) *
-    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 31.6, 32.1)));
+    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 31.3, 31.8)));
   const lhsAhOpacity = easeOutCubic(progressBetween(elapsedSeconds, 31.8, 32.4));
 
   // RHS tail: - l - k
@@ -287,10 +285,10 @@ export function Slide11SolvingGkx(): ReactElement {
   // Smoothly interpolated pill dimensions around the formula
   const lhsExpand =
     easeInOutCubic(progressBetween(elapsedSeconds, 27.2, 28.0)) *
-    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 31.6, 32.2)));
+    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 31.8, 32.4)));
   const rhsExpand = easeInOutCubic(progressBetween(elapsedSeconds, 27.6, 28.5));
-  const pillLeft = -336 - 86 * lhsExpand;
-  const pillRight = 258 + 82 * rhsExpand;
+  const pillLeft = -332 - 74 * lhsExpand;
+  const pillRight = 234 + 78 * rhsExpand;
   const pillWidth = pillRight - pillLeft;
 
   // Vertex opacities & spoken-letter pulses
@@ -501,7 +499,7 @@ export function Slide11SolvingGkx(): ReactElement {
             stroke="oklch(0.15 0 0 / 0.94)"
             strokeWidth={4.5}
             strokeLinejoin="round"
-            className="svg-label-halo fill-text-primary font-mono text-sm font-semibold tracking-mono"
+            className="svg-label-halo fill-text-primary font-math text-sm font-semibold"
           >
             |GX|
           </text>
@@ -517,7 +515,7 @@ export function Slide11SolvingGkx(): ReactElement {
               x={(POINT_X.x + POINT_K.x) * 0.5}
               y={POINT_X.y + 32}
               textAnchor="middle"
-              className="fill-text-primary font-mono text-sm font-semibold tracking-mono"
+              className="fill-text-primary font-math text-sm font-semibold"
             >
               |KX|
             </text>
@@ -532,7 +530,7 @@ export function Slide11SolvingGkx(): ReactElement {
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4.5}
               strokeLinejoin="round"
-              className="svg-label-halo fill-text-primary font-mono text-sm font-semibold tracking-mono"
+              className="svg-label-halo fill-text-primary font-math text-sm font-semibold"
             >
               |GK|
             </text>
@@ -633,9 +631,17 @@ export function Slide11SolvingGkx(): ReactElement {
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4}
               strokeLinejoin="round"
-              className="svg-label-halo fill-text-primary font-mono text-sm font-semibold tracking-mono"
+              className="svg-label-halo fill-text-primary font-math text-sm font-semibold"
             >
-              {hfBracketShift < 0.4 ? "|HF| = |GK|" : "|HF|"}
+              {hfBracketShift < 0.4 ? (
+                <>
+                  <tspan>|HF|</tspan>
+                  <tspan className="fill-text-secondary font-normal"> = </tspan>
+                  <tspan>|GK|</tspan>
+                </>
+              ) : (
+                "|HF|"
+              )}
             </text>
           </g>
         ) : null}
@@ -682,7 +688,7 @@ export function Slide11SolvingGkx(): ReactElement {
                 y={(POINT_E.y + POINT_F.y) * 0.5 + 5}
                 textAnchor="start"
                 opacity={0.58 + 0.42 * lActive}
-                className="fill-text-secondary font-mono text-sm font-semibold"
+                className="fill-text-secondary font-math text-base font-semibold italic"
               >
                 l
               </text>
@@ -725,7 +731,7 @@ export function Slide11SolvingGkx(): ReactElement {
                 y={(POINT_A.y + POINT_E.y) * 0.5 + 5}
                 textAnchor="start"
                 opacity={0.58 + 0.42 * kActive}
-                className="fill-text-secondary font-mono text-sm font-semibold"
+                className="fill-text-secondary font-math text-base font-semibold italic"
               >
                 k
               </text>
@@ -793,7 +799,7 @@ export function Slide11SolvingGkx(): ReactElement {
                     x={CALIPER_X + 40}
                     y={(POINT_H.y + POINT_A.y) * 0.5 + 5}
                     textAnchor="middle"
-                    className="fill-text-primary font-mono text-sm font-semibold tracking-mono"
+                    className="fill-text-primary font-math text-sm font-semibold"
                   >
                     |AH|
                   </text>
@@ -806,7 +812,7 @@ export function Slide11SolvingGkx(): ReactElement {
         {/* ================================================================
             BOTTOM EQUATION CARD: STEP 6 COMPACT -> MASTER FORMULA
            ================================================================ */}
-        {/* Compact Step 6 Card: |GK| = sqrt(|GX|^2 - |KX|^2) */}
+        {/* Compact Step 6 Card: |GK| = √(|GX|² − |KX|²) */}
         {compactCardOpacity > 0.01 ? (
           <g transform="translate(480, 520)" opacity={compactCardOpacity}>
             <rect
@@ -821,48 +827,48 @@ export function Slide11SolvingGkx(): ReactElement {
             />
 
             <text
-              x={-112}
+              x={-110}
               y={5}
               textAnchor="middle"
-              className="fill-text-primary font-mono text-lg font-semibold"
               filter={compactGkGlow > 0.25 ? "url(#slide11-luminous-glow)" : undefined}
+              className="fill-text-primary font-math text-lg font-semibold"
             >
               |GK|
             </text>
-            <text x={-76} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+            <text x={-76} y={5} textAnchor="middle" className="fill-text-secondary font-math text-lg">
               =
             </text>
 
             {/* Vector Radical Drawing Over |GX|^2 - |KX|^2 */}
             {compactRadicalDraw > 0.01 ? (
               <path
-                d="M -57 0 L -53 0 L -48 9 L -38 -18 L 138 -18"
+                d="M -58 0 L -54 0 L -49 9 L -39 -18 L 128 -18 L 128 -13"
                 fill="none"
                 stroke="oklch(0.98 0 0)"
                 strokeWidth={1.75}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeDasharray={212}
-                strokeDashoffset={212 * (1 - compactRadicalDraw)}
+                strokeDasharray={216}
+                strokeDashoffset={216 * (1 - compactRadicalDraw)}
                 filter="url(#slide11-luminous-glow)"
               />
             ) : null}
 
             <g filter={compactSquaresGlow > 0.25 ? "url(#slide11-luminous-glow)" : undefined}>
-              <text x={-5} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-                |GX|
+              <text x={-6} y={5} textAnchor="middle" className="fill-text-primary font-math text-lg font-semibold">
+                <tspan>|GX|</tspan>
+                <tspan dy={-8} className="text-xs font-semibold">
+                  2
+                </tspan>
               </text>
-              <text x={24} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                2
-              </text>
-              <text x={46} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+              <text x={38} y={5} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                 −
               </text>
-              <text x={92} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-                |KX|
-              </text>
-              <text x={122} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                2
+              <text x={86} y={5} textAnchor="middle" className="fill-text-primary font-math text-lg font-semibold">
+                <tspan>|KX|</tspan>
+                <tspan dy={-8} className="text-xs font-semibold">
+                  2
+                </tspan>
               </text>
             </g>
           </g>
@@ -882,227 +888,26 @@ export function Slide11SolvingGkx(): ReactElement {
               strokeWidth={1.55}
             />
 
-            {/* LHS State 1: |GK| */}
-            {lhsGkOpacity > 0.01 ? (
-              <text
-                x={-290}
-                y={8}
-                textAnchor="middle"
-                opacity={lhsGkOpacity}
-                className="fill-text-primary font-mono text-2xl font-semibold tracking-mono"
-              >
-                |GK|
-              </text>
-            ) : null}
-
-            {/* LHS State 2 & 3: |HF| gliding left to make room for - l - k */}
-            {lhsHfOpacity > 0.01 ? (
-              <g opacity={lhsHfOpacity}>
-                <text
-                  x={-290 - 86 * shiftHfLeft}
-                  y={8}
-                  textAnchor="middle"
-                  className="fill-text-primary font-mono text-2xl font-semibold tracking-mono"
-                >
-                  |HF|
-                </text>
-
-                {lhsMinusLReveal > 0.01 ? (
-                  <g opacity={lhsMinusLReveal}>
-                    <text x={-336} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                      −
-                    </text>
-                    <text
-                      x={-314}
-                      y={8}
-                      textAnchor="middle"
-                      className="fill-text-primary font-mono text-2xl font-semibold"
-                    >
-                      l
-                    </text>
-                  </g>
-                ) : null}
-
-                {lhsMinusKReveal > 0.01 ? (
-                  <g opacity={lhsMinusKReveal}>
-                    <text x={-293} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                      −
-                    </text>
-                    <text
-                      x={-272}
-                      y={8}
-                      textAnchor="middle"
-                      className="fill-text-primary font-mono text-2xl font-semibold"
-                    >
-                      k
-                    </text>
-                  </g>
-                ) : null}
-              </g>
-            ) : null}
-
-            {/* LHS State 4: Final |AH| */}
-            {lhsAhOpacity > 0.01 ? (
-              <text
-                x={-290}
-                y={8}
-                textAnchor="middle"
-                opacity={lhsAhOpacity}
-                filter={ahPulse > 0.25 ? "url(#slide11-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold tracking-mono"
-              >
-                |AH|
-              </text>
-            ) : null}
-
-            {/* Equals Sign */}
-            <text x={-242} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-              =
-            </text>
-
-            {/* Outer Square Root Radical */}
-            <path
-              d={OUTER_RADICAL_PATH}
-              fill="none"
-              stroke="oklch(0.98 0 0)"
-              strokeWidth={2.2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <MasterFormula
+              glowFilterId="slide11-luminous-glow"
+              lhs={{
+                kind: "step7-morph",
+                gkOpacity: lhsGkOpacity,
+                hfOpacity: lhsHfOpacity,
+                shiftHfLeft,
+                minusLOpacity: lhsMinusLReveal,
+                minusKOpacity: lhsMinusKReveal,
+                ahOpacity: lhsAhOpacity,
+                ahGlow: ahPulse,
+              }}
+              substGlow={substPulse}
+              minusLOpacity={rhsMinusLReveal}
+              minusLOffsetY={(1 - rhsMinusLReveal) * 8}
+              minusKOpacity={rhsMinusKReveal}
+              minusKOffsetY={(1 - rhsMinusKReveal) * 8}
+              lGlow={lActive}
+              kGlow={kActive}
             />
-
-            {/* Substituted |GX|^2 = (r^2 - l^2) + (l + k)^2 */}
-            <g filter={substPulse > 0.25 ? "url(#slide11-luminous-glow)" : undefined}>
-              <text x={-184} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                (
-              </text>
-              <text x={-169} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                r
-              </text>
-              <text x={-157} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                2
-              </text>
-              <text x={-141} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-              <text x={-123} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                l
-              </text>
-              <text x={-111} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                2
-              </text>
-              <text x={-97} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                )
-              </text>
-
-              <text x={-76} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                +
-              </text>
-
-              <text x={-54} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                (
-              </text>
-              <text x={-38} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                l
-              </text>
-              <text x={-20} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                +
-              </text>
-              <text x={-2} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                k
-              </text>
-              <text x={13} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                )
-              </text>
-              <text x={25} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                2
-              </text>
-            </g>
-
-            {/* Minus Operator */}
-            <text x={44} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-              −
-            </text>
-
-            {/* Substituted |KX|^2 = (sqrt(r^2 - l^2) - w)^2 */}
-            <g filter={substPulse > 0.25 ? "url(#slide11-luminous-glow)" : undefined}>
-              <path
-                d="M 68 -26 Q 59 -6 68 14"
-                fill="none"
-                stroke="oklch(0.84 0 0)"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-              <path
-                d={INNER_RADICAL_PATH}
-                fill="none"
-                stroke="oklch(0.98 0 0)"
-                strokeWidth={1.85}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <text x={100} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                r
-              </text>
-              <text x={112} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                2
-              </text>
-              <text x={127} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-              <text x={143} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                l
-              </text>
-              <text x={155} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                2
-              </text>
-              <text x={173} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-              <text x={190} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                w
-              </text>
-              <path
-                d="M 204 -26 Q 213 -6 204 14"
-                fill="none"
-                stroke="oklch(0.84 0 0)"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-              <text x={219} y={-10} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                2
-              </text>
-            </g>
-
-            {/* RHS Tail: - l - k */}
-            {rhsMinusLReveal > 0.01 ? (
-              <g
-                opacity={rhsMinusLReveal}
-                transform={`translate(0, ${(1 - rhsMinusLReveal) * 8})`}
-                filter={lActive > 0.25 ? "url(#slide11-luminous-glow)" : undefined}
-              >
-                <text x={252} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  −
-                </text>
-                <text x={272} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  l
-                </text>
-              </g>
-            ) : null}
-
-            {rhsMinusKReveal > 0.01 ? (
-              <g
-                opacity={rhsMinusKReveal}
-                transform={`translate(0, ${(1 - rhsMinusKReveal) * 8})`}
-                filter={kActive > 0.25 ? "url(#slide11-luminous-glow)" : undefined}
-              >
-                <text x={292} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  −
-                </text>
-                <text x={312} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  k
-                </text>
-              </g>
-            ) : null}
           </g>
         ) : null}
 

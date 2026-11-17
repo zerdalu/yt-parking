@@ -32,8 +32,8 @@ const RADIUS_FX = PARALLEL_CENTER_X + TRACK_HALF_W - TURNING_CENTER.x; // 231
 const RADIUS_EX = Math.hypot(RADIUS_FX, -WHEELBASE_PX); // 253.332
 const RADIUS_AX = Math.hypot(KERB_LINE_X - TURNING_CENTER.x, PARALLEL_CENTER_Y - HALF_L - TURNING_CENTER.y); // 274.117
 
-const R_TURN_SIGNED = -(PARALLEL_CENTER_X - TURNING_CENTER.x); // -200
-const FULL_LOCK_DEG = -((Math.atan2(WHEELBASE_PX, Math.abs(R_TURN_SIGNED)) * 180) / Math.PI); // -27.474 deg
+const R_TURN_ABS = PARALLEL_CENTER_X - TURNING_CENTER.x; // 200
+const FULL_LOCK_DEG = -((Math.atan2(WHEELBASE_PX, R_TURN_ABS) * 180) / Math.PI); // -27.474 deg
 
 // Front parked car rear-left corner G positioned on the exact outer turning circle
 const POINT_G_X = PARALLEL_CENTER_X - HALF_W; // 598
@@ -47,6 +47,7 @@ const TANGENT_ANGLE_A_DEG =
   (Math.atan2(TURNING_CENTER.y - POINT_A_PARALLEL.y, POINT_A_PARALLEL.x - TURNING_CENTER.x) * 180) / Math.PI; // 29.744 deg
 const TANGENT_ANGLE_G_DEG = (Math.atan2(TURNING_CENTER.y - POINT_G.y, POINT_G.x - TURNING_CENTER.x) * 180) / Math.PI; // 53.771 deg
 const GRAZE_HEADING_DEG = -(TANGENT_ANGLE_G_DEG - TANGENT_ANGLE_A_DEG); // -24.027 deg
+const ARC_LENGTH_MERGE = R_TURN_ABS * ((Math.abs(GRAZE_HEADING_DEG) * Math.PI) / 180); // 83.87 px
 
 const KERB_JOINT_Y = [56, 132, 208, 284, 360, 436] as const;
 const PAVING_JOINT_Y = [76, 160, 244, 328, 412] as const;
@@ -81,6 +82,21 @@ function progressBetween(seconds: number, start: number, end: number): number {
     return seconds >= end ? 1 : 0;
   }
   return clamp01((seconds - start) / (end - start));
+}
+
+function cubicHermite(t: number, t0: number, t1: number, y0: number, y1: number, v0: number, v1: number): number {
+  const dt = t1 - t0;
+  if (dt <= 0) {
+    return y1;
+  }
+  const u = clamp01((t - t0) / dt);
+  const u2 = u * u;
+  const u3 = u2 * u;
+  const h00 = 2 * u3 - 3 * u2 + 1;
+  const h10 = u3 - 2 * u2 + u;
+  const h01 = -2 * u3 + 3 * u2;
+  const h11 = u3 - u2;
+  return h00 * y0 + h10 * (dt * v0) + h01 * y1 + h11 * (dt * v1);
 }
 
 function pulseEnvelope(seconds: number, start: number, peakStart: number, peakEnd: number, end: number): number {
@@ -162,131 +178,85 @@ const APPROACH_LINE_UP_Y = POINT_G.y + 160 * APPROACH_FWD_Y;
 
 // Angle arcs measured clockwise/counterclockwise from straight UP (-90 deg in standard SVG)
 const ARC_APPROACH_THETA = buildArcSweep(POINT_G, 46, -90, -90 + GRAZE_HEADING_DEG);
+const ARC_COMPLEMENT_A_AT_G = buildArcSweep(POINT_G, 68, -90 + GRAZE_HEADING_DEG, -90 - TANGENT_ANGLE_G_DEG);
 const ARC_TANGENT_G = buildArcSweep(POINT_G, 88, -90, -90 - TANGENT_ANGLE_G_DEG);
 const ARC_TANGENT_A = buildArcSweep(POINT_A_PARALLEL, 56, -90, -90 - TANGENT_ANGLE_A_DEG);
 
-function computeSlide14Pose(seconds: number): Slide14Pose {
-  // Pass 1 (0.00s - 10.20s): Quick demo of straight angled reverse -> late lock -> circular arc
-  if (seconds < 10.6) {
-    const fadeOut = 1 - easeInOutCubic(progressBetween(seconds, 10.1, 10.55));
-    if (seconds < 5.2) {
-      return {
-        centerX: CENTER_AT_G.x + 126 * APPROACH_FWD_X,
-        centerY: CENTER_AT_G.y + 126 * APPROACH_FWD_Y,
-        headingDeg: GRAZE_HEADING_DEG,
-        steerDeg: 0,
-        wheelRollDistance: 126,
-        isReversing: false,
-        isBraking: true,
-        heroOpacity: easeOutCubic(progressBetween(seconds, 0.0, 0.8)),
-      };
-    }
-    if (seconds < 7.1) {
-      const u = easeInOutCubic(progressBetween(seconds, 5.2, 7.1));
-      const d = 126 * (1 - u);
-      const lockSnap = easeInOutCubic(progressBetween(seconds, 6.85, 7.1));
-      return {
-        centerX: CENTER_AT_G.x + d * APPROACH_FWD_X,
-        centerY: CENTER_AT_G.y + d * APPROACH_FWD_Y,
-        headingDeg: GRAZE_HEADING_DEG,
-        steerDeg: FULL_LOCK_DEG * lockSnap * 0.45,
-        wheelRollDistance: d,
-        isReversing: true,
-        isBraking: false,
-        heroOpacity: 1,
-      };
-    }
-    if (seconds < 7.55) {
-      const lockSnap = easeInOutCubic(progressBetween(seconds, 7.1, 7.55));
-      return {
-        centerX: CENTER_AT_G.x,
-        centerY: CENTER_AT_G.y,
-        headingDeg: GRAZE_HEADING_DEG,
-        steerDeg: FULL_LOCK_DEG * (0.45 + 0.55 * lockSnap),
-        wheelRollDistance: 0,
-        isReversing: true,
-        isBraking: false,
-        heroOpacity: 1,
-      };
-    }
-    const u = easeInOutCubic(progressBetween(seconds, 7.55, 9.8));
-    const headingDeg = GRAZE_HEADING_DEG * (1 - u);
-    const center = rotateLocalPointAroundX(0, 0, headingDeg);
-    const arcRoll = -RADIUS_FX * degToRad(headingDeg - GRAZE_HEADING_DEG);
-    const straighten = easeInOutCubic(progressBetween(seconds, 9.7, 10.1));
-    return {
-      centerX: center.x,
-      centerY: center.y,
-      headingDeg,
-      steerDeg: FULL_LOCK_DEG * (1 - straighten),
-      wheelRollDistance: arcRoll,
-      isReversing: seconds < 9.78,
-      isBraking: seconds >= 9.78,
-      heroOpacity: fadeOut,
-    };
-  }
-
-  // Pass 2 (10.60s - 21.10s): Analytical slow-motion pass syncing A passing G (15.65s) & circle merge
-  const fadeIn = easeOutCubic(progressBetween(seconds, 10.65, 11.15));
-  if (seconds < 15.65) {
-    const u = easeInOutCubic(progressBetween(seconds, 11.2, 15.65));
-    const d = 118 * (1 - u);
-    const steerPrep = easeInOutCubic(progressBetween(seconds, 14.9, 15.65));
+function poseFromArcLength(
+  s: number,
+  straightDist: number,
+  steerLockProgress: number,
+  heroOpacity: number,
+  isReversing: boolean,
+  isBraking: boolean,
+): Slide14Pose {
+  if (s <= straightDist) {
+    const d = straightDist - s;
     return {
       centerX: CENTER_AT_G.x + d * APPROACH_FWD_X,
       centerY: CENTER_AT_G.y + d * APPROACH_FWD_Y,
       headingDeg: GRAZE_HEADING_DEG,
-      steerDeg: FULL_LOCK_DEG * steerPrep * 0.55,
-      wheelRollDistance: d,
-      isReversing: seconds >= 11.2,
-      isBraking: seconds < 11.2,
-      heroOpacity: fadeIn,
+      steerDeg: FULL_LOCK_DEG * steerLockProgress,
+      wheelRollDistance: -s,
+      isReversing,
+      isBraking,
+      heroOpacity,
     };
   }
 
-  if (seconds < 17.55) {
-    const lockComplete = easeInOutCubic(progressBetween(seconds, 15.65, 16.35));
-    return {
-      centerX: CENTER_AT_G.x,
-      centerY: CENTER_AT_G.y,
-      headingDeg: GRAZE_HEADING_DEG,
-      steerDeg: FULL_LOCK_DEG * (0.55 + 0.45 * lockComplete),
-      wheelRollDistance: 0,
-      isReversing: false,
-      isBraking: true,
-      heroOpacity: 1,
-    };
+  const arcProgress = clamp01((s - straightDist) / ARC_LENGTH_MERGE);
+  const headingDeg = GRAZE_HEADING_DEG * (1 - arcProgress);
+  const center = rotateLocalPointAroundX(0, 0, headingDeg);
+  return {
+    centerX: center.x,
+    centerY: center.y,
+    headingDeg,
+    steerDeg: FULL_LOCK_DEG * steerLockProgress,
+    wheelRollDistance: -s,
+    isReversing,
+    isBraking,
+    heroOpacity,
+  };
+}
+
+function computeSlide14Pose(seconds: number): Slide14Pose {
+  const pass1Straight = 126;
+  const pass1Total = pass1Straight + ARC_LENGTH_MERGE; // 209.87
+
+  // Pass 1 (0.00s - 10.55s): Continuous straight reverse -> late lock at G -> circular arc (no mid-sweep stop)
+  if (seconds < 10.6) {
+    const fadeOut = 1 - easeInOutCubic(progressBetween(seconds, 10.1, 10.55));
+    if (seconds < 5.2) {
+      return poseFromArcLength(0, pass1Straight, 0, easeOutCubic(progressBetween(seconds, 0.0, 0.8)), false, true);
+    }
+    const s = pass1Total * easeInOutCubic(progressBetween(seconds, 5.2, 9.75));
+    const lockSnap = easeInOutCubic(progressBetween(seconds, 7.1, 7.65));
+    return poseFromArcLength(s, pass1Straight, lockSnap, fadeOut, seconds < 9.7, seconds >= 9.4);
+  }
+
+  // Pass 2 (10.60s - 31.00s): Continuous analytical pass syncing A passing G at 16.0s & circle merge (no stop at G)
+  const pass2Straight = 118;
+  const pass2Total = pass2Straight + ARC_LENGTH_MERGE; // 201.87
+  const fadeIn = easeOutCubic(progressBetween(seconds, 10.65, 11.15));
+
+  if (seconds < 11.2) {
+    return poseFromArcLength(0, pass2Straight, 0, fadeIn, false, true);
+  }
+
+  if (seconds <= 16.0) {
+    const s = cubicHermite(seconds, 11.2, 16.0, 0, pass2Straight, 0, 22.0);
+    const lockSnap = easeInOutCubic(progressBetween(seconds, 15.4, 16.2));
+    return poseFromArcLength(s, pass2Straight, lockSnap, 1, true, false);
   }
 
   if (seconds < 20.6) {
-    const u = easeInOutCubic(progressBetween(seconds, 17.55, 20.6));
-    const headingDeg = GRAZE_HEADING_DEG * (1 - u);
-    const center = rotateLocalPointAroundX(0, 0, headingDeg);
-    const arcRoll = -RADIUS_FX * degToRad(headingDeg - GRAZE_HEADING_DEG);
-    return {
-      centerX: center.x,
-      centerY: center.y,
-      headingDeg,
-      steerDeg: FULL_LOCK_DEG,
-      wheelRollDistance: arcRoll,
-      isReversing: true,
-      isBraking: false,
-      heroOpacity: 1,
-    };
+    const s = cubicHermite(seconds, 16.0, 20.6, pass2Straight, pass2Total, 22.0, 0);
+    const lockSnap = easeInOutCubic(progressBetween(seconds, 15.4, 16.2));
+    return poseFromArcLength(s, pass2Straight, lockSnap, 1, seconds < 20.5, seconds >= 20.1);
   }
 
   // Beat 3 (20.60s - 31.00s): Parallel pose at (636, 342) while tangents at G and A are analyzed
-  const straighten = easeInOutCubic(progressBetween(seconds, 20.6, 21.2));
-  return {
-    centerX: PARALLEL_CENTER_X,
-    centerY: PARALLEL_CENTER_Y,
-    headingDeg: 0,
-    steerDeg: FULL_LOCK_DEG * (1 - straighten),
-    wheelRollDistance: -RADIUS_FX * degToRad(-GRAZE_HEADING_DEG),
-    isReversing: false,
-    isBraking: seconds < 21.3,
-    heroOpacity: 1,
-  };
+  return poseFromArcLength(pass2Total, pass2Straight, 1, 1, false, seconds < 21.4);
 }
 
 export function Slide14AngledApproach(): ReactElement {
@@ -313,7 +283,7 @@ export function Slide14AngledApproach(): ReactElement {
   const pass1StraightEnd =
     elapsedSeconds < 5.2
       ? { x: APPROACH_LINE_UP_X, y: APPROACH_LINE_UP_Y }
-      : elapsedSeconds < 7.1
+      : elapsedSeconds < 7.42
         ? livePointA
         : POINT_G;
   const showPass1Straight = elapsedSeconds >= 5.2 && elapsedSeconds < 10.4;
@@ -324,8 +294,8 @@ export function Slide14AngledApproach(): ReactElement {
 
   // Lock-at-G highlight & Ackermann rays onto X (14.8s - 20.8s)
   const lockAtGHighlight = pulseEnvelope(elapsedSeconds, 14.9, 15.6, 17.5, 18.4);
-  const showAckermannRays = elapsedSeconds >= 15.65 && elapsedSeconds < 20.6;
-  const activeCircleGlow = pulseEnvelope(elapsedSeconds, 17.6, 18.2, 20.4, 21.3);
+  const showAckermannRays = elapsedSeconds >= 15.8 && elapsedSeconds < 20.6;
+  const activeCircleGlow = pulseEnvelope(elapsedSeconds, 17.2, 18.0, 20.4, 21.3);
 
   // Ghost car at G during Beat 3 (21.3s - 31.0s) so approach angle θ & tangents coexist clearly
   const grazeGhostOpacity = easeOutCubic(progressBetween(elapsedSeconds, 21.2, 22.1)) * 0.32;
@@ -573,8 +543,8 @@ export function Slide14AngledApproach(): ReactElement {
               <line
                 x1={APPROACH_LINE_UP_X}
                 y1={APPROACH_LINE_UP_Y}
-                x2={elapsedSeconds < 15.65 ? livePointA.x : POINT_G.x}
-                y2={elapsedSeconds < 15.65 ? livePointA.y : POINT_G.y}
+                x2={elapsedSeconds < 16.0 ? livePointA.x : POINT_G.x}
+                y2={elapsedSeconds < 16.0 ? livePointA.y : POINT_G.y}
                 stroke="oklch(0.98 0 0)"
                 strokeWidth={2.1}
                 filter="url(#slide14-luminous-glow)"
@@ -596,7 +566,7 @@ export function Slide14AngledApproach(): ReactElement {
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4}
               strokeLinejoin="round"
-              className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
+              className="svg-label-halo fill-text-primary font-math text-base font-semibold italic"
             >
               θ
             </text>
@@ -663,34 +633,25 @@ export function Slide14AngledApproach(): ReactElement {
               strokeWidth={1.7 + 0.5 * tangentGGlow}
               opacity={tangentGDraw}
             />
-            <g opacity={easeOutCubic(progressBetween(tangentGDraw, 0.45, 1))}>
-              <text
-                x={526}
-                y={96}
-                textAnchor="end"
-                stroke="oklch(0.15 0 0 / 0.94)"
-                strokeWidth={4}
-                strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
-              >
-                θ
-              </text>
-              <text
-                x={536}
-                y={101}
-                textAnchor="end"
-                stroke="oklch(0.15 0 0 / 0.94)"
-                strokeWidth={4}
-                strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-xs font-semibold"
-              >
+            <text
+              x={534}
+              y={98}
+              textAnchor="end"
+              opacity={easeOutCubic(progressBetween(tangentGDraw, 0.45, 1))}
+              stroke="oklch(0.15 0 0 / 0.94)"
+              strokeWidth={4}
+              strokeLinejoin="round"
+              className="svg-label-halo fill-text-primary font-math text-base font-semibold"
+            >
+              <tspan className="italic">θ</tspan>
+              <tspan dy={4} className="text-xs font-semibold">
                 G
-              </text>
-            </g>
+              </tspan>
+            </text>
           </g>
         ) : null}
 
-        {/* Tangent to Circle at A */}
+        {/* Tangent to Circle at A & Complementary Sector θ_A at G */}
         {tangentADraw > 0.01 ? (
           <g>
             {/* Perpendicular Radius X -> A_parallel */}
@@ -720,30 +681,30 @@ export function Slide14AngledApproach(): ReactElement {
               strokeWidth={1.7 + 0.5 * tangentAGlow}
               opacity={tangentADraw}
             />
-            <g opacity={easeOutCubic(progressBetween(tangentADraw, 0.45, 1))}>
-              <text
-                x={653}
-                y={189}
-                textAnchor="end"
-                stroke="oklch(0.15 0 0 / 0.94)"
-                strokeWidth={4}
-                strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
-              >
-                θ
-              </text>
-              <text
-                x={663}
-                y={194}
-                textAnchor="end"
-                stroke="oklch(0.15 0 0 / 0.94)"
-                strokeWidth={4}
-                strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-xs font-semibold"
-              >
+            {/* Complementary Sector Arc θ_A at G showing θ_G - θ_A = θ */}
+            <path
+              d={ARC_COMPLEMENT_A_AT_G}
+              fill="none"
+              stroke="oklch(0.92 0 0 / 0.72)"
+              strokeWidth={1.4}
+              strokeDasharray="3 3"
+              opacity={tangentADraw}
+            />
+            <text
+              x={661}
+              y={190}
+              textAnchor="end"
+              opacity={easeOutCubic(progressBetween(tangentADraw, 0.45, 1))}
+              stroke="oklch(0.15 0 0 / 0.94)"
+              strokeWidth={4}
+              strokeLinejoin="round"
+              className="svg-label-halo fill-text-primary font-math text-base font-semibold"
+            >
+              <tspan className="italic">θ</tspan>
+              <tspan dy={4} className="text-xs font-semibold">
                 A
-              </text>
-            </g>
+              </tspan>
+            </text>
           </g>
         ) : null}
 
@@ -866,37 +827,42 @@ export function Slide14AngledApproach(): ReactElement {
             />
 
             <text
-              x={-90}
+              x={-86}
               y={6}
               textAnchor="middle"
               filter={eqThetaGlow > 0.25 ? "url(#slide14-luminous-glow)" : undefined}
-              className="fill-text-primary font-mono text-2xl font-semibold"
+              className="fill-text-primary font-math text-2xl font-semibold italic"
             >
               θ
             </text>
 
-            <text x={-52} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
+            <text x={-48} y={6} textAnchor="middle" className="fill-text-secondary font-math text-2xl">
               =
             </text>
 
-            <g opacity={eqThetaGReveal} filter={tangentGGlow > 0.25 ? "url(#slide14-luminous-glow)" : undefined}>
-              <text x={-12} y={6} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                θ
-              </text>
-              <text x={2} y={13} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
+            <text
+              x={-6}
+              y={6}
+              textAnchor="middle"
+              opacity={eqThetaGReveal}
+              filter={tangentGGlow > 0.25 ? "url(#slide14-luminous-glow)" : undefined}
+              className="fill-text-primary font-math text-2xl font-semibold"
+            >
+              <tspan className="italic">θ</tspan>
+              <tspan dy={6} className="text-xs font-semibold">
                 G
-              </text>
-            </g>
+              </tspan>
+            </text>
 
             <g opacity={eqThetaAReveal} filter={tangentAGlow > 0.25 ? "url(#slide14-luminous-glow)" : undefined}>
-              <text x={36} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
+              <text x={34} y={6} textAnchor="middle" className="fill-text-secondary font-math text-2xl">
                 −
               </text>
-              <text x={74} y={6} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                θ
-              </text>
-              <text x={88} y={13} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                A
+              <text x={74} y={6} textAnchor="middle" className="fill-text-primary font-math text-2xl font-semibold">
+                <tspan className="italic">θ</tspan>
+                <tspan dy={6} className="text-xs font-semibold">
+                  A
+                </tspan>
               </text>
             </g>
           </g>

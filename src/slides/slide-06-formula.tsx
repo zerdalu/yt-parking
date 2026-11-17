@@ -1,4 +1,5 @@
 import { CutPlaneCar, CutPlaneCarDefs } from "@/components/cut-plane-car";
+import { MasterFormula, RootR2MinusL2 } from "@/components/math-formula";
 import { RoadStage } from "@/components/road-stage";
 import {
   CarSectionVariants,
@@ -48,12 +49,7 @@ const POINT_H: Point2D = { x: PARALLEL_CENTER_X + HALF_W, y: POINT_G_Y };
 const ANGLE_A_PARALLEL_DEG =
   (Math.atan2(POINT_A_PARALLEL.y - TURNING_CENTER.y, POINT_A_PARALLEL.x - TURNING_CENTER.x) * 180) / Math.PI;
 const ANGLE_G_DEG = (Math.atan2(POINT_G.y - TURNING_CENTER.y, POINT_G.x - TURNING_CENTER.x) * 180) / Math.PI;
-const FREEZE_HEADING_DEG = ANGLE_G_DEG - ANGLE_A_PARALLEL_DEG; // -24.565 deg
-
-const OUTER_RADICAL_PATH = "M -224 1 L -219 1 L -213 13 L -199 -41 L 236 -41 L 236 -35";
-const OUTER_RADICAL_LEN = 516;
-const INNER_RADICAL_PATH = "M 74 0 L 78 0 L 82 9 L 92 -27 L 164 -27";
-const INNER_RADICAL_LEN = 126;
+const GRAZE_HEADING_DEG = ANGLE_G_DEG - ANGLE_A_PARALLEL_DEG; // -24.565 deg
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -117,47 +113,7 @@ function rotateCarCenterAroundX(headingDeg: number): Point2D {
 const OUTER_CIRCLE_ARC = buildArcFromAngles(TURNING_CENTER, RADIUS_AX, -78, -14);
 const WHEEL_E_CIRCLE_ARC = buildArcFromAngles(TURNING_CENTER, RADIUS_EX, -76, -8);
 const WHEEL_F_CIRCLE_ARC = buildArcFromAngles(TURNING_CENTER, RADIUS_FX, -70, 12);
-
-interface MiniRadicalExprProps {
-  readonly x: number;
-  readonly y: number;
-  readonly suffix?: string;
-}
-
-function MiniRootR2L2({ x, y, suffix }: MiniRadicalExprProps): ReactElement {
-  return (
-    <g transform={`translate(${x}, ${y})`}>
-      <path
-        d="M -36 0 L -33 0 L -30 5 L -24 -13 L 18 -13"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.35}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <text x={-19} y={2} className="fill-current font-mono text-xs font-semibold">
-        r
-      </text>
-      <text x={-11} y={-5} className="fill-current font-mono text-xs">
-        ²
-      </text>
-      <text x={-3} y={2} className="fill-current font-mono text-xs">
-        −
-      </text>
-      <text x={7} y={2} className="fill-current font-mono text-xs font-semibold">
-        l
-      </text>
-      <text x={14} y={-5} className="fill-current font-mono text-xs">
-        ²
-      </text>
-      {suffix ? (
-        <text x={24} y={2} className="fill-current font-mono text-xs font-semibold">
-          {suffix}
-        </text>
-      ) : null}
-    </g>
-  );
-}
+const GRAZE_CAR_CENTER = rotateCarCenterAroundX(GRAZE_HEADING_DEG);
 
 interface RightTriangleCardProps {
   readonly pTop: Point2D;
@@ -296,17 +252,19 @@ export function Slide06Formula(): ReactElement {
   const algebraOut = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 16.95, 17.6));
   const frozenSceneOpacity = easeOutCubic(progressBetween(elapsedSeconds, 17.2, 17.85));
 
-  // Beat 4 (17.20s - 24.00s): Car sweeps down arc (-39 deg -> -24.565 deg) and FREEZES at 18.85s
-  const sweepProgress = easeOutCubic(progressBetween(elapsedSeconds, 17.35, 18.85));
-  const headingDeg = -39 + (FREEZE_HEADING_DEG - -39) * sweepProgress;
-  const isReversing = elapsedSeconds >= 17.35 && elapsedSeconds < 18.85;
-  const isBraking = elapsedSeconds >= 18.85;
-  const wheelRollDistance = -177 * degToRad(headingDeg + 39);
+  // Beat 4 (17.20s - 24.00s): Car sweeps down arc (-36 deg -> 0 deg parallel) grazing G and freezing at Figure 2 instant
+  const sweepProgress = easeOutCubic(progressBetween(elapsedSeconds, 17.35, 19.55));
+  const headingDeg = -36 * (1 - sweepProgress);
+  const isReversing = elapsedSeconds >= 17.35 && elapsedSeconds < 19.5;
+  const isBraking = elapsedSeconds >= 19.2;
+  const wheelRollDistance = -177 * degToRad(headingDeg + 36);
 
   const carCenter = rotateCarCenterAroundX(headingDeg);
-  const freezePulse = pulseEnvelope(elapsedSeconds, 18.75, 19.05, 20.55, 21.6);
-  const parallelGhostOpacity = easeOutCubic(progressBetween(elapsedSeconds, 19.35, 20.4)) * 0.42;
-  const ahPreviewOpacity = easeOutCubic(progressBetween(elapsedSeconds, 20.1, 21.2));
+  const freezePulse = pulseEnvelope(elapsedSeconds, 19.3, 19.65, 21.2, 22.4);
+  const grazeGhostOpacity = easeOutCubic(progressBetween(elapsedSeconds, 18.2, 19.0)) * 0.38;
+  const ahPreviewOpacity = easeOutCubic(progressBetween(elapsedSeconds, 19.7, 20.7));
+
+  const tailOffset = (1 - tailEnter) * 8;
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center">
@@ -351,276 +309,33 @@ export function Slide06Formula(): ReactElement {
           <g opacity={stageFadeIn * algebraOut}>
             {/* Centered Equation (1) Typographic Display */}
             <g transform={`translate(480, ${formulaY}) scale(${formulaScale})`}>
-              {/* Soft Highlight Capsules Behind Illuminated Bracketed Terms */}
-              {term1Focus > 0.02 ? (
-                <rect
-                  x={-193}
-                  y={-32}
-                  width={104}
-                  height={48}
-                  rx={6}
-                  fill="oklch(0.98 0 0 / 0.08)"
-                  stroke="oklch(0.96 0 0 / 0.65)"
-                  strokeWidth={1.3}
-                  opacity={term1Focus}
-                />
-              ) : null}
-
-              {term2Focus > 0.02 ? (
-                <rect
-                  x={-63}
-                  y={-32}
-                  width={96}
-                  height={48}
-                  rx={6}
-                  fill="oklch(0.98 0 0 / 0.08)"
-                  stroke="oklch(0.96 0 0 / 0.65)"
-                  strokeWidth={1.3}
-                  opacity={term2Focus}
-                />
-              ) : null}
-
-              {term3Focus > 0.02 ? (
-                <rect
-                  x={56}
-                  y={-34}
-                  width={172}
-                  height={53}
-                  rx={6}
-                  fill="oklch(0.98 0 0 / 0.08)"
-                  stroke="oklch(0.96 0 0 / 0.65)"
-                  strokeWidth={1.3}
-                  opacity={term3Focus}
-                />
-              ) : null}
-
-              {/* Nested Square-Root Highlight Halo (5.3s - 8.9s) */}
-              {nestedRootGlow > 0.02 ? (
-                <rect
-                  x={68}
-                  y={-31}
-                  width={98}
-                  height={44}
-                  rx={5}
-                  fill="oklch(0.98 0 0 / 0.08)"
-                  stroke="oklch(0.98 0 0 / 0.72)"
-                  strokeWidth={1.3}
-                  opacity={nestedRootGlow}
-                />
-              ) : null}
-
-              {/* Target Distance |AH| */}
-              <text
-                x={-290}
-                y={8}
-                textAnchor="middle"
-                className="fill-text-primary font-mono text-2xl font-semibold tracking-mono"
-              >
-                |AH|
-              </text>
-
-              {/* Equals Sign */}
-              <text
-                x={-242}
-                y={8}
-                textAnchor="middle"
-                opacity={equalsOpacity}
-                className="fill-text-secondary font-mono text-2xl"
-              >
-                =
-              </text>
-
-              {/* Outer Square Root Radical */}
-              {outerRadicalDraw > 0.01 ? (
-                <path
-                  d={OUTER_RADICAL_PATH}
-                  fill="none"
-                  stroke="oklch(0.98 0 0)"
-                  strokeWidth={2.2 + 0.8 * nestedRootGlow}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeDasharray={OUTER_RADICAL_LEN}
-                  strokeDashoffset={OUTER_RADICAL_LEN * (1 - outerRadicalDraw)}
-                  filter={nestedRootGlow > 0.25 ? "url(#slide06-luminous-glow)" : undefined}
-                />
-              ) : null}
-
-              {/* Bracketed Term 1: (r² - l²) */}
-              <g
-                opacity={term1Enter}
-                transform={`translate(0, ${(1 - term1Enter) * 8})`}
-                filter={term1Focus > 0.35 ? "url(#slide06-luminous-glow)" : undefined}
-              >
-                <text x={-184} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  (
-                </text>
-                <text x={-169} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  r
-                </text>
-                <text
-                  x={-157}
-                  y={-8}
-                  textAnchor="middle"
-                  className="fill-text-primary font-mono text-base font-semibold"
-                >
-                  2
-                </text>
-                <text x={-141} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  −
-                </text>
-                <text x={-123} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  l
-                </text>
-                <text
-                  x={-111}
-                  y={-8}
-                  textAnchor="middle"
-                  className="fill-text-primary font-mono text-base font-semibold"
-                >
-                  2
-                </text>
-                <text x={-97} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  )
-                </text>
-              </g>
-
-              {/* Plus Operator */}
-              <text
-                x={-76}
-                y={8}
-                textAnchor="middle"
-                opacity={term2Enter}
-                className="fill-text-secondary font-mono text-2xl"
-              >
-                +
-              </text>
-
-              {/* Bracketed Term 2: (l + k)² */}
-              <g
-                opacity={term2Enter}
-                transform={`translate(0, ${(1 - term2Enter) * 8})`}
-                filter={term2Focus > 0.35 ? "url(#slide06-luminous-glow)" : undefined}
-              >
-                <text x={-54} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  (
-                </text>
-                <text x={-38} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  l
-                </text>
-                <text x={-20} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  +
-                </text>
-                <text x={-2} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  k
-                </text>
-                <text x={13} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  )
-                </text>
-                <text x={25} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                  2
-                </text>
-              </g>
-
-              {/* Minus Operator */}
-              <text
-                x={44}
-                y={8}
-                textAnchor="middle"
-                opacity={term3Enter}
-                className="fill-text-secondary font-mono text-2xl"
-              >
-                −
-              </text>
-
-              {/* Bracketed Term 3: (√(r² - l²) − w)² */}
-              <g
-                opacity={term3Enter}
-                transform={`translate(0, ${(1 - term3Enter) * 8})`}
-                filter={term3Focus > 0.35 ? "url(#slide06-luminous-glow)" : undefined}
-              >
-                {/* Tall Parentheses Cradling the Nested Radical */}
-                <path
-                  d="M 68 -26 Q 59 -6 68 14"
-                  fill="none"
-                  stroke="oklch(0.84 0 0)"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-
-                {/* Inner Square Root Radical */}
-                <path
-                  d={INNER_RADICAL_PATH}
-                  fill="none"
-                  stroke="oklch(0.98 0 0)"
-                  strokeWidth={1.85 + 0.75 * nestedRootGlow}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeDasharray={INNER_RADICAL_LEN}
-                  strokeDashoffset={INNER_RADICAL_LEN * (1 - term3Enter)}
-                  filter={nestedRootGlow > 0.2 ? "url(#slide06-luminous-glow)" : undefined}
-                />
-
-                <text x={100} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  r
-                </text>
-                <text x={112} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                  2
-                </text>
-                <text x={127} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  −
-                </text>
-                <text x={143} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  l
-                </text>
-                <text x={155} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                  2
-                </text>
-
-                <text x={173} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  −
-                </text>
-                <text x={190} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  w
-                </text>
-
-                <path
-                  d="M 204 -26 Q 213 -6 204 14"
-                  fill="none"
-                  stroke="oklch(0.84 0 0)"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                />
-                <text
-                  x={219}
-                  y={-10}
-                  textAnchor="middle"
-                  className="fill-text-primary font-mono text-base font-semibold"
-                >
-                  2
-                </text>
-              </g>
-
-              {/* Subtracted Car Overhang + Wheelbase: − l − k */}
-              <g opacity={tailEnter} transform={`translate(0, ${(1 - tailEnter) * 8})`}>
-                <text x={252} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  −
-                </text>
-                <text x={272} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  l
-                </text>
-                <text x={292} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                  −
-                </text>
-                <text x={312} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                  k
-                </text>
-              </g>
+              <MasterFormula
+                glowFilterId="slide06-luminous-glow"
+                equalsOpacity={equalsOpacity}
+                outerRadicalDraw={outerRadicalDraw}
+                innerRadicalDraw={term3Enter}
+                nestedRootGlow={nestedRootGlow}
+                showFocusCapsules={true}
+                term1Opacity={term1Enter}
+                term1OffsetY={(1 - term1Enter) * 8}
+                term1Focus={term1Focus}
+                term2Opacity={term2Enter}
+                term2OffsetY={(1 - term2Enter) * 8}
+                term2Focus={term2Focus}
+                term3Opacity={term3Enter}
+                term3OffsetY={(1 - term3Enter) * 8}
+                term3Focus={term3Focus}
+                minusLOpacity={tailEnter}
+                minusLOffsetY={tailOffset}
+                minusKOpacity={tailEnter}
+                minusKOffsetY={tailOffset}
+              />
             </g>
 
             {/* Subtle Dashed Links Connecting Bracketed Terms to the Three Right-Angled Triangles */}
             {tri1Draw > 0.05 ? (
               <path
-                d="M 346 218 C 346 270, 210 272, 210 326"
+                d="M 338 218 C 338 270, 210 272, 210 326"
                 fill="none"
                 stroke={`oklch(0.88 0 0 / ${(0.25 + 0.5 * term1Focus).toFixed(2)})`}
                 strokeWidth={1.25}
@@ -631,7 +346,7 @@ export function Slide06Formula(): ReactElement {
 
             {tri2Draw > 0.05 ? (
               <path
-                d="M 465 218 L 480 310"
+                d="M 445 218 L 480 310"
                 fill="none"
                 stroke={`oklch(0.88 0 0 / ${(0.25 + 0.5 * term2Focus).toFixed(2)})`}
                 strokeWidth={1.25}
@@ -642,7 +357,7 @@ export function Slide06Formula(): ReactElement {
 
             {tri3Draw > 0.05 ? (
               <path
-                d="M 615 220 C 615 270, 755 272, 755 322"
+                d="M 592 220 C 592 270, 755 272, 755 322"
                 fill="none"
                 stroke={`oklch(0.88 0 0 / ${(0.25 + 0.5 * term3Focus).toFixed(2)})`}
                 strokeWidth={1.25}
@@ -663,14 +378,24 @@ export function Slide06Formula(): ReactElement {
               emphasis={term1Focus}
             >
               <g>
-                <text x={188} y={398} textAnchor="end" className="fill-text-primary font-mono text-sm font-semibold">
+                <text
+                  x={188}
+                  y={398}
+                  textAnchor="end"
+                  className="fill-text-primary font-math text-base font-semibold italic"
+                >
                   r
                 </text>
-                <text x={279} y={414} textAnchor="start" className="fill-text-primary font-mono text-sm font-semibold">
+                <text
+                  x={279}
+                  y={414}
+                  textAnchor="start"
+                  className="fill-text-primary font-math text-base font-semibold italic"
+                >
                   l
                 </text>
                 <g className="text-text-primary">
-                  <MiniRootR2L2 x={208} y={488} />
+                  <RootR2MinusL2 x={208} y={488} />
                 </g>
               </g>
             </RightTriangleDiagram>
@@ -688,17 +413,24 @@ export function Slide06Formula(): ReactElement {
             >
               <g>
                 <line x1={540} y1={364} x2={550} y2={364} stroke="oklch(0.85 0 0 / 0.7)" strokeWidth={1.2} />
-                <text x={468} y={385} textAnchor="end" className="fill-text-primary font-mono text-sm font-semibold">
+                <text x={468} y={385} textAnchor="end" className="fill-text-primary font-math text-sm font-semibold">
                   |AX|
                 </text>
-                <text x={559} y={402} textAnchor="start" className="fill-text-primary font-mono text-sm font-semibold">
-                  l + k
+                <text
+                  x={559}
+                  y={402}
+                  textAnchor="start"
+                  className="fill-text-primary font-math text-base font-semibold"
+                >
+                  <tspan className="italic">l</tspan>
+                  <tspan className="fill-text-secondary font-normal"> + </tspan>
+                  <tspan className="italic">k</tspan>
                 </text>
                 <text
                   x={480}
                   y={488}
                   textAnchor="middle"
-                  className="fill-text-secondary font-mono text-xs font-semibold"
+                  className="fill-text-secondary font-math text-sm font-semibold"
                 >
                   |FX|
                 </text>
@@ -717,14 +449,14 @@ export function Slide06Formula(): ReactElement {
               emphasis={term3Focus}
             >
               <g>
-                <text x={744} y={390} textAnchor="end" className="fill-text-primary font-mono text-sm font-semibold">
+                <text x={744} y={390} textAnchor="end" className="fill-text-primary font-math text-sm font-semibold">
                   |GX|
                 </text>
-                <text x={834} y={408} textAnchor="start" className="fill-text-primary font-mono text-sm font-semibold">
+                <text x={834} y={408} textAnchor="start" className="fill-text-primary font-math text-sm font-semibold">
                   |GK|
                 </text>
                 <g className="text-text-primary">
-                  <MiniRootR2L2 x={754} y={488} suffix="− w" />
+                  <RootR2MinusL2 x={744} y={488} withMinusW={true} />
                 </g>
               </g>
             </RightTriangleDiagram>
@@ -773,9 +505,12 @@ export function Slide06Formula(): ReactElement {
               />
             </g>
 
-            {/* Ghost Target Parallel Car Pose at End of Reverse Arc */}
-            {parallelGhostOpacity > 0.01 ? (
-              <g transform={`translate(${PARALLEL_CENTER_X}, ${PARALLEL_CENTER_Y})`} opacity={parallelGhostOpacity}>
+            {/* Ghost Snapshot at the Grazing Instant (Corner A passing G) */}
+            {grazeGhostOpacity > 0.01 ? (
+              <g
+                transform={`translate(${GRAZE_CAR_CENTER.x}, ${GRAZE_CAR_CENTER.y}) rotate(${GRAZE_HEADING_DEG})`}
+                opacity={grazeGhostOpacity}
+              >
                 <CutPlaneCar
                   variant={CarSectionVariants.Ghost}
                   kerbSide={KerbSides.Right}
@@ -786,9 +521,18 @@ export function Slide06Formula(): ReactElement {
               </g>
             ) : null}
 
-            {/* Target Extra Clearance |AH| Bracket */}
+            {/* Target Extra Clearance |AH| Bracket & Equal-Radius Rays XG / XA */}
             {ahPreviewOpacity > 0.01 ? (
               <g opacity={ahPreviewOpacity}>
+                <line
+                  x1={TURNING_CENTER.x}
+                  y1={TURNING_CENTER.y}
+                  x2={POINT_A_PARALLEL.x}
+                  y2={POINT_A_PARALLEL.y}
+                  stroke="oklch(0.92 0 0 / 0.62)"
+                  strokeWidth={1.3}
+                  strokeDasharray="4 4"
+                />
                 <g stroke="oklch(0.84 0 0 / 0.6)" strokeWidth={1.1} strokeDasharray="3 3">
                   <line x1={POINT_H.x} y1={POINT_H.y} x2={708} y2={POINT_H.y} />
                   <line x1={POINT_A_PARALLEL.x} y1={POINT_A_PARALLEL.y} x2={708} y2={POINT_A_PARALLEL.y} />
@@ -802,25 +546,25 @@ export function Slide06Formula(): ReactElement {
                   x={716}
                   y={(POINT_H.y + POINT_A_PARALLEL.y) * 0.5 + 4}
                   textAnchor="start"
-                  className="fill-text-primary font-mono text-xs font-semibold tracking-mono"
+                  className="fill-text-primary font-math text-sm font-semibold"
                 >
                   |AH|
                 </text>
               </g>
             ) : null}
 
-            {/* Radius Ray from Turning Center X to Grazing Pinch Point G / A */}
+            {/* Radius Ray from Turning Center X to Grazing Pinch Point G */}
             <line
               x1={TURNING_CENTER.x}
               y1={TURNING_CENTER.y}
               x2={POINT_G.x}
               y2={POINT_G.y}
-              stroke={`oklch(0.92 0 0 / ${(0.3 + 0.45 * freezePulse).toFixed(2)})`}
-              strokeWidth={1.25}
+              stroke={`oklch(0.92 0 0 / ${(0.42 + 0.45 * freezePulse).toFixed(2)})`}
+              strokeWidth={1.3}
               strokeDasharray="4 4"
             />
 
-            {/* Hero Sports Coupe Reversing and Freezing at Critical Instant */}
+            {/* Hero Sports Coupe Reversing Past G and Freezing Parallel to Kerb */}
             <g transform={`translate(${carCenter.x}, ${carCenter.y}) rotate(${headingDeg})`}>
               <CutPlaneCar
                 variant={CarSectionVariants.Hero}
@@ -858,30 +602,18 @@ export function Slide06Formula(): ReactElement {
               </text>
             </g>
 
-            {/* Freeze-Frame Lock Pulse at Critical Grazing Instant A = G */}
+            {/* Grazing Pinch Point G & Kerb Corner H */}
             <g transform={`translate(${POINT_G.x}, ${POINT_G.y})`}>
               {freezePulse > 0.03 ? (
-                <>
-                  <circle
-                    cx={0}
-                    cy={0}
-                    r={10 + 18 * freezePulse}
-                    fill="none"
-                    stroke="oklch(0.98 0 0)"
-                    strokeWidth={1.4}
-                    opacity={freezePulse * 0.8}
-                  />
-                  <circle
-                    cx={0}
-                    cy={0}
-                    r={14}
-                    fill="none"
-                    stroke="oklch(0.98 0 0 / 0.72)"
-                    strokeWidth={1.2}
-                    strokeDasharray="3 3"
-                    opacity={freezePulse}
-                  />
-                </>
+                <circle
+                  cx={0}
+                  cy={0}
+                  r={10 + 14 * freezePulse}
+                  fill="none"
+                  stroke="oklch(0.98 0 0)"
+                  strokeWidth={1.4}
+                  opacity={freezePulse * 0.8}
+                />
               ) : null}
               <circle
                 cx={0}
@@ -901,11 +633,34 @@ export function Slide06Formula(): ReactElement {
               >
                 G
               </text>
-              {isBraking ? (
+            </g>
+
+            {ahPreviewOpacity > 0.01 ? (
+              <g opacity={ahPreviewOpacity}>
+                <circle cx={POINT_H.x} cy={POINT_H.y} r={3.5} fill="oklch(0.98 0 0)" />
                 <text
-                  x={13}
-                  y={-9}
-                  textAnchor="start"
+                  x={POINT_H.x - 10}
+                  y={POINT_H.y - 8}
+                  textAnchor="end"
+                  stroke="oklch(0.15 0 0 / 0.94)"
+                  strokeWidth={4}
+                  strokeLinejoin="round"
+                  className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
+                >
+                  H
+                </text>
+
+                <circle
+                  cx={POINT_A_PARALLEL.x}
+                  cy={POINT_A_PARALLEL.y}
+                  r={4}
+                  fill="oklch(0.98 0 0)"
+                  filter="url(#slide06-luminous-glow)"
+                />
+                <text
+                  x={POINT_A_PARALLEL.x - 10}
+                  y={POINT_A_PARALLEL.y - 8}
+                  textAnchor="end"
                   stroke="oklch(0.15 0 0 / 0.94)"
                   strokeWidth={4}
                   strokeLinejoin="round"
@@ -913,8 +668,8 @@ export function Slide06Formula(): ReactElement {
                 >
                   A
                 </text>
-              ) : null}
-            </g>
+              </g>
+            ) : null}
           </g>
         ) : null}
       </svg>

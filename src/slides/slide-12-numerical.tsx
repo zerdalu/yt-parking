@@ -1,4 +1,5 @@
 import { CutPlaneCar, CutPlaneCarDefs } from "@/components/cut-plane-car";
+import { MasterFormula } from "@/components/math-formula";
 import {
   CarSectionVariants,
   computeAckermannAngles,
@@ -50,6 +51,11 @@ const HERO_FRONT_BUMPER_FINAL_Y = BAY_FINAL_CENTER_Y - HALF_CAR_LENGTH_PX; // 18
 const HERO_REAR_BUMPER_FINAL_Y = BAY_FINAL_CENTER_Y + HALF_CAR_LENGTH_PX; // 315.52
 const FRONT_CAR_REAR_Y = HERO_FRONT_BUMPER_FINAL_Y - CLEARANCE_PX; // 139.864
 
+// Target parallel stop coordinates at end of reverse sweep (center at (775, 260))
+const STOP_FRONT_BUMPER_Y = PHASE4_STOP_CENTER_Y - HALF_CAR_LENGTH_PX; // 194.48
+const STOP_FRONT_AXLE_Y = PHASE4_STOP_CENTER_Y - HALF_WHEELBASE_PX; // 219.44
+const STOP_REAR_AXLE_Y = PHASE4_STOP_CENTER_Y + HALF_WHEELBASE_PX; // 300.56
+
 // Front parked car (width w = 1.7 m = 53.04 px aligned against kerb)
 const FRONT_CAR_WIDTH_PX = 1.7 * PX_PER_METER; // 53.04 px
 const FRONT_CAR_SCALE = FRONT_CAR_WIDTH_PX / DEFAULT_VEHICLE_DIMENSIONS.width; // 0.6979
@@ -62,33 +68,33 @@ const REAR_CAR_CENTER_Y = 395.52;
 // Exact turning center X_2 for Phase 4 full-lock reverse arc into (775, 260)
 const TURNING_CENTER: Point2D = {
   x: BAY_CENTER_X - R_TURN_PX, // 651.511
-  y: PHASE4_STOP_CENTER_Y + HALF_WHEELBASE_PX, // 300.56
+  y: STOP_REAR_AXLE_Y, // 300.56
 };
 
 // Target front-kerb wheel center E at end of Phase 4 arc (distance |EX| = 168.48 px = 5.40 m)
 const TARGET_E: Point2D = {
   x: BAY_CENTER_X + SLIDE_12_DIMENSIONS.trackHalfWidth, // 799.18
-  y: PHASE4_STOP_CENTER_Y - HALF_WHEELBASE_PX, // 219.44
+  y: STOP_FRONT_AXLE_Y, // 219.44
 };
 
 // Exact symmetric S-sweep kinematics from adjacent right driving lane into (775, 260)
-const LANE_START_Y = 210;
-const LANE_STAGE_CENTER_Y = 78.89;
-const X1_Y = LANE_STAGE_CENTER_Y + HALF_WHEELBASE_PX; // 119.45
-const SIN_INFLECT = (TURNING_CENTER.y - X1_Y) / (2 * R_TURN_PX); // 0.733304
-const COS_INFLECT = Math.sqrt(1 - SIN_INFLECT * SIN_INFLECT); // 0.679901
-const THETA_INFLECT_DEG = (Math.asin(SIN_INFLECT) * 180) / Math.PI; // 47.1636 deg
-const LANE_STAGE_CENTER_X = BAY_CENTER_X - 2 * R_TURN_PX * (1 - COS_INFLECT); // 695.943
+const LANE_START_Y = 230;
+const LANE_STAGE_CENTER_Y = 93.14;
+const X1_Y = LANE_STAGE_CENTER_Y + HALF_WHEELBASE_PX; // 133.70
+const SIN_INFLECT = (TURNING_CENTER.y - X1_Y) / (2 * R_TURN_PX); // 0.675607
+const COS_INFLECT = Math.sqrt(1 - SIN_INFLECT * SIN_INFLECT); // 0.737262
+const THETA_INFLECT_DEG = (Math.asin(SIN_INFLECT) * 180) / Math.PI; // 42.501 deg
+const LANE_STAGE_CENTER_X = BAY_CENTER_X - 2 * R_TURN_PX * (1 - COS_INFLECT); // 710.11
 const X1_CENTER: Point2D = {
-  x: LANE_STAGE_CENTER_X + R_TURN_PX, // 819.432
-  y: X1_Y, // 119.45
+  x: LANE_STAGE_CENTER_X + R_TURN_PX, // 833.60
+  y: X1_Y, // 133.70
 };
 
 const KERB_JOINT_Y = [56, 128, 200, 272, 344, 416] as const;
 const PAVING_JOINT_Y = [72, 152, 232, 312, 392] as const;
 
-const OUTER_RADICAL_PATH = "M -322 0 L -317 0 L -311 11 L -298 -35 L 284 -35 L 284 -29";
-const INNER_RADICAL_PATH = "M 40 0 L 44 0 L 48 8 L 57 -23 L 176 -23";
+const NUMERIC_OUTER_RADICAL_PATH = "M -316 0 L -311 0 L -305 11 L -292 -35 L 272 -35 L 272 -29";
+const NUMERIC_INNER_RADICAL_PATH = "M 36 0 L 40 0 L 44 9 L 53 -23 L 182 -23 L 182 -18";
 
 interface Slide12Pose {
   readonly centerX: number;
@@ -148,7 +154,7 @@ function degToRad(deg: number): number {
 }
 
 function computeSlide12Pose(seconds: number): Slide12Pose {
-  const pullUpDistance = LANE_START_Y - LANE_STAGE_CENTER_Y; // 131.11
+  const pullUpDistance = LANE_START_Y - LANE_STAGE_CENTER_Y; // 136.86
   const arcTotalRad = degToRad(THETA_INFLECT_DEG);
   const singleArcLength = R_TURN_PX * arcTotalRad;
 
@@ -162,109 +168,82 @@ function computeSlide12Pose(seconds: number): Slide12Pose {
       headingDeg: 0,
       frontLeftSteerDeg: ack.frontLeftSteerDeg,
       frontRightSteerDeg: ack.frontRightSteerDeg,
-      wheelRollDistance: pullUpDistance * u,
+      wheelRollDistance: (pullUpDistance * u) / CAR_SCALE,
       isReversing: false,
       isBraking: seconds >= 2.85,
     };
   }
 
   if (seconds < 19.8) {
-    const lockRight = easeInOutCubic(progressBetween(seconds, 18.8, 19.8));
-    const ack = computeAckermannAngles(FULL_LOCK_DEG * lockRight, SLIDE_12_DIMENSIONS);
     return {
       centerX: LANE_STAGE_CENTER_X,
       centerY: LANE_STAGE_CENTER_Y,
       headingDeg: 0,
-      frontLeftSteerDeg: ack.frontLeftSteerDeg,
-      frontRightSteerDeg: ack.frontRightSteerDeg,
-      wheelRollDistance: pullUpDistance,
+      frontLeftSteerDeg: 0,
+      frontRightSteerDeg: 0,
+      wheelRollDistance: pullUpDistance / CAR_SCALE,
       isReversing: false,
       isBraking: true,
     };
   }
 
-  if (seconds < 23.6) {
-    const u = easeInOutCubic(progressBetween(seconds, 19.8, 23.6));
-    const headingDeg = -THETA_INFLECT_DEG * u;
+  // Continuous uninterrupted reverse S-sweep (19.8s - 28.2s)
+  if (seconds < 28.2) {
+    const u = easeInOutCubic(progressBetween(seconds, 19.8, 28.2));
+    const isFirstArc = u <= 0.5;
+    const w = isFirstArc ? 2 * u : 2 * (1 - u);
+    const headingDeg = -THETA_INFLECT_DEG * w;
     const headingRad = degToRad(headingDeg);
-    const rearAxleX = X1_CENTER.x - R_TURN_PX * Math.cos(headingRad);
-    const rearAxleY = X1_CENTER.y - R_TURN_PX * Math.sin(headingRad);
-    const centerX = rearAxleX + HALF_WHEELBASE_PX * Math.sin(headingRad);
-    const centerY = rearAxleY - HALF_WHEELBASE_PX * Math.cos(headingRad);
-    const ack = computeAckermannAngles(FULL_LOCK_DEG, SLIDE_12_DIMENSIONS);
-    return {
-      centerX,
-      centerY,
-      headingDeg,
-      frontLeftSteerDeg: ack.frontLeftSteerDeg,
-      frontRightSteerDeg: ack.frontRightSteerDeg,
-      wheelRollDistance: pullUpDistance - R_TURN_PX * Math.abs(headingRad),
-      isReversing: true,
-      isBraking: false,
-    };
-  }
 
-  if (seconds < 24.4) {
-    const u = easeInOutCubic(progressBetween(seconds, 23.6, 24.4));
-    const headingDeg = -THETA_INFLECT_DEG;
-    const headingRad = degToRad(headingDeg);
-    const rearAxleX = X1_CENTER.x - R_TURN_PX * Math.cos(headingRad);
-    const rearAxleY = X1_CENTER.y - R_TURN_PX * Math.sin(headingRad);
+    const rearAxleX = isFirstArc
+      ? X1_CENTER.x - R_TURN_PX * Math.cos(headingRad)
+      : TURNING_CENTER.x + R_TURN_PX * Math.cos(headingRad);
+    const rearAxleY = isFirstArc
+      ? X1_CENTER.y - R_TURN_PX * Math.sin(headingRad)
+      : TURNING_CENTER.y + R_TURN_PX * Math.sin(headingRad);
+
     const centerX = rearAxleX + HALF_WHEELBASE_PX * Math.sin(headingRad);
     const centerY = rearAxleY - HALF_WHEELBASE_PX * Math.cos(headingRad);
-    const steerDeg = FULL_LOCK_DEG * (1 - 2 * u);
+
+    // Smooth steering transitions while rolling (no stationary dry-steering)
+    const entrySteer = easeInOutCubic(progressBetween(seconds, 19.8, 20.4));
+    const counterSteer = easeInOutCubic(progressBetween(seconds, 23.6, 24.4));
+    const exitStraighten = easeInOutCubic(progressBetween(seconds, 27.6, 28.2));
+    const steerDeg = FULL_LOCK_DEG * entrySteer * (1 - 2 * counterSteer) * (1 - exitStraighten);
     const ack = computeAckermannAngles(steerDeg, SLIDE_12_DIMENSIONS);
-    return {
-      centerX,
-      centerY,
-      headingDeg,
-      frontLeftSteerDeg: ack.frontLeftSteerDeg,
-      frontRightSteerDeg: ack.frontRightSteerDeg,
-      wheelRollDistance: pullUpDistance - singleArcLength,
-      isReversing: false,
-      isBraking: true,
-    };
-  }
 
-  if (seconds < 28.4) {
-    const u = easeInOutCubic(progressBetween(seconds, 24.4, 28.4));
-    const headingDeg = -THETA_INFLECT_DEG * (1 - u);
-    const headingRad = degToRad(headingDeg);
-    const rearAxleX = TURNING_CENTER.x + R_TURN_PX * Math.cos(headingRad);
-    const rearAxleY = TURNING_CENTER.y + R_TURN_PX * Math.sin(headingRad);
-    const centerX = rearAxleX + HALF_WHEELBASE_PX * Math.sin(headingRad);
-    const centerY = rearAxleY - HALF_WHEELBASE_PX * Math.cos(headingRad);
-    const ack = computeAckermannAngles(-FULL_LOCK_DEG, SLIDE_12_DIMENSIONS);
-    const arc2Distance = R_TURN_PX * (arcTotalRad - Math.abs(headingRad));
+    const rolledArc = isFirstArc
+      ? R_TURN_PX * Math.abs(headingRad)
+      : singleArcLength + R_TURN_PX * (arcTotalRad - Math.abs(headingRad));
+
     return {
       centerX,
       centerY,
       headingDeg,
       frontLeftSteerDeg: ack.frontLeftSteerDeg,
       frontRightSteerDeg: ack.frontRightSteerDeg,
-      wheelRollDistance: pullUpDistance - singleArcLength - arc2Distance,
+      wheelRollDistance: (pullUpDistance - rolledArc) / CAR_SCALE,
       isReversing: true,
-      isBraking: false,
+      isBraking: seconds >= 27.65,
     };
   }
 
-  if (seconds < 29.0) {
-    const u = easeInOutCubic(progressBetween(seconds, 28.4, 29.0));
-    const ack = computeAckermannAngles(-FULL_LOCK_DEG * (1 - u), SLIDE_12_DIMENSIONS);
+  // Brief pause before straight forward pull-up (28.2s - 28.5s)
+  if (seconds < 28.5) {
     return {
       centerX: BAY_CENTER_X,
       centerY: PHASE4_STOP_CENTER_Y,
       headingDeg: 0,
-      frontLeftSteerDeg: ack.frontLeftSteerDeg,
-      frontRightSteerDeg: ack.frontRightSteerDeg,
-      wheelRollDistance: pullUpDistance - 2 * singleArcLength,
+      frontLeftSteerDeg: 0,
+      frontRightSteerDeg: 0,
+      wheelRollDistance: (pullUpDistance - 2 * singleArcLength) / CAR_SCALE,
       isReversing: false,
       isBraking: true,
     };
   }
 
-  if (seconds < 29.9) {
-    const u = easeInOutCubic(progressBetween(seconds, 29.0, 29.9));
+  if (seconds < 29.6) {
+    const u = easeInOutCubic(progressBetween(seconds, 28.5, 29.6));
     const centerY = PHASE4_STOP_CENTER_Y + (BAY_FINAL_CENTER_Y - PHASE4_STOP_CENTER_Y) * u;
     const forwardStep = PHASE4_STOP_CENTER_Y - centerY;
     return {
@@ -273,9 +252,9 @@ function computeSlide12Pose(seconds: number): Slide12Pose {
       headingDeg: 0,
       frontLeftSteerDeg: 0,
       frontRightSteerDeg: 0,
-      wheelRollDistance: pullUpDistance - 2 * singleArcLength + forwardStep,
+      wheelRollDistance: (pullUpDistance - 2 * singleArcLength + forwardStep) / CAR_SCALE,
       isReversing: false,
-      isBraking: seconds >= 29.65,
+      isBraking: seconds >= 29.3,
     };
   }
 
@@ -285,7 +264,7 @@ function computeSlide12Pose(seconds: number): Slide12Pose {
     headingDeg: 0,
     frontLeftSteerDeg: 0,
     frontRightSteerDeg: 0,
-    wheelRollDistance: pullUpDistance - 2 * singleArcLength + (PHASE4_STOP_CENTER_Y - BAY_FINAL_CENTER_Y),
+    wheelRollDistance: (pullUpDistance - 2 * singleArcLength + (PHASE4_STOP_CENTER_Y - BAY_FINAL_CENTER_Y)) / CAR_SCALE,
     isReversing: false,
     isBraking: false,
   };
@@ -295,7 +274,7 @@ function buildSweepCornerTrail(seconds: number): string {
   if (seconds < 19.8) {
     return "";
   }
-  const endT = Math.min(seconds, 28.4);
+  const endT = Math.min(seconds, 28.2);
   const points: string[] = [];
   const dt = 0.08;
 
@@ -323,9 +302,18 @@ interface MetricChipProps {
   readonly value: string;
   readonly opacity: number;
   readonly activeGlow: number;
+  readonly isItalicSymbol?: boolean;
 }
 
-function MetricChip({ x, y, symbol, value, opacity, activeGlow }: MetricChipProps): ReactElement | null {
+function MetricChip({
+  x,
+  y,
+  symbol,
+  value,
+  opacity,
+  activeGlow,
+  isItalicSymbol = true,
+}: MetricChipProps): ReactElement | null {
   if (opacity <= 0.01) {
     return null;
   }
@@ -350,11 +338,11 @@ function MetricChip({ x, y, symbol, value, opacity, activeGlow }: MetricChipProp
         x={22}
         y={36}
         textAnchor="start"
-        className="fill-text-secondary font-mono text-lg font-semibold tracking-mono"
+        className={`fill-text-secondary font-math text-xl font-semibold ${isItalicSymbol ? "italic" : ""}`}
       >
         {symbol}
       </text>
-      <text x={50} y={36} textAnchor="middle" className="fill-text-muted font-mono text-base">
+      <text x={50} y={36} textAnchor="middle" className="fill-text-muted font-math text-lg">
         =
       </text>
       <text
@@ -387,16 +375,16 @@ export function Slide12Numerical(): ReactElement {
   const radiusGlow = pulseEnvelope(elapsedSeconds, 9.2, 9.8, 11.2, 12.0);
   const xNodeOpacity = easeOutCubic(progressBetween(elapsedSeconds, 4.4, 5.4));
 
-  // Ghost outline of target bay pose while r = 5.4 m & sweep are active
+  // Ghost outline of target bay pose while r = 5.4 m, l = 2.6 m, k = 1.3 m & sweep are active
   const bayGhostOpacity =
     easeOutCubic(progressBetween(elapsedSeconds, 8.8, 9.8)) *
-    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 28.0, 28.8))) *
-    0.34;
+    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 27.6, 28.4))) *
+    0.38;
 
-  // On-car dimension calipers during staged period (12.12s - 22.42s)
-  const lkFadeOutBeforeSweep = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 19.0, 19.7));
-  const lCaliperDraw = easeInOutCubic(progressBetween(elapsedSeconds, 12.6, 14.2)) * lkFadeOutBeforeSweep;
-  const kCaliperDraw = easeInOutCubic(progressBetween(elapsedSeconds, 15.6, 17.2)) * lkFadeOutBeforeSweep;
+  // Unified Figure 2 dimension calipers (12.12s - 22.42s)
+  const lkFadeOutBeforeClearance = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 27.4, 28.1));
+  const lCaliperDraw = easeInOutCubic(progressBetween(elapsedSeconds, 12.6, 14.2)) * lkFadeOutBeforeClearance;
+  const kCaliperDraw = easeInOutCubic(progressBetween(elapsedSeconds, 15.6, 17.2)) * lkFadeOutBeforeClearance;
   const wCaliperDraw = easeInOutCubic(progressBetween(elapsedSeconds, 19.2, 21.0));
   const wGlow = pulseEnvelope(elapsedSeconds, 19.4, 20.1, 22.0, 22.8);
 
@@ -423,7 +411,7 @@ export function Slide12Numerical(): ReactElement {
   const kVarPulse = pulseFactor(elapsedSeconds, 16.6, 1.2);
   const wVarPulse = pulseFactor(elapsedSeconds, 20.6, 1.2);
 
-  // Formula Card 4-State Evaluation Choreography (y = 528)
+  // Formula Card 4-State Evaluation Choreography (y = 530)
   const symbolicOpacity =
     easeOutCubic(progressBetween(elapsedSeconds, 0.7, 1.5)) *
     (1 - easeInOutCubic(progressBetween(elapsedSeconds, 22.4, 23.0)));
@@ -443,7 +431,7 @@ export function Slide12Numerical(): ReactElement {
   const toNumeric = easeInOutCubic(progressBetween(elapsedSeconds, 22.4, 23.2));
   const toIntermediate = easeInOutCubic(progressBetween(elapsedSeconds, 25.8, 26.5));
   const toFinal = easeInOutCubic(progressBetween(elapsedSeconds, 28.8, 29.5));
-  const formulaPillWidth = 568 + 118 * toNumeric - 246 * toIntermediate - 140 * toFinal; // 568 -> 686 -> 440 -> 300
+  const formulaPillWidth = 544 + 140 * toNumeric - 248 * toIntermediate - 144 * toFinal;
 
   // RoadStage final clearance callouts (28.0s - 33.0s)
   const carLengthCallout =
@@ -452,12 +440,6 @@ export function Slide12Numerical(): ReactElement {
   const clearanceCallout = easeOutCubic(progressBetween(elapsedSeconds, 29.4, 30.4));
   const sweepTrailOpacity =
     elapsedSeconds < 19.8 ? 0 : elapsedSeconds > 30.0 ? Math.max(0.32, 1 - (elapsedSeconds - 30.0) / 1.5) : 0.88;
-
-  // Staged car anchor coordinates (valid when 3.6 <= t <= 19.8)
-  const stagedFrontBumperY = LANE_STAGE_CENTER_Y - HALF_CAR_LENGTH_PX; // 13.37
-  const stagedFrontAxleY = LANE_STAGE_CENTER_Y - HALF_WHEELBASE_PX; // 38.33
-  const stagedRearAxleY = LANE_STAGE_CENTER_Y + HALF_WHEELBASE_PX; // 119.45
-  const stagedCarLeftX = LANE_STAGE_CENTER_X - HALF_CAR_WIDTH_PX; // 666.30
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center">
@@ -471,8 +453,8 @@ export function Slide12Numerical(): ReactElement {
 
       <svg viewBox="0 0 960 620" className="h-full w-full max-w-6xl p-4 select-none">
         <title>
-          Numerical evaluation of Blackburn's formula with r = 5.4 m, l = 2.6 m, k = 1.3 m, and w = 1.7 m yielding 1.43
-          m of extra clearance
+          Numerical evaluation of Blackburn&apos;s formula with r = 5.4 m, l = 2.6 m, k = 1.3 m, and w = 1.7 m yielding
+          1.43 m of extra clearance
         </title>
         <defs>
           <radialGradient id="slide12-ambient-glow" cx="58%" cy="46%" r="54%">
@@ -638,7 +620,7 @@ export function Slide12Numerical(): ReactElement {
               kerbSide={KerbSides.Right}
               showBoundingBox={false}
               showVertexLabels={false}
-              showAxlePlaneLines={false}
+              showAxlePlaneLines={true}
             />
           </g>
         ) : null}
@@ -702,9 +684,10 @@ export function Slide12Numerical(): ReactElement {
               x={TURNING_CENTER.x}
               y={TURNING_CENTER.y - 26}
               textAnchor="middle"
-              className="fill-text-primary font-mono text-xs font-semibold tabular-nums"
+              className="fill-text-primary text-xs font-semibold"
             >
-              Ø = 10.8 m
+              <tspan className="font-math">Ø = </tspan>
+              <tspan className="font-mono tabular-nums">10.8 m</tspan>
             </text>
           </g>
         ) : null}
@@ -723,6 +706,7 @@ export function Slide12Numerical(): ReactElement {
               strokeDashoffset={R_PX * (1 - radiusRayDraw)}
               filter={radiusGlow > 0.2 ? "url(#slide12-luminous-glow)" : undefined}
             />
+            <circle cx={TARGET_E.x} cy={TARGET_E.y} r={3} fill="oklch(0.98 0 0)" />
             {radiusRayDraw > 0.55 ? (
               <text
                 x={716}
@@ -731,9 +715,11 @@ export function Slide12Numerical(): ReactElement {
                 stroke="oklch(0.15 0 0 / 0.94)"
                 strokeWidth={4}
                 strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-xs font-semibold tabular-nums"
+                className="svg-label-halo fill-text-primary text-xs font-semibold"
               >
-                r = 5.4 m
+                <tspan className="font-math text-sm italic">r</tspan>
+                <tspan className="fill-text-secondary font-math font-normal"> = </tspan>
+                <tspan className="font-mono tabular-nums">5.4 m</tspan>
               </text>
             ) : null}
           </g>
@@ -764,81 +750,85 @@ export function Slide12Numerical(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            STAGED DIMENSION CALIPERS: l = 2.6 m, k = 1.3 m, w = 1.7 m
+            UNIFIED FIGURE 2 DIMENSION CALIPERS: l = 2.6 m, k = 1.3 m, w = 1.7 m
            ================================================================ */}
-        {/* l = 2.6 m along staged hero car */}
+        {/* l = 2.6 m along bay wheel centers E..F (y = 219.44..300.56) */}
         {lCaliperDraw > 0.01 ? (
           <g opacity={lCaliperDraw}>
             <g stroke="oklch(0.84 0 0 / 0.55)" strokeWidth={1.1} strokeDasharray="3 3">
-              <line x1={stagedCarLeftX} y1={stagedFrontAxleY} x2={644} y2={stagedFrontAxleY} />
-              <line x1={stagedCarLeftX} y1={stagedRearAxleY} x2={644} y2={stagedRearAxleY} />
+              <line x1={TARGET_E.x} y1={STOP_FRONT_AXLE_Y} x2={830} y2={STOP_FRONT_AXLE_Y} />
+              <line x1={TARGET_E.x} y1={STOP_REAR_AXLE_Y} x2={830} y2={STOP_REAR_AXLE_Y} />
             </g>
             <line
-              x1={650}
-              y1={stagedFrontAxleY}
-              x2={650}
-              y2={stagedRearAxleY}
+              x1={824}
+              y1={STOP_FRONT_AXLE_Y}
+              x2={824}
+              y2={STOP_REAR_AXLE_Y}
               stroke="oklch(0.98 0 0)"
               strokeWidth={1.8}
               filter="url(#slide12-luminous-glow)"
             />
             <g stroke="oklch(0.96 0 0)" strokeWidth={1.3}>
-              <line x1={646} y1={stagedFrontAxleY} x2={654} y2={stagedFrontAxleY} />
-              <line x1={646} y1={stagedRearAxleY} x2={654} y2={stagedRearAxleY} />
+              <line x1={820} y1={STOP_FRONT_AXLE_Y} x2={828} y2={STOP_FRONT_AXLE_Y} />
+              <line x1={820} y1={STOP_REAR_AXLE_Y} x2={828} y2={STOP_REAR_AXLE_Y} />
             </g>
             <text
-              x={639}
-              y={(stagedFrontAxleY + stagedRearAxleY) * 0.5 + 4}
-              textAnchor="end"
+              x={836}
+              y={(STOP_FRONT_AXLE_Y + STOP_REAR_AXLE_Y) * 0.5 + 4}
+              textAnchor="start"
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4}
               strokeLinejoin="round"
-              className="svg-label-halo fill-text-primary font-mono text-xs font-semibold tabular-nums"
+              className="svg-label-halo fill-text-primary text-xs font-semibold"
             >
-              l = 2.6 m
+              <tspan className="font-math text-sm italic">l</tspan>
+              <tspan className="fill-text-secondary font-math font-normal"> = </tspan>
+              <tspan className="font-mono tabular-nums">2.6 m</tspan>
             </text>
           </g>
         ) : null}
 
-        {/* k = 1.3 m along staged hero car */}
+        {/* k = 1.3 m along bay front overhang A..E (y = 194.48..219.44) */}
         {kCaliperDraw > 0.01 ? (
           <g opacity={kCaliperDraw}>
             <line
-              x1={stagedCarLeftX}
-              y1={stagedFrontBumperY}
-              x2={644}
-              y2={stagedFrontBumperY}
+              x1={KERB_X}
+              y1={STOP_FRONT_BUMPER_Y}
+              x2={830}
+              y2={STOP_FRONT_BUMPER_Y}
               stroke="oklch(0.84 0 0 / 0.55)"
               strokeWidth={1.1}
               strokeDasharray="3 3"
             />
             <line
-              x1={650}
-              y1={stagedFrontBumperY}
-              x2={650}
-              y2={stagedFrontAxleY}
+              x1={824}
+              y1={STOP_FRONT_BUMPER_Y}
+              x2={824}
+              y2={STOP_FRONT_AXLE_Y}
               stroke="oklch(0.98 0 0)"
               strokeWidth={1.8}
               filter="url(#slide12-luminous-glow)"
             />
             <line
-              x1={646}
-              y1={stagedFrontBumperY}
-              x2={654}
-              y2={stagedFrontBumperY}
+              x1={820}
+              y1={STOP_FRONT_BUMPER_Y}
+              x2={828}
+              y2={STOP_FRONT_BUMPER_Y}
               stroke="oklch(0.96 0 0)"
               strokeWidth={1.3}
             />
             <text
-              x={639}
-              y={(stagedFrontBumperY + stagedFrontAxleY) * 0.5 + 4}
-              textAnchor="end"
+              x={836}
+              y={(STOP_FRONT_BUMPER_Y + STOP_FRONT_AXLE_Y) * 0.5 + 4}
+              textAnchor="start"
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4}
               strokeLinejoin="round"
-              className="svg-label-halo fill-text-primary font-mono text-xs font-semibold tabular-nums"
+              className="svg-label-halo fill-text-primary text-xs font-semibold"
             >
-              k = 1.3 m
+              <tspan className="font-math text-sm italic">k</tspan>
+              <tspan className="fill-text-secondary font-math font-normal"> = </tspan>
+              <tspan className="font-mono tabular-nums">1.3 m</tspan>
             </text>
           </g>
         ) : null}
@@ -870,9 +860,11 @@ export function Slide12Numerical(): ReactElement {
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4}
               strokeLinejoin="round"
-              className="svg-label-halo fill-text-primary font-mono text-xs font-semibold tabular-nums"
+              className="svg-label-halo fill-text-primary text-xs font-semibold"
             >
-              w = 1.7 m
+              <tspan className="font-math text-sm italic">w</tspan>
+              <tspan className="fill-text-secondary font-math font-normal"> = </tspan>
+              <tspan className="font-mono tabular-nums">1.7 m</tspan>
             </text>
           </g>
         ) : null}
@@ -915,7 +907,7 @@ export function Slide12Numerical(): ReactElement {
               x={838}
               y={BAY_FINAL_CENTER_Y + 4}
               textAnchor="start"
-              className="fill-text-secondary font-mono text-xs font-semibold"
+              className="fill-text-secondary font-math text-sm font-semibold italic"
             >
               L
             </text>
@@ -995,6 +987,7 @@ export function Slide12Numerical(): ReactElement {
           x={46}
           y={168}
           symbol={chip1RadiusMorph < 0.5 ? "Ø" : "r"}
+          isItalicSymbol={chip1RadiusMorph >= 0.5}
           value={chip1RadiusMorph < 0.5 ? "10.8 m" : "5.4 m"}
           opacity={chip1Opacity}
           activeGlow={chip1Glow}
@@ -1021,201 +1014,27 @@ export function Slide12Numerical(): ReactElement {
           {/* Stage 1: Symbolic Master Formula */}
           {symbolicOpacity > 0.01 ? (
             <g transform="scale(0.84)" opacity={symbolicOpacity}>
-              <text x={-290} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-                |AH|
-              </text>
-              <text x={-242} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                =
-              </text>
-              <path
-                d="M -224 1 L -219 1 L -213 13 L -199 -41 L 236 -41 L 236 -35"
-                fill="none"
-                stroke="oklch(0.98 0 0)"
-                strokeWidth={2.2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <MasterFormula
+                glowFilterId="slide12-luminous-glow"
+                rGlow={rVarPulse}
+                lGlow={lVarPulse}
+                kGlow={kVarPulse}
+                wGlow={wVarPulse}
               />
-
-              {/* (r^2 - l^2) */}
-              <text x={-184} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                (
-              </text>
-              <text
-                x={-169}
-                y={8}
-                textAnchor="middle"
-                filter={rVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                r
-              </text>
-              <text x={-157} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                2
-              </text>
-              <text x={-141} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-              <text
-                x={-123}
-                y={8}
-                textAnchor="middle"
-                filter={lVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                l
-              </text>
-              <text x={-111} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                2
-              </text>
-              <text x={-97} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                )
-              </text>
-
-              <text x={-76} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                +
-              </text>
-
-              {/* (l + k)^2 */}
-              <text x={-54} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                (
-              </text>
-              <text
-                x={-38}
-                y={8}
-                textAnchor="middle"
-                filter={lVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                l
-              </text>
-              <text x={-20} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                +
-              </text>
-              <text
-                x={-2}
-                y={8}
-                textAnchor="middle"
-                filter={kVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                k
-              </text>
-              <text x={13} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                )
-              </text>
-              <text x={25} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                2
-              </text>
-
-              <text x={44} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-
-              {/* (sqrt(r^2 - l^2) - w)^2 */}
-              <path
-                d="M 68 -26 Q 59 -6 68 14"
-                fill="none"
-                stroke="oklch(0.84 0 0)"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-              <path
-                d="M 74 0 L 78 0 L 82 9 L 92 -27 L 164 -27"
-                fill="none"
-                stroke="oklch(0.98 0 0)"
-                strokeWidth={1.85}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <text
-                x={100}
-                y={8}
-                textAnchor="middle"
-                filter={rVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                r
-              </text>
-              <text x={112} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                2
-              </text>
-              <text x={127} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-              <text
-                x={143}
-                y={8}
-                textAnchor="middle"
-                filter={lVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                l
-              </text>
-              <text x={155} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                2
-              </text>
-              <text x={173} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-              <text
-                x={190}
-                y={8}
-                textAnchor="middle"
-                filter={wVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                w
-              </text>
-              <path
-                d="M 204 -26 Q 213 -6 204 14"
-                fill="none"
-                stroke="oklch(0.84 0 0)"
-                strokeWidth={2}
-                strokeLinecap="round"
-              />
-              <text x={219} y={-10} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-                2
-              </text>
-
-              {/* - l - k */}
-              <text x={252} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-              <text
-                x={272}
-                y={8}
-                textAnchor="middle"
-                filter={lVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                l
-              </text>
-              <text x={292} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-                −
-              </text>
-              <text
-                x={312}
-                y={8}
-                textAnchor="middle"
-                filter={kVarPulse > 0.25 ? "url(#slide12-luminous-glow)" : undefined}
-                className="fill-text-primary font-mono text-2xl font-semibold"
-              >
-                k
-              </text>
             </g>
           ) : null}
 
           {/* Stage 2: Populated Real-World Values */}
           {numericOpacity > 0.01 ? (
             <g transform="scale(0.82)" opacity={numericOpacity}>
-              <text x={-378} y={7} textAnchor="middle" className="fill-text-primary font-mono text-xl font-semibold">
+              <text x={-364} y={7} textAnchor="middle" className="fill-text-primary font-math text-xl font-semibold">
                 |AH|
               </text>
-              <text x={-338} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              <text x={-332} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 =
               </text>
               <path
-                d={OUTER_RADICAL_PATH}
+                d={NUMERIC_OUTER_RADICAL_PATH}
                 fill="none"
                 stroke="oklch(0.98 0 0)"
                 strokeWidth={2}
@@ -1223,149 +1042,129 @@ export function Slide12Numerical(): ReactElement {
                 strokeLinejoin="round"
               />
 
-              {/* (5.4^2 - 2.6^2) */}
-              <text x={-286} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              {/* (5.4² − 2.6²) */}
+              <text x={-282} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 (
               </text>
-              <text
-                x={-261}
-                y={7}
-                textAnchor="middle"
-                className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
-              >
-                5.4
+              <text x={-255} y={7} textAnchor="middle" className="fill-text-primary font-mono text-xl font-semibold">
+                <tspan className="tabular-nums">5.4</tspan>
+                <tspan dy={-9} className="text-xs font-semibold">
+                  2
+                </tspan>
               </text>
-              <text x={-237} y={-6} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                2
-              </text>
-              <text x={-221} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              <text x={-220} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 −
               </text>
-              <text
-                x={-196}
-                y={7}
-                textAnchor="middle"
-                className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
-              >
-                2.6
+              <text x={-185} y={7} textAnchor="middle" className="fill-text-primary font-mono text-xl font-semibold">
+                <tspan className="tabular-nums">2.6</tspan>
+                <tspan dy={-9} className="text-xs font-semibold">
+                  2
+                </tspan>
               </text>
-              <text x={-172} y={-6} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                2
-              </text>
-              <text x={-158} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              <text x={-158} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 )
               </text>
 
-              <text x={-140} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              <text x={-140} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 +
               </text>
 
-              {/* (2.6 + 1.3)^2 */}
-              <text x={-122} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              {/* (2.6 + 1.3)² */}
+              <text x={-124} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 (
               </text>
               <text
-                x={-97}
+                x={-99}
                 y={7}
                 textAnchor="middle"
                 className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
               >
                 2.6
               </text>
-              <text x={-71} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              <text x={-71} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 +
               </text>
               <text
-                x={-45}
+                x={-43}
                 y={7}
                 textAnchor="middle"
                 className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
               >
                 1.3
               </text>
-              <text x={-20} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
-                )
-              </text>
-              <text x={-9} y={-6} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                2
+              <text x={-14} y={7} textAnchor="middle" className="text-xl">
+                <tspan className="fill-text-secondary font-math">)</tspan>
+                <tspan dy={-9} className="fill-text-primary font-mono text-xs font-semibold">
+                  2
+                </tspan>
               </text>
 
-              <text x={10} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              <text x={8} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 −
               </text>
 
-              {/* (sqrt(5.4^2 - 2.6^2) - 1.7)^2 */}
-              <text x={29} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              {/* (√(5.4² − 2.6²) − 1.7)² */}
+              <text x={26} y={7} textAnchor="middle" className="fill-text-secondary font-math text-2xl">
                 (
               </text>
               <path
-                d={INNER_RADICAL_PATH}
+                d={NUMERIC_INNER_RADICAL_PATH}
                 fill="none"
                 stroke="oklch(0.98 0 0)"
                 strokeWidth={1.65}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-              <text
-                x={81}
-                y={7}
-                textAnchor="middle"
-                className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
-              >
-                5.4
+              <text x={80} y={7} textAnchor="middle" className="fill-text-primary font-mono text-xl font-semibold">
+                <tspan className="tabular-nums">5.4</tspan>
+                <tspan dy={-8} className="text-xs font-semibold">
+                  2
+                </tspan>
               </text>
-              <text x={105} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                2
+              <text x={115} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
+                −
               </text>
-              <text x={122} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              <text x={150} y={7} textAnchor="middle" className="fill-text-primary font-mono text-xl font-semibold">
+                <tspan className="tabular-nums">2.6</tspan>
+                <tspan dy={-8} className="text-xs font-semibold">
+                  2
+                </tspan>
+              </text>
+              <text x={194} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 −
               </text>
               <text
-                x={147}
-                y={7}
-                textAnchor="middle"
-                className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
-              >
-                2.6
-              </text>
-              <text x={171} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                2
-              </text>
-              <text x={190} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
-                −
-              </text>
-              <text
-                x={216}
+                x={222}
                 y={7}
                 textAnchor="middle"
                 className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
               >
                 1.7
               </text>
-              <text x={242} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
-                )
-              </text>
-              <text x={254} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                2
+              <text x={250} y={7} textAnchor="middle" className="text-2xl">
+                <tspan className="fill-text-secondary font-math">)</tspan>
+                <tspan dy={-11} className="fill-text-primary font-mono text-xs font-semibold">
+                  2
+                </tspan>
               </text>
 
-              {/* - 2.6 - 1.3 */}
-              <text x={300} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              {/* − 2.6 − 1.3 */}
+              <text x={289} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 −
               </text>
               <text
-                x={326}
+                x={317}
                 y={7}
                 textAnchor="middle"
                 className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
               >
                 2.6
               </text>
-              <text x={352} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
+              <text x={346} y={7} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                 −
               </text>
               <text
-                x={378}
+                x={374}
                 y={7}
                 textAnchor="middle"
                 className="fill-text-primary font-mono text-xl font-semibold tabular-nums"
@@ -1378,14 +1177,14 @@ export function Slide12Numerical(): ReactElement {
           {/* Stage 3: Intermediate Arithmetic Reduction */}
           {intermediateOpacity > 0.01 ? (
             <g opacity={intermediateOpacity}>
-              <text x={-172} y={7} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+              <text x={-170} y={7} textAnchor="middle" className="fill-text-primary font-math text-lg font-semibold">
                 |AH|
               </text>
-              <text x={-136} y={7} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+              <text x={-138} y={7} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                 =
               </text>
               <path
-                d="M -117 0 L -113 0 L -108 9 L -97 -19 L 122 -19"
+                d="M -121 0 L -117 0 L -112 9 L -101 -19 L 122 -19 L 122 -14"
                 fill="none"
                 stroke="oklch(0.98 0 0)"
                 strokeWidth={1.75}
@@ -1393,20 +1192,45 @@ export function Slide12Numerical(): ReactElement {
                 strokeLinejoin="round"
               />
               <text
-                x={14}
+                x={-67}
                 y={7}
                 textAnchor="middle"
                 className="fill-text-primary font-mono text-lg font-semibold tabular-nums"
               >
-                22.40 + 15.21 − 9.20
+                22.40
+              </text>
+              <text x={-29} y={7} textAnchor="middle" className="fill-text-secondary font-math text-lg">
+                +
               </text>
               <text
-                x={165}
+                x={9}
                 y={7}
                 textAnchor="middle"
                 className="fill-text-primary font-mono text-lg font-semibold tabular-nums"
               >
-                − 3.90
+                15.21
+              </text>
+              <text x={47} y={7} textAnchor="middle" className="fill-text-secondary font-math text-lg">
+                −
+              </text>
+              <text
+                x={84}
+                y={7}
+                textAnchor="middle"
+                className="fill-text-primary font-mono text-lg font-semibold tabular-nums"
+              >
+                9.20
+              </text>
+              <text x={138} y={7} textAnchor="middle" className="fill-text-secondary font-math text-lg">
+                −
+              </text>
+              <text
+                x={172}
+                y={7}
+                textAnchor="middle"
+                className="fill-text-primary font-mono text-lg font-semibold tabular-nums"
+              >
+                3.90
               </text>
             </g>
           ) : null}
@@ -1414,19 +1238,14 @@ export function Slide12Numerical(): ReactElement {
           {/* Stage 4: Final Result |AH| = 1.43 m */}
           {finalCardOpacity > 0.01 ? (
             <g opacity={finalCardOpacity} filter={finalPulse > 0.2 ? "url(#slide12-luminous-glow)" : undefined}>
-              <text
-                x={-78}
-                y={8}
-                textAnchor="middle"
-                className="fill-text-primary font-mono text-2xl font-semibold tracking-mono"
-              >
+              <text x={-76} y={8} textAnchor="middle" className="fill-text-primary font-math text-2xl font-semibold">
                 |AH|
               </text>
-              <text x={-26} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
+              <text x={-28} y={8} textAnchor="middle" className="fill-text-secondary font-math text-2xl">
                 =
               </text>
               <text
-                x={62}
+                x={58}
                 y={8}
                 textAnchor="middle"
                 className="fill-text-primary font-mono text-2xl font-semibold tracking-mono tabular-nums"

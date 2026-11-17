@@ -17,7 +17,8 @@ const FULL_LEFT_STEER_DEG = -34;
 const ACKERMANN = computeAckermannAngles(FULL_LEFT_STEER_DEG, DEFAULT_VEHICLE_DIMENSIONS);
 const INSIDE_LOCK_DEG = ACKERMANN.frontLeftSteerDeg; // ~ -40.25 deg
 const OUTSIDE_LOCK_DEG = ACKERMANN.frontRightSteerDeg; // ~ -29.33 deg
-const TURNING_RADIUS_PX = Math.abs(ACKERMANN.turningRadiusSigned ?? 154.19) * CAR_SCALE;
+const TURNING_RADIUS_LOCAL = Math.abs(ACKERMANN.turningRadiusSigned ?? 154.19);
+const TURNING_RADIUS_PX = TURNING_RADIUS_LOCAL * CAR_SCALE;
 
 const TURNING_CENTER: Point2D = {
   x: BASE_CAR_CENTER_X - TURNING_RADIUS_PX,
@@ -181,7 +182,7 @@ export function Slide04Ackermann(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
 
   // Beat 0 (0.0s - 3.3s): Reverse cleanly into stationary upright pose
-  // Beat 4 (35.8s - 39.2s): Rotate smoothly backward around turning center X
+  // Beat 4 (35.88s - 39.2s): Rotate smoothly backward around turning center X
   const introProgress = easeInOutCubic(progressBetween(elapsedSeconds, 0.0, 3.1));
   const outroProgress = easeInOutCubic(progressBetween(elapsedSeconds, 35.88, 39.2));
 
@@ -189,19 +190,20 @@ export function Slide04Ackermann(): ReactElement {
     elapsedSeconds < 3.4 ? -12 * (1 - introProgress) : elapsedSeconds >= 35.88 ? 16 * outroProgress : 0;
 
   const isReversing =
-    (elapsedSeconds > 0.05 && elapsedSeconds < 3.0) || (elapsedSeconds >= 35.88 && elapsedSeconds < 39.1);
-  const wheelRollDistance = -TURNING_RADIUS_PX * degToRad(headingDeg);
+    (elapsedSeconds > 0.05 && elapsedSeconds < 3.05) || (elapsedSeconds >= 35.88 && elapsedSeconds < 39.15);
+  const isBraking =
+    (elapsedSeconds >= 2.55 && elapsedSeconds < 3.45) || (elapsedSeconds >= 38.55 && elapsedSeconds < 39.6);
+  const wheelRollDistance = -TURNING_RADIUS_LOCAL * degToRad(headingDeg);
 
   // Steering angle choreography:
-  // - 0.0s..3.2s: Full Ackermann lock during intro rotation
-  // - 3.2s..4.1s: Straighten to 0 deg for rear-wheel segment
+  // - 0.0s..3.1s: Full Ackermann lock during intro rotation, straightening as it comes to rest
   // - 16.2s..18.0s: Both front wheels steer together to outside angle (-29.33 deg)
   // - 23.1s..24.7s: Inside front wheel pivots sharper (-29.33 -> -40.25 deg) to lock onto X
   let frontLeftSteerDeg = 0;
   let frontRightSteerDeg = 0;
 
-  if (elapsedSeconds < 4.2) {
-    const straighten = easeInOutCubic(progressBetween(elapsedSeconds, 3.2, 4.1));
+  if (elapsedSeconds < 3.6) {
+    const straighten = easeInOutCubic(progressBetween(elapsedSeconds, 2.5, 3.3));
     frontLeftSteerDeg = INSIDE_LOCK_DEG * (1 - straighten);
     frontRightSteerDeg = OUTSIDE_LOCK_DEG * (1 - straighten);
   } else if (elapsedSeconds >= 16.2 && elapsedSeconds < 23.1) {
@@ -249,21 +251,21 @@ export function Slide04Ackermann(): ReactElement {
   const outerCircleDraw = easeInOutCubic(progressBetween(elapsedSeconds, 21.1, 22.4));
   const circleContrastDim = easeInOutCubic(progressBetween(elapsedSeconds, 26.2, 27.6));
 
-  // Inside parallel-steer miss + lateral scrub warning (22.4s - 24.4s)
-  const insideRayOpacity = easeOutCubic(progressBetween(elapsedSeconds, 22.4, 23.0));
+  // Inside parallel-steer miss + lateral scrub warning (22.2s - 24.7s)
+  const insideRayOpacity = easeOutCubic(progressBetween(elapsedSeconds, 22.2, 22.9));
   const scrubWarningOpacity =
-    easeOutCubic(progressBetween(elapsedSeconds, 22.5, 23.0)) *
+    easeOutCubic(progressBetween(elapsedSeconds, 22.3, 22.9)) *
     (1 - easeInOutCubic(progressBetween(elapsedSeconds, 23.9, 24.7)));
 
-  // Outside front ray joins in (24.6s - 26.0s) and angle callouts appear
+  // Outside front ray joins in (24.4s - 25.8s) and live angle callouts appear from 17.4s
   const outsideRayDraw = easeInOutCubic(progressBetween(elapsedSeconds, 24.4, 25.8));
   const outsideRayLength = Math.hypot(wheelFrontRight.x - TURNING_CENTER.x, wheelFrontRight.y - TURNING_CENTER.y);
 
   const angleCalloutOpacity =
-    easeOutCubic(progressBetween(elapsedSeconds, 24.6, 25.4)) *
+    easeOutCubic(progressBetween(elapsedSeconds, 17.4, 18.2)) *
     (1 - easeInOutCubic(progressBetween(elapsedSeconds, 35.2, 36.0)));
 
-  // Beat 3: All axle lines converge cleanly at X (32.4s - 35.6s) & whole car turns cleanly around X (35.8s+)
+  // Beat 3: All axle lines converge cleanly at X (32.4s - 35.6s) & whole car turns cleanly around X (35.88s+)
   const allAxlesHighlight = easeInOutCubic(progressBetween(elapsedSeconds, 32.4, 34.8));
   const rotationSweepArcsOpacity = easeOutCubic(progressBetween(elapsedSeconds, 35.6, 36.6));
   const rearArcDraw = easeInOutCubic(progressBetween(elapsedSeconds, 35.88, 39.2));
@@ -274,7 +276,7 @@ export function Slide04Ackermann(): ReactElement {
       <div className="pointer-events-none absolute top-8 left-10 z-10 flex flex-col gap-1">
         <span className="font-mono text-xs tracking-mono text-text-muted tabular-nums">04</span>
         <h1 className="font-display text-2xl font-heading tracking-heading text-text-primary">
-          Ackermann Steering & The Turning Center X
+          Ackermann Steering &amp; The Turning Center X
         </h1>
       </div>
 
@@ -371,7 +373,7 @@ export function Slide04Ackermann(): ReactElement {
           />
         ) : null}
 
-        {/* Inside Front Wheel Normal Ray (Starts Missing X High, Then Sweeps Down onto X) */}
+        {/* Inside Front Wheel Normal Ray (Starts Missing X High at 29 deg, Then Sweeps Down onto X at 40 deg) */}
         {insideRayOpacity > 0.01 ? (
           <g opacity={insideRayOpacity}>
             <line
@@ -391,18 +393,18 @@ export function Slide04Ackermann(): ReactElement {
                 <circle
                   cx={insideRayEnd.x}
                   cy={insideRayEnd.y}
-                  r={4}
+                  r={4.5}
                   fill="none"
-                  stroke="oklch(0.86 0.12 25)"
-                  strokeWidth={1.5}
+                  stroke="oklch(0.86 0.14 25)"
+                  strokeWidth={1.6}
                 />
                 <line
                   x1={insideRayEnd.x}
                   y1={insideRayEnd.y + 8}
                   x2={TURNING_CENTER.x}
                   y2={TURNING_CENTER.y - 24}
-                  stroke="oklch(0.86 0.12 25 / 0.75)"
-                  strokeWidth={1.2}
+                  stroke="oklch(0.86 0.14 25 / 0.78)"
+                  strokeWidth={1.25}
                   strokeDasharray="2 3"
                 />
               </g>
@@ -482,6 +484,7 @@ export function Slide04Ackermann(): ReactElement {
             frontRightSteerDeg={frontRightSteerDeg}
             wheelRollDistance={wheelRollDistance}
             isReversing={isReversing}
+            isBraking={isBraking}
           />
         </g>
 
@@ -530,13 +533,13 @@ export function Slide04Ackermann(): ReactElement {
           </g>
         ) : null}
 
-        {/* Ackermann Angle Comparison Arcs (Inside ~40 deg vs Outside ~29 deg) */}
+        {/* Live Ackermann Angle Comparison Arcs (29 deg -> 40 deg Inside vs 29 deg Outside) */}
         <SteerAngleCallout
           hub={wheelFrontLeft}
           steerDeg={frontLeftSteerDeg}
           label={`${Math.round(Math.abs(frontLeftSteerDeg))}°`}
           opacity={angleCalloutOpacity}
-          emphasized={true}
+          emphasized={elapsedSeconds >= 22.8}
         />
         <SteerAngleCallout
           hub={wheelFrontRight}

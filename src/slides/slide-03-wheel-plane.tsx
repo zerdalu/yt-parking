@@ -246,11 +246,12 @@ export function Slide03WheelPlane(): ReactElement {
   const slicePlaneOpacity = easeOutCubic(progressBetween(elapsedSeconds, 3.2, 3.9)) * sideFadeOut;
 
   const projectionBridgeOpacity =
-    easeOutCubic(progressBetween(elapsedSeconds, 6.8, 7.6)) *
+    easeOutCubic(progressBetween(elapsedSeconds, 6.6, 7.4)) *
     (1 - easeInOutCubic(progressBetween(elapsedSeconds, 9.0, 10.1)));
 
-  const topDownScanProgress = progressBetween(elapsedSeconds, 7.6, 10.2);
+  const topDownScanProgress = progressBetween(elapsedSeconds, 6.8, 9.5);
   const showTopDownScan = topDownScanProgress > 0 && topDownScanProgress < 1;
+  const topDownRevealOpacity = easeOutCubic(progressBetween(elapsedSeconds, 6.5, 7.6));
 
   // Smooth glide of top-down car from right side (x = 650, scale = 1.88) to stage center (x = 480, scale = 2.08)
   const centerTransition = easeInOutCubic(progressBetween(elapsedSeconds, 9.5, 11.4));
@@ -273,8 +274,9 @@ export function Slide03WheelPlane(): ReactElement {
   const frontAxleY = carCenterY - wheelOffsetY;
   const rearAxleY = carCenterY + wheelOffsetY;
 
-  // Beat 2 (11.0s - 16.4s): Outer body rectangle A, B, C, D
+  // Beat 2 (11.0s - 16.4s): Outer body rectangle A -> B -> C -> D
   const rectPerimeter = 2 * (halfW * 2 + halfL * 2);
+  const rectPathD = `M ${rightX} ${topY} L ${leftX} ${topY} L ${leftX} ${bottomY} L ${rightX} ${bottomY} Z`;
   const rectDraw = easeInOutCubic(progressBetween(elapsedSeconds, 11.0, 13.8));
   const rectVisible = elapsedSeconds >= 11.0;
 
@@ -297,7 +299,7 @@ export function Slide03WheelPlane(): ReactElement {
     pulseFactor(elapsedSeconds, 35.97, 0.55),
   );
 
-  // Beat 3 (16.9s - 28.9s): Right-hand kerb along A, E, F, D & safe clearance offset rightward
+  // Beat 3 (16.9s - 28.9s): Right-hand kerb along A, E, F, D & safe clearance offset
   const kerbVisibility = easeOutCubic(progressBetween(elapsedSeconds, 16.9, 17.8));
   const kerbLineDraw = easeInOutCubic(progressBetween(elapsedSeconds, 17.8, 19.4));
   const alloyHighlight = Math.max(pulseFactor(elapsedSeconds, 24.1, 0.85), pulseFactor(elapsedSeconds, 30.2, 0.9));
@@ -306,7 +308,7 @@ export function Slide03WheelPlane(): ReactElement {
 
   // Beat 4 (28.9s - 36.64s): Kerb-side wheels E and F align closely with right edge A-D
   const wheelFocus = easeInOutCubic(progressBetween(elapsedSeconds, 29.4, 31.2));
-  const carShellOpacity = 1 - 0.36 * wheelFocus;
+  const carShellOpacity = topDownRevealOpacity * (1 - 0.36 * wheelFocus);
 
   const alphaE = Math.max(
     easeOutCubic(progressBetween(elapsedSeconds, 19.7, 20.05)) * 0.9,
@@ -331,8 +333,11 @@ export function Slide03WheelPlane(): ReactElement {
   const efAxisDraw = easeInOutCubic(progressBetween(elapsedSeconds, 31.4, 33.2));
   const efAxisLength = bottomY - topY;
   const edgeAlignConnectors = easeOutCubic(progressBetween(elapsedSeconds, 33.6, 34.8));
+  const edgeAdGlow = easeOutCubic(progressBetween(elapsedSeconds, 34.6, 35.4));
 
-  const scanLineY = topY + (bottomY - topY) * easeInOutCubic(topDownScanProgress);
+  const scanEased = easeInOutCubic(topDownScanProgress);
+  const scanLineY = topY + (bottomY - topY) * scanEased;
+  const topDownClipHeight = elapsedSeconds >= 9.5 ? 620 : Math.max(0, scanLineY - (topY - 24));
   const aboveSliceClipHeight = Math.max(0, sliceY - 250);
   const belowSliceClipHeight = Math.max(0, 398 - sliceY);
 
@@ -403,6 +408,10 @@ export function Slide03WheelPlane(): ReactElement {
 
           <clipPath id="slide03-below-slice-clip">
             <rect x={60} y={sliceY} width={365} height={belowSliceClipHeight} />
+          </clipPath>
+
+          <clipPath id="slide03-topdown-reveal-clip">
+            <rect x={leftX - 40} y={topY - 24} width={rightX - leftX + 80} height={topDownClipHeight} />
           </clipPath>
 
           <CutPlaneCarDefs />
@@ -552,15 +561,19 @@ export function Slide03WheelPlane(): ReactElement {
         {/* ================================================================
             MAIN STAGE: Enlarged 2D Cut-Plane Sports Coupe (Kerb on Right Edge AD)
            ================================================================ */}
-        <g transform={`translate(${carCenterX}, ${carCenterY}) scale(${carScale})`} opacity={carShellOpacity}>
-          <CutPlaneCar
-            variant={CarSectionVariants.Hero}
-            kerbSide={KerbSides.Right}
-            showBoundingBox={false}
-            showVertexLabels={false}
-            showAxlePlaneLines={true}
-          />
-        </g>
+        {carShellOpacity > 0.01 ? (
+          <g clipPath="url(#slide03-topdown-reveal-clip)">
+            <g transform={`translate(${carCenterX}, ${carCenterY}) scale(${carScale})`} opacity={carShellOpacity}>
+              <CutPlaneCar
+                variant={CarSectionVariants.Hero}
+                kerbSide={KerbSides.Right}
+                showBoundingBox={false}
+                showVertexLabels={false}
+                showAxlePlaneLines={true}
+              />
+            </g>
+          </g>
+        ) : null}
 
         {/* Protective Rim Glow Around Right-Side Curbside Wheels E & F */}
         {alloyHighlight > 0.03 ? (
@@ -599,30 +612,28 @@ export function Slide03WheelPlane(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            BEAT 2: Outer Body Rectangle ABCD
+            BEAT 2: Outer Body Rectangle ABCD (Traced in Order A -> B -> C -> D)
            ================================================================ */}
         {rectVisible ? (
           <g>
-            <rect
-              x={leftX}
-              y={topY}
-              width={rightX - leftX}
-              height={bottomY - topY}
+            <path
+              d={rectPathD}
               fill="none"
               stroke="oklch(0.95 0 0 / 0.85)"
               strokeWidth={1.6}
+              strokeLinejoin="round"
               strokeDasharray={rectPerimeter}
               strokeDashoffset={rectPerimeter * (1 - rectDraw)}
             />
 
             {/* Right-Angle Corner Caliper Brackets */}
-            {rectDraw > 0.15 ? (
+            {rectDraw > 0.05 ? (
               <g fill="none" stroke="oklch(0.98 0 0)" strokeWidth={1.8}>
                 <path d={`M ${rightX - 12} ${topY} L ${rightX} ${topY} L ${rightX} ${topY + 12}`} />
-                {rectDraw > 0.3 ? (
+                {rectDraw > 0.25 ? (
                   <path d={`M ${leftX} ${topY + 12} L ${leftX} ${topY} L ${leftX + 12} ${topY}`} />
                 ) : null}
-                {rectDraw > 0.68 ? (
+                {rectDraw > 0.65 ? (
                   <path d={`M ${leftX + 12} ${bottomY} L ${leftX} ${bottomY} L ${leftX} ${bottomY - 12}`} />
                 ) : null}
                 {rectDraw > 0.85 ? (
@@ -647,6 +658,20 @@ export function Slide03WheelPlane(): ReactElement {
             strokeDasharray={kerbShift > 0.2 ? "7 5" : 496}
             strokeDashoffset={kerbShift > 0.2 ? 0 : 496 * (1 - kerbLineDraw)}
             filter={kerbShift < 0.2 ? "url(#slide03-luminous-glow)" : undefined}
+          />
+        ) : null}
+
+        {/* Luminous Right Edge AD Highlight During Beat 4 Comparison */}
+        {edgeAdGlow > 0.01 ? (
+          <line
+            x1={rightX}
+            y1={topY}
+            x2={rightX}
+            y2={bottomY}
+            stroke="oklch(0.99 0 0)"
+            strokeWidth={2.5}
+            opacity={edgeAdGlow}
+            filter="url(#slide03-luminous-glow)"
           />
         ) : null}
 

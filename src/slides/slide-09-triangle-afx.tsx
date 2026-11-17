@@ -1,4 +1,5 @@
 import { CutPlaneCar, CutPlaneCarDefs } from "@/components/cut-plane-car";
+import { RootR2MinusL2 } from "@/components/math-formula";
 import {
   CarSectionVariants,
   computeAckermannAngles,
@@ -48,8 +49,8 @@ const FRONT_CAR_CENTER_Y = POINT_G.y - FRONT_CAR_HALF_L; // 44.223
 const VIRTUAL_STEER_DEG = -((Math.atan2(LENGTH_EF, CAR_CENTER_X - POINT_X.x) * 180) / Math.PI);
 const ACKERMANN = computeAckermannAngles(VIRTUAL_STEER_DEG, DEFAULT_VEHICLE_DIMENSIONS);
 
-const TRIANGLE_AFX_PATH = `M ${POINT_X.x} ${POINT_X.y} L ${POINT_F.x} ${POINT_F.y} L ${POINT_A.x} ${POINT_A.y} Z`;
-const TRIANGLE_AFX_PERIMETER = LENGTH_FX + LENGTH_AF + RADIUS_AX;
+const TRIANGLE_AFX_PATH = `M ${POINT_A.x} ${POINT_A.y} L ${POINT_F.x} ${POINT_F.y} L ${POINT_X.x} ${POINT_X.y} Z`;
+const TRIANGLE_AFX_PERIMETER = LENGTH_AF + LENGTH_FX + RADIUS_AX;
 
 const CALIPER_X = 668;
 const TOTAL_CALIPER_X = 716;
@@ -218,7 +219,7 @@ function VertexNode({
 export function Slide09TriangleAfx(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
 
-  // Beat 1 (0.00s - 5.02s): Seamless carry-over from Slide 08 + taller triangle AFX draws
+  // Beat 1 (0.00s - 5.02s): Seamless carry-over from Slide 08 + taller triangle AFX draws in order A -> F -> X
   const stageFadeIn = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 0.9));
   const efxCarryOpacity = 1 - 0.55 * easeInOutCubic(progressBetween(elapsedSeconds, 1.8, 3.6));
   const aVertexOpacity = easeOutCubic(progressBetween(elapsedSeconds, 1.8, 2.7));
@@ -226,12 +227,11 @@ export function Slide09TriangleAfx(): ReactElement {
 
   // Beat 2 (5.56s - 14.24s): Vertical side AF = l + k & base FX = sqrt(r^2 - l^2)
   const afFocus = pulseEnvelope(elapsedSeconds, 5.5, 6.2, 10.9, 11.6);
-  const lCaliperOpacity = easeOutCubic(progressBetween(elapsedSeconds, 6.2, 8.2));
+  const lCaliperOpacity = 0.45 * stageFadeIn + 0.55 * easeOutCubic(progressBetween(elapsedSeconds, 6.2, 8.0));
   const kCaliperDraw = easeInOutCubic(progressBetween(elapsedSeconds, 9.15, 10.75));
   const lkBracketOpacity = easeOutCubic(progressBetween(elapsedSeconds, 10.4, 11.4));
 
   const fxFocus = pulseEnvelope(elapsedSeconds, 11.5, 12.1, 14.1, 14.9);
-  const baseFxExprOpacity = easeOutCubic(progressBetween(elapsedSeconds, 12.2, 13.4));
 
   // Beat 3 (14.76s - 21.02s): Pythagoras a second time -> hypotenuse AX & outer circle arc
   const pythagorasGlow = pulseEnvelope(elapsedSeconds, 14.75, 15.3, 16.8, 17.5);
@@ -242,15 +242,22 @@ export function Slide09TriangleAfx(): ReactElement {
   const eqBoxOpacity = easeOutCubic(progressBetween(elapsedSeconds, 16.4, 17.6));
   const eqRadicalDraw = easeInOutCubic(progressBetween(elapsedSeconds, 16.8, 18.4));
 
-  // Beat 4 (21.58s - 32.00s): Step 3 — Point G on same circle -> |GX| = |AX|
+  // Beat 4 (21.58s - 32.00s): Step 3 — Point G on same circle -> Compass arm pivots AX -> GX
   const frontCarOpacity = easeOutCubic(progressBetween(elapsedSeconds, 22.8, 24.4)) * 0.72;
   const gOpacity = easeOutCubic(progressBetween(elapsedSeconds, 23.6, 24.8));
   const circleHighlight = pulseEnvelope(elapsedSeconds, 25.3, 25.9, 27.6, 29.0);
 
-  const compassSweep = easeInOutCubic(progressBetween(elapsedSeconds, 27.1, 28.9));
-  const gxRayDraw = easeInOutCubic(progressBetween(elapsedSeconds, 27.3, 29.1));
-  const congruenceOpacity = easeOutCubic(progressBetween(elapsedSeconds, 28.9, 29.9));
-  const gxEqReveal = easeInOutCubic(progressBetween(elapsedSeconds, 28.6, 30.0));
+  const compassSweep = easeInOutCubic(progressBetween(elapsedSeconds, 26.8, 28.8));
+  const compassAngleDeg = ANGLE_A_DEG + (ANGLE_G_DEG - ANGLE_A_DEG) * compassSweep;
+  const compassTip: Point2D = {
+    x: POINT_X.x + RADIUS_AX * Math.cos(degToRad(compassAngleDeg)),
+    y: POINT_X.y + RADIUS_AX * Math.sin(degToRad(compassAngleDeg)),
+  };
+  const showCompassArm = elapsedSeconds >= 26.8;
+  const congruenceOpacity = easeOutCubic(progressBetween(elapsedSeconds, 28.7, 29.7));
+
+  const gxShift = easeInOutCubic(progressBetween(elapsedSeconds, 28.4, 29.5));
+  const gxEqTextOpacity = easeOutCubic(progressBetween(elapsedSeconds, 29.0, 29.8));
 
   // Vertex pulses synchronized to spoken letters
   const pulseA = Math.max(
@@ -273,7 +280,7 @@ export function Slide09TriangleAfx(): ReactElement {
   );
   const pulseG = Math.max(pulseFactor(elapsedSeconds, 25.18, 0.6), pulseFactor(elapsedSeconds, 28.35, 0.55));
 
-  const pillWidth = 336 + 78 * gxEqReveal;
+  const pillWidth = 316 + 76 * gxShift;
   const pillX = -(pillWidth * 0.5);
 
   return (
@@ -425,7 +432,7 @@ export function Slide09TriangleAfx(): ReactElement {
               opacity={easeOutCubic(progressBetween(afxDraw, 0.35, 1))}
             />
 
-            {/* Triangle AFX Perimeter */}
+            {/* Triangle AFX Perimeter (Traced in Order A -> F -> X) */}
             <path
               d={TRIANGLE_AFX_PATH}
               fill="none"
@@ -488,21 +495,28 @@ export function Slide09TriangleAfx(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            STEP 3: RADIUS GX IDENTICAL TO AX
+            STEP 3: ROTATING COMPASS ARM AX -> GX
            ================================================================ */}
-        {gxRayDraw > 0.01 ? (
+        {showCompassArm ? (
           <g>
             <line
               x1={POINT_X.x}
               y1={POINT_X.y}
-              x2={POINT_G.x}
-              y2={POINT_G.y}
+              x2={compassTip.x}
+              y2={compassTip.y}
               stroke="oklch(0.99 0 0)"
               strokeWidth={2.2}
-              strokeDasharray={RADIUS_AX}
-              strokeDashoffset={RADIUS_AX * (1 - gxRayDraw)}
               filter="url(#slide09-luminous-glow)"
             />
+            {compassSweep < 0.99 ? (
+              <circle
+                cx={compassTip.x}
+                cy={compassTip.y}
+                r={4.2}
+                fill="oklch(0.99 0 0)"
+                filter="url(#slide09-luminous-glow)"
+              />
+            ) : null}
 
             {congruenceOpacity > 0.01 ? (
               <g opacity={congruenceOpacity}>
@@ -515,7 +529,7 @@ export function Slide09TriangleAfx(): ReactElement {
                   stroke="oklch(0.15 0 0 / 0.94)"
                   strokeWidth={4.5}
                   strokeLinejoin="round"
-                  className="svg-label-halo fill-text-primary font-mono text-sm font-semibold tracking-mono"
+                  className="svg-label-halo fill-text-primary font-math text-sm font-semibold"
                 >
                   |GX|
                 </text>
@@ -527,10 +541,10 @@ export function Slide09TriangleAfx(): ReactElement {
         {/* ================================================================
             VERTICAL CALIPERS: l + k ALONG AF & HYPOTENUSE |AX|
            ================================================================ */}
-        {/* Split Caliper l (EF) + k (AE) */}
+        {/* Split Caliper l (EF, carried over from Slide 08) + k (AE) */}
         {lCaliperOpacity > 0.01 ? (
-          <g>
-            <g stroke="oklch(0.84 0 0 / 0.58)" strokeWidth={1.1} strokeDasharray="3 3" opacity={lCaliperOpacity}>
+          <g opacity={lCaliperOpacity}>
+            <g stroke="oklch(0.84 0 0 / 0.58)" strokeWidth={1.1} strokeDasharray="3 3">
               <line x1={POINT_E.x} y1={POINT_E.y} x2={CALIPER_X + 6} y2={POINT_E.y} />
               <line x1={POINT_F.x} y1={POINT_F.y} x2={CALIPER_X + 6} y2={POINT_F.y} />
             </g>
@@ -541,9 +555,8 @@ export function Slide09TriangleAfx(): ReactElement {
               y2={POINT_F.y}
               stroke="oklch(0.95 0 0)"
               strokeWidth={1.8}
-              opacity={lCaliperOpacity}
             />
-            <g stroke="oklch(0.95 0 0 / 0.9)" strokeWidth={1.4} opacity={lCaliperOpacity}>
+            <g stroke="oklch(0.95 0 0 / 0.9)" strokeWidth={1.4}>
               <line x1={CALIPER_X - 4} y1={POINT_E.y} x2={CALIPER_X + 4} y2={POINT_E.y} />
               <line x1={CALIPER_X - 4} y1={POINT_F.y} x2={CALIPER_X + 4} y2={POINT_F.y} />
             </g>
@@ -551,8 +564,7 @@ export function Slide09TriangleAfx(): ReactElement {
               x={CALIPER_X + 14}
               y={(POINT_E.y + POINT_F.y) * 0.5 + 5}
               textAnchor="start"
-              opacity={lCaliperOpacity}
-              className="fill-text-primary font-mono text-base font-semibold"
+              className="fill-text-primary font-math text-lg font-semibold italic"
             >
               l
             </text>
@@ -596,7 +608,7 @@ export function Slide09TriangleAfx(): ReactElement {
               y={(POINT_A.y + POINT_E.y) * 0.5 + 5}
               textAnchor="start"
               opacity={easeOutCubic(progressBetween(kCaliperDraw, 0.4, 1))}
-              className="fill-text-primary font-mono text-base font-semibold"
+              className="fill-text-primary font-math text-lg font-semibold italic"
             >
               k
             </text>
@@ -616,9 +628,11 @@ export function Slide09TriangleAfx(): ReactElement {
               x={TOTAL_CALIPER_X + 12}
               y={(POINT_A.y + POINT_F.y) * 0.5 + 5}
               textAnchor="start"
-              className="fill-text-primary font-mono text-sm font-semibold"
+              className="fill-text-primary font-math text-base font-semibold"
             >
-              l + k
+              <tspan className="italic">l</tspan>
+              <tspan className="fill-text-secondary font-normal"> + </tspan>
+              <tspan className="italic">k</tspan>
             </text>
           </g>
         ) : null}
@@ -633,56 +647,23 @@ export function Slide09TriangleAfx(): ReactElement {
             stroke="oklch(0.15 0 0 / 0.94)"
             strokeWidth={4.5}
             strokeLinejoin="round"
-            className="svg-label-halo fill-text-primary font-mono text-sm font-semibold tracking-mono"
+            className="svg-label-halo fill-text-primary font-math text-sm font-semibold"
           >
             |AX|
           </text>
         ) : null}
 
-        {/* Base |FX| = sqrt(r^2 - l^2) Label Below Base */}
-        <g transform={`translate(${(POINT_X.x + POINT_F.x) * 0.5}, ${POINT_X.y + 30})`} opacity={stageFadeIn}>
-          {baseFxExprOpacity < 0.99 ? (
-            <text
-              x={0}
-              y={0}
-              textAnchor="middle"
-              opacity={1 - baseFxExprOpacity}
-              className="fill-text-secondary font-mono text-sm font-semibold tracking-mono"
-            >
-              |FX|
-            </text>
-          ) : null}
-          {baseFxExprOpacity > 0.01 ? (
-            <g opacity={baseFxExprOpacity}>
-              <path
-                d="M -32 0 L -29 0 L -26 6 L -19 -13 L 34 -13"
-                fill="none"
-                stroke="oklch(0.95 0 0)"
-                strokeWidth={1.4}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <text x={-10} y={2} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                r
-              </text>
-              <text x={-2} y={-6} textAnchor="middle" className="fill-text-primary font-mono text-xs">
-                2
-              </text>
-              <text x={8} y={2} textAnchor="middle" className="fill-text-secondary font-mono text-sm">
-                −
-              </text>
-              <text x={20} y={2} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-                l
-              </text>
-              <text x={28} y={-6} textAnchor="middle" className="fill-text-primary font-mono text-xs">
-                2
-              </text>
-            </g>
-          ) : null}
+        {/* Base |FX| = √(r² − l²) Carried Over from Slide 08 */}
+        <g
+          opacity={stageFadeIn * (0.65 + 0.35 * fxFocus)}
+          filter={fxFocus > 0.25 ? "url(#slide09-luminous-glow)" : undefined}
+          className="text-text-primary"
+        >
+          <RootR2MinusL2 x={(POINT_X.x + POINT_F.x) * 0.5} y={POINT_X.y + 30} />
         </g>
 
         {/* ================================================================
-            BOTTOM EQUATION CARD: |GX| = |AX| = sqrt((r^2 - l^2) + (l + k)^2)
+            BOTTOM EQUATION CARD: |GX| = |AX| = √((r² − l²) + (l + k)²)
            ================================================================ */}
         {eqBoxOpacity > 0.01 ? (
           <g transform="translate(490, 512)" opacity={eqBoxOpacity}>
@@ -698,82 +679,92 @@ export function Slide09TriangleAfx(): ReactElement {
             />
 
             {/* Step 3 Left-Hand Equivalence: |GX| = */}
-            {gxEqReveal > 0.01 ? (
-              <g opacity={gxEqReveal}>
-                <text x={-153} y={6} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+            {gxEqTextOpacity > 0.01 ? (
+              <g opacity={gxEqTextOpacity}>
+                <text x={-148} y={6} textAnchor="middle" className="fill-text-primary font-math text-lg font-semibold">
                   |GX|
                 </text>
-                <text x={-117} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={-112} y={6} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                   =
                 </text>
               </g>
             ) : null}
 
             {/* Step 2 Core Formula Shifting Smoothly Right for |GX| = */}
-            <g transform={`translate(${38 * gxEqReveal}, 0)`}>
-              <text x={-119} y={6} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+            <g transform={`translate(${42 * gxShift}, 0)`}>
+              <text x={-114} y={6} textAnchor="middle" className="fill-text-primary font-math text-lg font-semibold">
                 |AX|
               </text>
-              <text x={-86} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+              <text x={-84} y={6} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                 =
               </text>
 
               <path
-                d="M -70 0 L -66 0 L -61 10 L -51 -19 L 141 -19"
+                d="M -70 0 L -66 0 L -61 10 L -51 -19 L 120 -19 L 120 -14"
                 fill="none"
                 stroke="oklch(0.98 0 0)"
                 strokeWidth={1.75}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeDasharray={232}
-                strokeDashoffset={232 * (1 - eqRadicalDraw)}
+                strokeDasharray={222}
+                strokeDashoffset={222 * (1 - eqRadicalDraw)}
                 filter="url(#slide09-luminous-glow)"
               />
 
               <g opacity={easeOutCubic(progressBetween(eqRadicalDraw, 0.25, 0.95))}>
-                <text x={-43} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={-44} y={6} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                   (
                 </text>
-                <text x={-31} y={6} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-                  r
+                <text x={-30} y={6} textAnchor="middle" className="fill-text-primary font-math text-lg font-semibold">
+                  <tspan className="italic">r</tspan>
+                  <tspan dy={-7} className="text-xs font-semibold">
+                    2
+                  </tspan>
                 </text>
-                <text x={-22} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                  2
-                </text>
-                <text x={-8} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={-12} y={6} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                   −
                 </text>
-                <text x={6} y={6} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-                  l
+                <text x={6} y={6} textAnchor="middle" className="fill-text-primary font-math text-lg font-semibold">
+                  <tspan className="italic">l</tspan>
+                  <tspan dy={-7} className="text-xs font-semibold">
+                    2
+                  </tspan>
                 </text>
-                <text x={15} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                  2
-                </text>
-                <text x={25} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={19} y={6} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                   )
                 </text>
 
-                <text x={41} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={34} y={6} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                   +
                 </text>
 
-                <text x={58} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={49} y={6} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                   (
                 </text>
-                <text x={71} y={6} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+                <text
+                  x={59}
+                  y={6}
+                  textAnchor="middle"
+                  className="fill-text-primary font-math text-lg font-semibold italic"
+                >
                   l
                 </text>
-                <text x={87} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={73} y={6} textAnchor="middle" className="fill-text-secondary font-math text-lg">
                   +
                 </text>
-                <text x={103} y={6} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+                <text
+                  x={88}
+                  y={6}
+                  textAnchor="middle"
+                  className="fill-text-primary font-math text-lg font-semibold italic"
+                >
                   k
                 </text>
-                <text x={116} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
-                  )
-                </text>
-                <text x={126} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                  2
+                <text x={104} y={6} textAnchor="middle" className="font-math text-lg">
+                  <tspan className="fill-text-secondary">)</tspan>
+                  <tspan dy={-7} className="fill-text-primary text-xs font-semibold">
+                    2
+                  </tspan>
                 </text>
               </g>
             </g>

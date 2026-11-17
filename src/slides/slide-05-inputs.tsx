@@ -35,14 +35,17 @@ const TURNING_CENTER: Point2D = {
 // Exact virtual steering angle so outside front wheel E aligns cleanly with X(360, 501.96)
 const CENTER_STEER_DEG = -((Math.atan2(WHEEL_OFFSET_Y * 2, HERO_CENTER_X - TURNING_CENTER.x) * 180) / Math.PI);
 const ACKERMANN = computeAckermannAngles(CENTER_STEER_DEG, DEFAULT_VEHICLE_DIMENSIONS);
-
-// Front parked car positioned at exact Blackburn critical clearance |AH| = 113.24px
-const FRONT_CAR_REAR_Y = 187.44;
-const FRONT_CAR_CENTER_Y = FRONT_CAR_REAR_Y - HALF_LENGTH; // 63.12
+const TURNING_RADIUS_LOCAL = Math.abs(ACKERMANN.turningRadiusSigned ?? 182.43);
 
 const POINT_A: Point2D = { x: KERB_X, y: HERO_TOP_Y };
 const POINT_E: Point2D = { x: WHEEL_KERB_X, y: FRONT_AXLE_Y };
 const POINT_F: Point2D = { x: WHEEL_KERB_X, y: REAR_AXLE_Y };
+
+// Front parked car positioned so rear-left corner G lies on the exact outer turning circle |GX| = |AX|
+const RADIUS_AX = Math.hypot(POINT_A.x - TURNING_CENTER.x, POINT_A.y - TURNING_CENTER.y); // 383.335
+const FRONT_CAR_REAR_Y = TURNING_CENTER.y - Math.sqrt(RADIUS_AX * RADIUS_AX - (ROAD_X - TURNING_CENTER.x) ** 2); // 183.76
+const FRONT_CAR_CENTER_Y = FRONT_CAR_REAR_Y - HALF_LENGTH; // 59.44
+
 const POINT_G: Point2D = { x: ROAD_X, y: FRONT_CAR_REAR_Y };
 const POINT_H: Point2D = { x: KERB_X, y: FRONT_CAR_REAR_Y };
 
@@ -79,6 +82,20 @@ function pulseFactor(seconds: number, centerTime: number, halfWidth: number = 0.
     return 0;
   }
   return Math.cos((dist / halfWidth) * (Math.PI * 0.5));
+}
+
+function degToRad(deg: number): number {
+  return (deg * Math.PI) / 180;
+}
+
+function rotateHeroPointAroundX(worldX: number, worldY: number, headingDeg: number): Point2D {
+  const rad = degToRad(headingDeg);
+  const dx = worldX - TURNING_CENTER.x;
+  const dy = worldY - TURNING_CENTER.y;
+  return {
+    x: TURNING_CENTER.x + dx * Math.cos(rad) - dy * Math.sin(rad),
+    y: TURNING_CENTER.y + dx * Math.sin(rad) + dy * Math.cos(rad),
+  };
 }
 
 function buildTurningArcThroughE(): { readonly path: string; readonly length: number } {
@@ -150,11 +167,18 @@ function PointNode({ point, label, labelX, labelY, textAnchor, opacity, pulse }:
 export function Slide05Inputs(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
 
-  // Intro (0.0s - 6.6s): Schematic fades in & wheels steer cleanly into Ackermann lock
-  const stageFadeIn = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 1.2));
-  const steerLock = easeInOutCubic(progressBetween(elapsedSeconds, 1.4, 3.6));
-  const frontLeftSteerDeg = ACKERMANN.frontLeftSteerDeg * steerLock;
-  const frontRightSteerDeg = ACKERMANN.frontRightSteerDeg * steerLock;
+  // Intro (0.0s - 3.6s): Car finishes reversing along full-lock arc around X into parallel pose (no dry-steering)
+  const stageFadeIn = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 0.9));
+  const introSweep = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 3.6));
+  const headingDeg = -15 * (1 - introSweep);
+  const heroCenter = rotateHeroPointAroundX(HERO_CENTER_X, HERO_CENTER_Y, headingDeg);
+  const livePointA = rotateHeroPointAroundX(POINT_A.x, POINT_A.y, headingDeg);
+  const livePointE = rotateHeroPointAroundX(POINT_E.x, POINT_E.y, headingDeg);
+  const livePointF = rotateHeroPointAroundX(POINT_F.x, POINT_F.y, headingDeg);
+
+  const isReversing = elapsedSeconds > 0.05 && elapsedSeconds < 3.45;
+  const isBraking = elapsedSeconds >= 2.8 && elapsedSeconds < 4.2;
+  const wheelRollDistance = -TURNING_RADIUS_LOCAL * degToRad(headingDeg);
 
   // Beat 1 (7.1s - 15.5s): r = |EX| (kerb-to-kerb turning circle radius from E to X)
   const rDraw = easeInOutCubic(progressBetween(elapsedSeconds, 7.4, 9.6));
@@ -173,7 +197,7 @@ export function Slide05Inputs(): ReactElement {
   const wDraw = easeInOutCubic(progressBetween(elapsedSeconds, 28.4, 30.2));
   const wFocus = pulseFactor(elapsedSeconds, 30.8, 2.6);
 
-  // Goal (33.5s - 38.0s): Extra distance AH
+  // Goal (33.5s - 38.0s): Extra distance |AH|
   const ahDraw = easeInOutCubic(progressBetween(elapsedSeconds, 34.1, 35.8));
   const ahFocus = easeOutCubic(progressBetween(elapsedSeconds, 34.4, 35.6));
 
@@ -207,7 +231,7 @@ export function Slide05Inputs(): ReactElement {
       </div>
 
       <svg viewBox="0 0 960 620" className="h-full w-full max-w-6xl p-4 select-none">
-        <title>Four measurable inputs r, l, k, w and target extra parking distance AH</title>
+        <title>Four measurable inputs r, l, k, w and target extra parking distance |AH|</title>
         <defs>
           <radialGradient id="slide05-ambient-glow" cx="50%" cy="50%" r="54%">
             <stop offset="0%" stopColor="oklch(0.28 0 0 / 0.5)" />
@@ -277,14 +301,14 @@ export function Slide05Inputs(): ReactElement {
           <line
             x1={TURNING_CENTER.x}
             y1={REAR_AXLE_Y}
-            x2={POINT_F.x}
-            y2={REAR_AXLE_Y}
+            x2={livePointF.x}
+            y2={livePointF.y}
             stroke="oklch(0.78 0 0 / 0.3)"
             strokeWidth={1.1}
             strokeDasharray="4 5"
           />
 
-          {/* Parked Car in Front (Rear Bumper GH at y = 187.44) */}
+          {/* Parked Car in Front (Rear Bumper GH at y = 183.76) */}
           <g transform={`translate(${HERO_CENTER_X}, ${FRONT_CAR_CENTER_Y}) scale(${CAR_SCALE})`}>
             <CutPlaneCar
               variant={CarSectionVariants.Parked}
@@ -296,15 +320,18 @@ export function Slide05Inputs(): ReactElement {
           </g>
 
           {/* Hero Sports Coupe */}
-          <g transform={`translate(${HERO_CENTER_X}, ${HERO_CENTER_Y}) scale(${CAR_SCALE})`}>
+          <g transform={`translate(${heroCenter.x}, ${heroCenter.y}) rotate(${headingDeg}) scale(${CAR_SCALE})`}>
             <CutPlaneCar
               variant={CarSectionVariants.Hero}
               kerbSide={KerbSides.Right}
               showBoundingBox={false}
               showVertexLabels={false}
               showAxlePlaneLines={true}
-              frontLeftSteerDeg={frontLeftSteerDeg}
-              frontRightSteerDeg={frontRightSteerDeg}
+              frontLeftSteerDeg={ACKERMANN.frontLeftSteerDeg}
+              frontRightSteerDeg={ACKERMANN.frontRightSteerDeg}
+              wheelRollDistance={wheelRollDistance}
+              isReversing={isReversing}
+              isBraking={isBraking}
             />
           </g>
         </g>
@@ -338,15 +365,17 @@ export function Slide05Inputs(): ReactElement {
             />
             {rDraw > 0.55 ? (
               <text
-                x={506}
-                y={408}
+                x={504}
+                y={404}
                 textAnchor="middle"
                 stroke="oklch(0.15 0 0 / 0.94)"
                 strokeWidth={4.5}
                 strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
+                className="svg-label-halo fill-text-primary font-math text-base font-semibold"
               >
-                r
+                <tspan className="italic">r</tspan>
+                <tspan className="fill-text-secondary font-normal"> = </tspan>
+                <tspan>|EX|</tspan>
               </text>
             ) : null}
           </g>
@@ -378,15 +407,17 @@ export function Slide05Inputs(): ReactElement {
             </g>
             {lDraw > 0.45 ? (
               <text
-                x={CALIPER_X + 16}
+                x={CALIPER_X + 14}
                 y={(FRONT_AXLE_Y + REAR_AXLE_Y) * 0.5 + 5}
                 textAnchor="start"
                 stroke="oklch(0.15 0 0 / 0.94)"
                 strokeWidth={4}
                 strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
+                className="svg-label-halo fill-text-primary font-math text-base font-semibold"
               >
-                l
+                <tspan className="italic">l</tspan>
+                <tspan className="fill-text-secondary font-normal"> = </tspan>
+                <tspan>|EF|</tspan>
               </text>
             ) : null}
           </g>
@@ -427,15 +458,17 @@ export function Slide05Inputs(): ReactElement {
             />
             {kDraw > 0.45 ? (
               <text
-                x={CALIPER_X + 16}
+                x={CALIPER_X + 14}
                 y={(HERO_TOP_Y + FRONT_AXLE_Y) * 0.5 + 5}
                 textAnchor="start"
                 stroke="oklch(0.15 0 0 / 0.94)"
                 strokeWidth={4}
                 strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
+                className="svg-label-halo fill-text-primary font-math text-base font-semibold"
               >
-                k
+                <tspan className="italic">k</tspan>
+                <tspan className="fill-text-secondary font-normal"> = </tspan>
+                <tspan>|AE|</tspan>
               </text>
             ) : null}
           </g>
@@ -447,14 +480,14 @@ export function Slide05Inputs(): ReactElement {
         {wDraw > 0.01 ? (
           <g>
             <g stroke="oklch(0.84 0 0 / 0.62)" strokeWidth={1.1} strokeDasharray="3 3">
-              <line x1={POINT_G.x} y1={FRONT_CAR_REAR_Y} x2={POINT_G.x} y2={218} />
-              <line x1={POINT_H.x} y1={FRONT_CAR_REAR_Y} x2={POINT_H.x} y2={218} />
+              <line x1={POINT_G.x} y1={FRONT_CAR_REAR_Y} x2={POINT_G.x} y2={214} />
+              <line x1={POINT_H.x} y1={FRONT_CAR_REAR_Y} x2={POINT_H.x} y2={214} />
             </g>
             <line
               x1={POINT_G.x}
-              y1={212}
+              y1={208}
               x2={POINT_H.x}
-              y2={212}
+              y2={208}
               stroke={`oklch(0.96 0 0 / ${(0.76 + 0.24 * wFocus).toFixed(2)})`}
               strokeWidth={1.8 + 0.6 * wFocus}
               strokeDasharray={HALF_WIDTH * 2}
@@ -462,27 +495,29 @@ export function Slide05Inputs(): ReactElement {
               filter={wFocus > 0.3 ? "url(#slide05-luminous-glow)" : undefined}
             />
             <g stroke="oklch(0.94 0 0 / 0.85)" strokeWidth={1.4}>
-              <line x1={POINT_G.x} y1={208} x2={POINT_G.x} y2={216} />
-              <line x1={POINT_H.x} y1={208} x2={POINT_H.x} y2={216} />
+              <line x1={POINT_G.x} y1={204} x2={POINT_G.x} y2={212} />
+              <line x1={POINT_H.x} y1={204} x2={POINT_H.x} y2={212} />
             </g>
             {wDraw > 0.45 ? (
               <text
                 x={HERO_CENTER_X}
-                y={232}
+                y={228}
                 textAnchor="middle"
                 stroke="oklch(0.15 0 0 / 0.94)"
                 strokeWidth={4}
                 strokeLinejoin="round"
-                className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
+                className="svg-label-halo fill-text-primary font-math text-base font-semibold"
               >
-                w
+                <tspan className="italic">w</tspan>
+                <tspan className="fill-text-secondary font-normal"> = </tspan>
+                <tspan>|GH|</tspan>
               </text>
             ) : null}
           </g>
         ) : null}
 
         {/* ================================================================
-            GOAL: Extra Parking Distance AH = ?
+            GOAL: Extra Parking Distance |AH| = ?
            ================================================================ */}
         {ahDraw > 0.01 ? (
           <g opacity={ahFocus}>
@@ -539,7 +574,7 @@ export function Slide05Inputs(): ReactElement {
                 <rect
                   x={738}
                   y={(FRONT_CAR_REAR_Y + HERO_TOP_Y) * 0.5 - 15}
-                  width={68}
+                  width={78}
                   height={30}
                   rx={6}
                   fill="oklch(0.22 0 0 / 0.94)"
@@ -547,12 +582,14 @@ export function Slide05Inputs(): ReactElement {
                   strokeWidth={1.5}
                 />
                 <text
-                  x={772}
+                  x={777}
                   y={(FRONT_CAR_REAR_Y + HERO_TOP_Y) * 0.5 + 5}
                   textAnchor="middle"
-                  className="fill-text-primary font-mono text-sm font-semibold tracking-mono"
+                  className="fill-text-primary font-math text-base font-semibold"
                 >
-                  AH = ?
+                  <tspan>|AH|</tspan>
+                  <tspan className="fill-text-secondary font-normal"> = </tspan>
+                  <tspan>?</tspan>
                 </text>
               </g>
             ) : null}
@@ -604,28 +641,28 @@ export function Slide05Inputs(): ReactElement {
             GEOMETRIC VERTICES: A, E, F, G, H
            ================================================================ */}
         <PointNode
-          point={POINT_E}
+          point={livePointE}
           label="E"
-          labelX={POINT_E.x - 14}
-          labelY={POINT_E.y - 4}
+          labelX={livePointE.x - 14}
+          labelY={livePointE.y - 4}
           textAnchor="end"
           opacity={alphaE}
           pulse={pulseE}
         />
         <PointNode
-          point={POINT_F}
+          point={livePointF}
           label="F"
-          labelX={POINT_F.x - 14}
-          labelY={POINT_F.y - 8}
+          labelX={livePointF.x - 14}
+          labelY={livePointF.y - 8}
           textAnchor="end"
           opacity={alphaF}
           pulse={pulseF}
         />
         <PointNode
-          point={POINT_A}
+          point={livePointA}
           label="A"
-          labelX={POINT_A.x - 10}
-          labelY={POINT_A.y - 10}
+          labelX={livePointA.x - 10}
+          labelY={livePointA.y - 10}
           textAnchor="end"
           opacity={alphaA}
           pulse={pulseA}

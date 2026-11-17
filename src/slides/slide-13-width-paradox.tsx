@@ -1,4 +1,5 @@
 import { CutPlaneCar, CutPlaneCarDefs } from "@/components/cut-plane-car";
+import { MasterFormula } from "@/components/math-formula";
 import { CarSectionVariants, DEFAULT_VEHICLE_DIMENSIONS, KerbSides, type Point2D } from "@/simulation/car-simulator";
 import { usePresentationStore } from "@/store/presentation-store";
 import type { ReactElement } from "react";
@@ -30,12 +31,6 @@ const POINT_G_Y = TURNING_CENTER.y - Math.sqrt(RADIUS_AX * RADIUS_AX - (POINT_G_
 const POINT_G: Point2D = { x: POINT_G_X, y: POINT_G_Y };
 const POINT_H: Point2D = { x: KERB_LINE_X, y: POINT_G_Y };
 const FRONT_PARKED_CENTER_Y = POINT_G_Y - HALF_L; // 28.467
-
-const POINT_A_PARALLEL: Point2D = { x: KERB_LINE_X, y: PARALLEL_CENTER_Y - HALF_L }; // (678, 201)
-const ANGLE_A_PARALLEL_DEG =
-  (Math.atan2(POINT_A_PARALLEL.y - TURNING_CENTER.y, POINT_A_PARALLEL.x - TURNING_CENTER.x) * 180) / Math.PI; // -28.74 deg
-const ANGLE_G_DEG = (Math.atan2(POINT_G.y - TURNING_CENTER.y, POINT_G.x - TURNING_CENTER.x) * 180) / Math.PI; // -52.55 deg
-const GRAZE_HEADING_DEG = ANGLE_G_DEG - ANGLE_A_PARALLEL_DEG; // -23.81 deg
 
 const TIRE_RADIUS = 14;
 const TREAD_RIB_COUNT = 10;
@@ -246,7 +241,7 @@ function MorphingCutPlaneCar({
   const dx = -widthDelta;
   const midX = dx * 0.5;
   const bodyPath = computeMorphingBodyPath(dx);
-  const taillightStroke = isBraking ? "oklch(0.68 0.22 25 / 0.96)" : "oklch(0.78 0.08 25 / 0.64)";
+  const taillightStroke = isBraking ? "oklch(0.72 0.24 25 / 0.98)" : "oklch(0.78 0.08 25 / 0.64)";
 
   return (
     <g className="select-none">
@@ -328,19 +323,28 @@ function MorphingCutPlaneCar({
           strokeLinecap="round"
         />
 
+        {/* Red Brake Light Glow Halos */}
+        {isBraking ? (
+          <g>
+            <circle cx={-19 + dx} cy={81} r={9} fill="url(#cut-car-brake-glow)" />
+            <circle cx={19} cy={81} r={9} fill="url(#cut-car-brake-glow)" />
+            <ellipse cx={midX} cy={81.5} rx={9} ry={5} fill="url(#cut-car-brake-glow)" />
+          </g>
+        ) : null}
+
         {/* Taillights & Brake Strip */}
         <path
           d={`M ${-27 + dx} 79 C ${-21 + dx} 81.5, ${-15 + dx} 82, ${-10 + dx} 81.5`}
           fill="none"
           stroke={taillightStroke}
-          strokeWidth={isBraking ? 2.1 : 1.6}
+          strokeWidth={isBraking ? 2.4 : 1.6}
           strokeLinecap="round"
         />
         <path
           d="M 10 81.5 C 15 82, 21 81.5, 27 79"
           fill="none"
           stroke={taillightStroke}
-          strokeWidth={isBraking ? 2.1 : 1.6}
+          strokeWidth={isBraking ? 2.4 : 1.6}
           strokeLinecap="round"
         />
         <line
@@ -349,15 +353,19 @@ function MorphingCutPlaneCar({
           x2={7}
           y2={81.5}
           stroke={taillightStroke}
-          strokeWidth={isBraking ? 1.5 : 0.9}
+          strokeWidth={isBraking ? 1.8 : 0.9}
           strokeLinecap="round"
         />
 
-        {/* Reversing Lamps */}
+        {/* Reversing Lamps & Glow */}
         {isReversing ? (
-          <g stroke="oklch(0.97 0 0 / 0.95)" strokeWidth={1.8} strokeLinecap="round">
-            <line x1={-11 + dx} y1={82} x2={-6 + dx} y2={82} />
-            <line x1={6} y1={82} x2={11} y2={82} />
+          <g>
+            <circle cx={-8.5 + dx} cy={82.5} r={7.5} fill="url(#cut-car-reverse-glow)" />
+            <circle cx={8.5} cy={82.5} r={7.5} fill="url(#cut-car-reverse-glow)" />
+            <g stroke="oklch(0.98 0 0)" strokeWidth={2} strokeLinecap="round">
+              <line x1={-11 + dx} y1={82} x2={-6 + dx} y2={82} />
+              <line x1={6} y1={82} x2={11} y2={82} />
+            </g>
           </g>
         ) : null}
       </g>
@@ -423,11 +431,9 @@ export function Slide13WidthParadox(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
   const stageFadeIn = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 0.9));
 
-  // Car pose & width-morph timeline across 0s - 36s
+  // Car pose & width-morph timeline across 0s - 36s (strictly locked to Ackermann wheel circles)
   let headingDeg = -38;
   let widthDelta = 0;
-  let shuffleOffsetX = 0;
-  let shuffleOffsetY = 0;
   let isReversing = false;
   let isBraking = true;
 
@@ -436,20 +442,14 @@ export function Slide13WidthParadox(): ReactElement {
     widthDelta = 0;
     isReversing = false;
     isBraking = true;
-  } else if (elapsedSeconds < 19.15) {
-    const u = easeInOutCubic(progressBetween(elapsedSeconds, 12.66, 19.15));
-    headingDeg = -38 + (GRAZE_HEADING_DEG - -38) * u;
-    widthDelta = 0;
-    isReversing = true;
-    isBraking = false;
-  } else if (elapsedSeconds < 20.8) {
-    const u = easeInOutCubic(progressBetween(elapsedSeconds, 19.15, 20.8));
-    headingDeg = GRAZE_HEADING_DEG + (-14 - GRAZE_HEADING_DEG) * u;
+  } else if (elapsedSeconds < 20.6) {
+    const u = easeInOutCubic(progressBetween(elapsedSeconds, 12.66, 20.6));
+    headingDeg = -38 + (-14 - -38) * u;
     widthDelta = 0;
     isReversing = true;
     isBraking = false;
   } else if (elapsedSeconds < 23.4) {
-    const u = easeInOutCubic(progressBetween(elapsedSeconds, 20.8, 23.4));
+    const u = easeInOutCubic(progressBetween(elapsedSeconds, 20.6, 23.4));
     headingDeg = -14 + (-36 - -14) * u;
     widthDelta = 52 * easeInOutCubic(progressBetween(elapsedSeconds, 20.8, 23.2));
     isReversing = false;
@@ -489,14 +489,12 @@ export function Slide13WidthParadox(): ReactElement {
       isBraking = false;
     } else if (elapsedSeconds < 33.8) {
       const u = easeInOutCubic(progressBetween(elapsedSeconds, 32.9, 33.8));
-      headingDeg = -12 + (-20 - -12) * u;
-      shuffleOffsetX = -10 * Math.sin(u * Math.PI);
-      shuffleOffsetY = -14 * Math.sin(u * Math.PI);
+      headingDeg = -12 + (-24 - -12) * u;
       isReversing = false;
       isBraking = false;
     } else {
       const u = easeInOutCubic(progressBetween(elapsedSeconds, 33.8, 35.0));
-      headingDeg = -20 * (1 - u);
+      headingDeg = -24 * (1 - u);
       isReversing = true;
       isBraking = elapsedSeconds >= 34.7;
     }
@@ -513,19 +511,15 @@ export function Slide13WidthParadox(): ReactElement {
   const frontLeftSteerDeg = -((Math.atan2(WHEELBASE_PX, RADIUS_FX - 2 * TRACK_HALF_W - widthDelta) * 180) / Math.PI);
   const wheelRollDistance = -RADIUS_FX * degToRad(headingDeg);
 
-  const rawCenter = rotateLocalPointAroundX(0, 0, headingDeg);
-  const carCenterX = rawCenter.x + shuffleOffsetX;
-  const carCenterY = rawCenter.y + shuffleOffsetY;
+  const carCenter = rotateLocalPointAroundX(0, 0, headingDeg);
+  const carCenterX = carCenter.x;
+  const carCenterY = carCenter.y;
 
-  // World vertices of A, B, C, D, E, F
-  const rawA = rotateLocalPointAroundX(HALF_W, -HALF_L, headingDeg);
-  const rawB = rotateLocalPointAroundX(-HALF_W - widthDelta, -HALF_L, headingDeg);
-  const rawC = rotateLocalPointAroundX(-HALF_W - widthDelta, HALF_L, headingDeg);
-  const rawD = rotateLocalPointAroundX(HALF_W, HALF_L, headingDeg);
-  const pointA: Point2D = { x: rawA.x + shuffleOffsetX, y: rawA.y + shuffleOffsetY };
-  const pointB: Point2D = { x: rawB.x + shuffleOffsetX, y: rawB.y + shuffleOffsetY };
-  const pointC: Point2D = { x: rawC.x + shuffleOffsetX, y: rawC.y + shuffleOffsetY };
-  const pointD: Point2D = { x: rawD.x + shuffleOffsetX, y: rawD.y + shuffleOffsetY };
+  // World vertices of A, B, C, D
+  const pointA = rotateLocalPointAroundX(HALF_W, -HALF_L, headingDeg);
+  const pointB = rotateLocalPointAroundX(-HALF_W - widthDelta, -HALF_L, headingDeg);
+  const pointC = rotateLocalPointAroundX(-HALF_W - widthDelta, HALF_L, headingDeg);
+  const pointD = rotateLocalPointAroundX(HALF_W, HALF_L, headingDeg);
 
   const bcMid: Point2D = { x: (pointB.x + pointC.x) * 0.5, y: (pointB.y + pointC.y) * 0.5 };
 
@@ -533,7 +527,7 @@ export function Slide13WidthParadox(): ReactElement {
   const wFormulaGlow = pulseEnvelope(elapsedSeconds, 4.9, 5.5, 7.3, 8.1);
   const formulaScanProgress = progressBetween(elapsedSeconds, 8.5, 11.1);
   const showFormulaScan = formulaScanProgress > 0 && formulaScanProgress < 1;
-  const formulaScanX = -205 + 525 * easeInOutCubic(formulaScanProgress);
+  const formulaScanX = -290 + 575 * easeInOutCubic(formulaScanProgress);
 
   const ownWidthPulse = pulseEnvelope(elapsedSeconds, 8.4, 9.1, 10.9, 11.7);
   const pinchPointGlow = Math.max(
@@ -549,7 +543,7 @@ export function Slide13WidthParadox(): ReactElement {
   const narrowRoadProgress =
     easeInOutCubic(progressBetween(elapsedSeconds, 28.5, 30.6)) *
     (1 - 0.16 * easeInOutCubic(progressBetween(elapsedSeconds, 31.8, 32.8)));
-  const asphaltLeftX = 280 + (NARROW_ROAD_WALL_X - 280) * narrowRoadProgress; // 280 -> 440 -> 414
+  const asphaltLeftX = 280 + (NARROW_ROAD_WALL_X - 280) * narrowRoadProgress;
   const wideRoadDividerOpacity = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 28.6, 30.0));
   const narrowWarningGlow = pulseEnvelope(elapsedSeconds, 29.8, 30.3, 31.6, 32.2);
   const narrowNormalGhostOpacity =
@@ -764,7 +758,7 @@ export function Slide13WidthParadox(): ReactElement {
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4}
               strokeLinejoin="round"
-              className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
+              className="svg-label-halo fill-text-primary font-math text-base font-semibold italic"
             >
               w
             </text>
@@ -1003,9 +997,9 @@ export function Slide13WidthParadox(): ReactElement {
            ================================================================ */}
         <g transform="translate(480, 526) scale(0.84)" opacity={formulaCardOpacity}>
           <rect
-            x={-336}
+            x={-328}
             y={-52}
-            width={672}
+            width={656}
             height={80}
             rx={10}
             fill="oklch(0.21 0 0 / 0.94)"
@@ -1029,142 +1023,7 @@ export function Slide13WidthParadox(): ReactElement {
             </g>
           ) : null}
 
-          <text x={-290} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            |AH|
-          </text>
-          <text x={-242} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            =
-          </text>
-          <path
-            d="M -224 1 L -219 1 L -213 13 L -199 -41 L 236 -41 L 236 -35"
-            fill="none"
-            stroke="oklch(0.98 0 0)"
-            strokeWidth={2.2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          <text x={-184} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            (
-          </text>
-          <text x={-169} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            r
-          </text>
-          <text x={-157} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-            2
-          </text>
-          <text x={-141} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            −
-          </text>
-          <text x={-123} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            l
-          </text>
-          <text x={-111} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-            2
-          </text>
-          <text x={-97} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            )
-          </text>
-
-          <text x={-76} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            +
-          </text>
-
-          <text x={-54} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            (
-          </text>
-          <text x={-38} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            l
-          </text>
-          <text x={-20} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            +
-          </text>
-          <text x={-2} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            k
-          </text>
-          <text x={13} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            )
-          </text>
-          <text x={25} y={-8} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-            2
-          </text>
-
-          <text x={44} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            −
-          </text>
-
-          <path d="M 68 -26 Q 59 -6 68 14" fill="none" stroke="oklch(0.84 0 0)" strokeWidth={2} strokeLinecap="round" />
-          <path
-            d="M 74 0 L 78 0 L 82 9 L 92 -27 L 164 -27"
-            fill="none"
-            stroke="oklch(0.98 0 0)"
-            strokeWidth={1.85}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <text x={100} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            r
-          </text>
-          <text x={112} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-            2
-          </text>
-          <text x={127} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            −
-          </text>
-          <text x={143} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            l
-          </text>
-          <text x={155} y={-7} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
-            2
-          </text>
-          <text x={173} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            −
-          </text>
-
-          {wFormulaGlow > 0.02 ? (
-            <circle
-              cx={190}
-              cy={1}
-              r={16}
-              fill="oklch(0.98 0 0 / 0.14)"
-              stroke="oklch(0.98 0 0 / 0.85)"
-              strokeWidth={1.4}
-              opacity={wFormulaGlow}
-            />
-          ) : null}
-          <text
-            x={190}
-            y={8}
-            textAnchor="middle"
-            filter={wFormulaGlow > 0.2 ? "url(#slide13-luminous-glow)" : undefined}
-            className="fill-text-primary font-mono text-2xl font-semibold"
-          >
-            w
-          </text>
-
-          <path
-            d="M 204 -26 Q 213 -6 204 14"
-            fill="none"
-            stroke="oklch(0.84 0 0)"
-            strokeWidth={2}
-            strokeLinecap="round"
-          />
-          <text x={219} y={-10} textAnchor="middle" className="fill-text-primary font-mono text-base font-semibold">
-            2
-          </text>
-
-          <text x={252} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            −
-          </text>
-          <text x={272} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            l
-          </text>
-          <text x={292} y={8} textAnchor="middle" className="fill-text-secondary font-mono text-2xl">
-            −
-          </text>
-          <text x={312} y={8} textAnchor="middle" className="fill-text-primary font-mono text-2xl font-semibold">
-            k
-          </text>
+          <MasterFormula glowFilterId="slide13-luminous-glow" wGlow={wFormulaGlow} showWRing={true} />
         </g>
       </svg>
     </div>

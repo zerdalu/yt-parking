@@ -1,4 +1,5 @@
 import { CutPlaneCar, CutPlaneCarDefs } from "@/components/cut-plane-car";
+import { RootR2MinusL2 } from "@/components/math-formula";
 import {
   CarSectionVariants,
   computeAckermannAngles,
@@ -14,6 +15,7 @@ const ROAD_CAR_SCALE = 0.9;
 const ROAD_BAY_X = 627;
 const ROAD_CAR_HALF_W = DEFAULT_VEHICLE_DIMENSIONS.width * 0.5 * ROAD_CAR_SCALE; // 34.2
 const ROAD_CAR_HALF_L = DEFAULT_VEHICLE_DIMENSIONS.length * 0.5 * ROAD_CAR_SCALE; // 75.6
+const ROAD_HALF_WHEELBASE = DEFAULT_VEHICLE_DIMENSIONS.wheelbase * 0.5 * ROAD_CAR_SCALE; // 46.8
 const ROAD_KERB_X = ROAD_BAY_X + ROAD_CAR_HALF_W; // 661.2
 const ROAD_KERB_STONE_X = 665;
 const ROAD_PARKING_LINE_X = 588;
@@ -62,6 +64,28 @@ interface ShuttlePose {
   readonly isBraking: boolean;
 }
 
+interface ShuttlePassSpec {
+  readonly startTime: number;
+  readonly endTime: number;
+  readonly startX: number;
+  readonly endX: number;
+  readonly startY: number;
+  readonly endY: number;
+  readonly cumulativeRollStart: number;
+}
+
+const ACT1_PASSES: readonly ShuttlePassSpec[] = [
+  // 4 shuttle passes in c < 1.43 m (0.0s - 7.6s), stepping rearAxleX: 584 -> 592 -> 600 -> 608 -> 615
+  { startTime: 0.0, endTime: 1.85, startX: 584, endX: 592, startY: 274, endY: 332, cumulativeRollStart: 0 },
+  { startTime: 1.95, endTime: 3.75, startX: 592, endX: 600, startY: 332, endY: 274, cumulativeRollStart: -60 },
+  { startTime: 3.85, endTime: 5.65, startX: 600, endX: 608, startY: 274, endY: 332, cumulativeRollStart: -2 },
+  { startTime: 5.75, endTime: 7.55, startX: 608, endX: 615, startY: 332, endY: 278, cumulativeRollStart: -60 },
+  // 3 tighter shuttle passes after bay squeezes (7.8s - 13.8s), stepping rearAxleX: 615 -> 619 -> 623 -> 627
+  { startTime: 7.8, endTime: 9.65, startX: 615, endX: 619, startY: 278, endY: 320, cumulativeRollStart: -6 },
+  { startTime: 9.75, endTime: 11.6, startX: 619, endX: 623, startY: 320, endY: 280, cumulativeRollStart: -49 },
+  { startTime: 11.7, endTime: 13.7, startX: 623, endX: 627, startY: 280, endY: 318, cumulativeRollStart: -9 },
+];
+
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
@@ -108,91 +132,89 @@ function degToRad(deg: number): number {
   return (deg * Math.PI) / 180;
 }
 
-function computeAct1ShuttlePose(seconds: number): ShuttlePose {
-  // Smooth multi-point shuttles inside tight space c < 1.43 m (0s - 7.6s), then ultra-tight micro-shuttles (7.6s - 14.3s)
-  if (seconds < 1.8) {
-    const u = easeInOutCubic(progressBetween(seconds, 0.0, 1.8));
-    return {
-      centerX: 572 + 12 * u,
-      centerY: 250 + 12 * u,
-      headingDeg: -14 + 6 * u,
-      steerDeg: -26,
-      wheelRollDistance: -18 * u,
-      isReversing: true,
-      isBraking: seconds >= 1.65,
-    };
-  }
-  if (seconds < 3.6) {
-    const u = easeInOutCubic(progressBetween(seconds, 1.8, 3.6));
-    return {
-      centerX: 584 + 12 * u,
-      centerY: 262 - 12 * u,
-      headingDeg: -8 - 4 * u,
-      steerDeg: 28,
-      wheelRollDistance: -18 + 16 * u,
-      isReversing: false,
-      isBraking: seconds >= 3.45,
-    };
-  }
-  if (seconds < 5.5) {
-    const u = easeInOutCubic(progressBetween(seconds, 3.6, 5.5));
-    return {
-      centerX: 596 + 15 * u,
-      centerY: 250 + 13 * u,
-      headingDeg: -12 + 7 * u,
-      steerDeg: -28,
-      wheelRollDistance: -2 - 18 * u,
-      isReversing: true,
-      isBraking: seconds >= 5.35,
-    };
-  }
-  if (seconds < 7.6) {
-    const u = easeInOutCubic(progressBetween(seconds, 5.5, 7.6));
-    return {
-      centerX: 611 + 8 * u,
-      centerY: 263 - 8 * u,
-      headingDeg: -5 + 3 * u,
-      steerDeg: 22 * (1 - u),
-      wheelRollDistance: -20 + 12 * u,
-      isReversing: false,
-      isBraking: seconds >= 7.3,
-    };
-  }
+function radToDeg(rad: number): number {
+  return (rad * 180) / Math.PI;
+}
 
-  // Ultra-tight space micro-shuttles (7.6s - 14.3s)
-  if (seconds < 9.6) {
-    const u = easeInOutCubic(progressBetween(seconds, 7.6, 9.6));
-    return {
-      centerX: 619 - 8 * u,
-      centerY: 255 + 5 * u,
-      headingDeg: -2 - 4 * u,
-      steerDeg: -24,
-      wheelRollDistance: -8 - 10 * u,
-      isReversing: true,
-      isBraking: false,
-    };
-  }
-  if (seconds < 11.4) {
-    const u = easeInOutCubic(progressBetween(seconds, 9.6, 11.4));
-    return {
-      centerX: 611 + 8 * u,
-      centerY: 260 - 6 * u,
-      headingDeg: -6 + 3 * u,
-      steerDeg: 24,
-      wheelRollDistance: -18 + 10 * u,
-      isReversing: false,
-      isBraking: false,
-    };
-  }
-  const u = easeInOutCubic(progressBetween(seconds, 11.4, 13.8));
+/**
+ * Exact non-holonomic Figure-4 S-curve pass connecting (startX, startY, heading=0) to (endX, endY, heading=0)
+ * using two tangent circular arcs of radius R = (pa^2 + halfDy^2) / (2 * pa).
+ */
+function sampleShuttlePass(seconds: number, pass: ShuttlePassSpec): ShuttlePose {
+  const u = easeInOutCubic(progressBetween(seconds, pass.startTime, pass.endTime));
+  const deltaX = pass.endX - pass.startX;
+  const deltaY = pass.endY - pass.startY;
+  const dirY = deltaY >= 0 ? 1 : -1; // +1 = reverse (+Y), -1 = forward (-Y)
+  const pa = deltaX * 0.5;
+  const halfDy = Math.abs(deltaY) * 0.5;
+
+  // Exact radius R of each circular arc so 2 * R * (1 - cos(alpha)) = deltaX and 2 * R * sin(alpha) = |deltaY|
+  const radius = (pa * pa + halfDy * halfDy) / (2 * Math.max(0.5, pa));
+  const alphaRad = Math.asin(Math.min(1, halfDy / radius));
+
+  const isFirstArc = u <= 0.5;
+  const w = isFirstArc ? 2 * u : 2 * (1 - u);
+  const phiRad = alphaRad * w;
+
+  const rearAxleX = isFirstArc
+    ? pass.startX + radius * (1 - Math.cos(phiRad))
+    : pass.endX - radius * (1 - Math.cos(phiRad));
+  const rearAxleY = isFirstArc
+    ? pass.startY + dirY * radius * Math.sin(phiRad)
+    : pass.endY - dirY * radius * Math.sin(phiRad);
+
+  const headingRad = -dirY * phiRad;
+  const headingDeg = radToDeg(headingRad);
+  const centerX = rearAxleX + ROAD_HALF_WHEELBASE * Math.sin(headingRad);
+  const centerY = rearAxleY - ROAD_HALF_WHEELBASE * Math.cos(headingRad);
+
+  const steerLockDeg = Math.min(34, radToDeg(Math.atan2(ROAD_HALF_WHEELBASE * 2, radius)));
+  const entryRamp = easeInOutCubic(progressBetween(u, 0, 0.14));
+  const midSwitch = easeInOutCubic(progressBetween(u, 0.4, 0.6));
+  const exitRamp = 1 - easeInOutCubic(progressBetween(u, 0.86, 1.0));
+  const steerDeg = steerLockDeg * entryRamp * (1 - 2 * midSwitch) * exitRamp;
+
+  const arcLen = 2 * radius * alphaRad;
+  const rolled = -dirY * arcLen * u;
+  const isMoving = u > 0.01 && u < 0.99;
+
   return {
-    centerX: 619 + 8 * u,
-    centerY: 254 + 3 * u,
-    headingDeg: -3 * (1 - u),
-    steerDeg: -20 * (1 - u),
-    wheelRollDistance: -8 - 8 * u,
-    isReversing: seconds < 13.7,
-    isBraking: seconds >= 13.7,
+    centerX,
+    centerY,
+    headingDeg,
+    steerDeg,
+    wheelRollDistance: (pass.cumulativeRollStart + rolled) / ROAD_CAR_SCALE,
+    isReversing: isMoving && dirY > 0,
+    isBraking: !isMoving || u > 0.88,
+  };
+}
+
+function computeAct1ShuttlePose(seconds: number): ShuttlePose {
+  for (let i = 0; i < ACT1_PASSES.length; i++) {
+    const pass = ACT1_PASSES[i];
+    if (!pass) {
+      continue;
+    }
+    if (seconds <= pass.endTime) {
+      return sampleShuttlePass(seconds, pass);
+    }
+    const nextPass = ACT1_PASSES[i + 1];
+    if (nextPass && seconds < nextPass.startTime) {
+      return sampleShuttlePass(pass.endTime, pass);
+    }
+  }
+  const lastPass = ACT1_PASSES[ACT1_PASSES.length - 1];
+  if (lastPass) {
+    return sampleShuttlePass(lastPass.endTime, lastPass);
+  }
+  return {
+    centerX: ROAD_BAY_X,
+    centerY: 271.2,
+    headingDeg: 0,
+    steerDeg: 0,
+    wheelRollDistance: 0,
+    isReversing: false,
+    isBraking: true,
   };
 }
 
@@ -210,7 +232,7 @@ function computeFig4Pose(seconds: number): {
       centerX: POINT_A_FIG4.x,
       centerY: POINT_A_FIG4.y - FIG4_HALF_WHEELBASE,
       headingDeg: 0,
-      steerDeg: 34 * easeInOutCubic(progressBetween(seconds, 17.4, 18.2)),
+      steerDeg: 0,
       midpoint: POINT_A_FIG4,
       wheelRollDistance: 0,
       isReversing: false,
@@ -222,13 +244,14 @@ function computeFig4Pose(seconds: number): {
     const hRad = degToRad(headingDeg);
     const mx = CENTER_X_SMALL.x - FIG4_R_MID * Math.cos(hRad);
     const my = CENTER_X_SMALL.y - FIG4_R_MID * Math.sin(hRad);
+    const steerRamp = easeInOutCubic(progressBetween(seconds, 18.2, 18.6));
     return {
       centerX: mx + FIG4_HALF_WHEELBASE * Math.sin(hRad),
       centerY: my - FIG4_HALF_WHEELBASE * Math.cos(hRad),
       headingDeg,
-      steerDeg: 34,
+      steerDeg: 34 * steerRamp,
       midpoint: { x: mx, y: my },
-      wheelRollDistance: -SINGLE_ARC_LENGTH * u,
+      wheelRollDistance: (-SINGLE_ARC_LENGTH * u) / FIG4_CAR_SCALE,
       isReversing: true,
     };
   }
@@ -238,13 +261,15 @@ function computeFig4Pose(seconds: number): {
     const hRad = degToRad(headingDeg);
     const mx = CENTER_X_LARGE.x + FIG4_R_MID * Math.cos(hRad);
     const my = CENTER_X_LARGE.y + FIG4_R_MID * Math.sin(hRad);
+    const counterRamp = easeInOutCubic(progressBetween(seconds, 20.5, 20.9));
+    const exitRamp = 1 - easeInOutCubic(progressBetween(seconds, 22.4, 22.8));
     return {
       centerX: mx + FIG4_HALF_WHEELBASE * Math.sin(hRad),
       centerY: my - FIG4_HALF_WHEELBASE * Math.cos(hRad),
       headingDeg,
-      steerDeg: -34,
+      steerDeg: 34 * (1 - 2 * counterRamp) * exitRamp,
       midpoint: { x: mx, y: my },
-      wheelRollDistance: -SINGLE_ARC_LENGTH * (1 + u),
+      wheelRollDistance: (-SINGLE_ARC_LENGTH * (1 + u)) / FIG4_CAR_SCALE,
       isReversing: true,
     };
   }
@@ -254,22 +279,42 @@ function computeFig4Pose(seconds: number): {
     headingDeg: 0,
     steerDeg: 0,
     midpoint: POINT_a_FIG4,
-    wheelRollDistance: -2 * SINGLE_ARC_LENGTH,
+    wheelRollDistance: (-2 * SINGLE_ARC_LENGTH) / FIG4_CAR_SCALE,
     isReversing: false,
   };
 }
 
+/**
+ * Exact non-holonomic circular-arc reverse finish around turning center X on the left (R = 156 px).
+ */
 function computeAct3FinishPose(seconds: number): ShuttlePose {
+  const radius = 156;
+  const startHeadingDeg = -22;
+  const targetRearAxleX = ROAD_BAY_X; // 627
+  const targetRearAxleY = 304;
+  const turnCenterX = targetRearAxleX - radius; // 471
+
   const u = easeInOutCubic(progressBetween(seconds, 26.8, 29.4));
-  const headingDeg = -13 * (1 - u);
+  const headingDeg = startHeadingDeg * (1 - u);
+  const headingRad = degToRad(headingDeg);
+
+  const rearAxleX = turnCenterX + radius * Math.cos(headingRad);
+  const rearAxleY = targetRearAxleY + radius * Math.sin(headingRad);
+  const centerX = rearAxleX + ROAD_HALF_WHEELBASE * Math.sin(headingRad);
+  const centerY = rearAxleY - ROAD_HALF_WHEELBASE * Math.cos(headingRad);
+
+  const straighten = easeInOutCubic(progressBetween(seconds, 28.9, 29.4));
+  const steerDeg = -31 * (1 - straighten);
+  const arcTravel = radius * degToRad(Math.abs(startHeadingDeg)) * u;
+
   return {
-    centerX: 612 + 15 * u,
-    centerY: 250 + 7 * u,
+    centerX,
+    centerY,
     headingDeg,
-    steerDeg: -26 * (1 - u),
-    wheelRollDistance: -22 * u,
-    isReversing: seconds < 29.3,
-    isBraking: seconds >= 29.3,
+    steerDeg,
+    wheelRollDistance: -arcTravel / ROAD_CAR_SCALE,
+    isReversing: seconds >= 26.8 && seconds < 29.35,
+    isBraking: seconds >= 29.0,
   };
 }
 
@@ -344,7 +389,7 @@ export function Slide15Shuttling(): ReactElement {
   const act3Opacity = easeOutCubic(progressBetween(elapsedSeconds, 26.3, 27.0));
 
   // Act 1 Bay Tightening
-  const squeezeProgress = easeInOutCubic(progressBetween(elapsedSeconds, 7.8, 9.6));
+  const squeezeProgress = easeInOutCubic(progressBetween(elapsedSeconds, 7.6, 9.2));
   const frontParkedCenterY = 88 + 10 * squeezeProgress; // 88 -> 98
   const rearParkedCenterY = 426.4 - 10 * squeezeProgress; // 426.4 -> 416.4
   const frontRearBumperY = frontParkedCenterY + ROAD_CAR_HALF_L; // 163.6 -> 173.6
@@ -561,12 +606,24 @@ export function Slide15Shuttling(): ReactElement {
               x={753}
               y={frontRearBumperY + 13}
               textAnchor="middle"
-              className="fill-text-primary font-mono text-xs font-semibold tabular-nums"
+              className="fill-text-primary text-xs font-semibold"
             >
-              {squeezeProgress < 0.5 ? "c < 1.43 m" : "c > 0"}
+              {squeezeProgress < 0.5 ? (
+                <>
+                  <tspan className="font-math text-sm italic">c</tspan>
+                  <tspan className="fill-text-secondary font-math font-normal"> &lt; </tspan>
+                  <tspan className="font-mono tabular-nums">1.43 m</tspan>
+                </>
+              ) : (
+                <>
+                  <tspan className="font-math text-sm italic">c</tspan>
+                  <tspan className="fill-text-secondary font-math font-normal"> &gt; </tspan>
+                  <tspan className="font-mono tabular-nums">0</tspan>
+                </>
+              )}
             </text>
 
-            {/* Hero Car Shuttling */}
+            {/* Hero Car Shuttling Along True Non-Holonomic S-Curves */}
             <g
               transform={`translate(${act1Pose.centerX}, ${act1Pose.centerY}) rotate(${act1Pose.headingDeg}) scale(${ROAD_CAR_SCALE})`}
             >
@@ -623,7 +680,7 @@ export function Slide15Shuttling(): ReactElement {
                 x={676}
                 y={FIG4_Y_MID + 5}
                 textAnchor="start"
-                className="fill-text-primary font-mono text-sm font-semibold"
+                className="fill-text-primary font-math text-base font-semibold italic"
               >
                 c
               </text>
@@ -658,7 +715,7 @@ export function Slide15Shuttling(): ReactElement {
                   x={526}
                   y={230}
                   textAnchor="start"
-                  className="fill-text-secondary font-mono text-xs font-semibold"
+                  className="fill-text-secondary font-math text-sm font-semibold italic"
                 >
                   R
                 </text>
@@ -769,7 +826,7 @@ export function Slide15Shuttling(): ReactElement {
                   x={(POINT_A_FIG4.x + POINT_P_FIG4.x) * 0.5}
                   y={FIG4_Y_TOP - 37}
                   textAnchor="middle"
-                  className="fill-text-primary font-mono text-xs font-semibold"
+                  className="fill-text-primary font-math text-sm font-semibold"
                 >
                   |PA|
                 </text>
@@ -791,9 +848,10 @@ export function Slide15Shuttling(): ReactElement {
                     x={(POINT_A_FIG4.x + POINT_a_FIG4.x) * 0.5}
                     y={383}
                     textAnchor="middle"
-                    className="fill-text-primary font-mono text-sm font-semibold tracking-mono"
+                    className="fill-text-primary font-math text-base font-semibold"
                   >
-                    2|PA|
+                    <tspan className="font-mono tabular-nums">2</tspan>
+                    <tspan>|PA|</tspan>
                   </text>
                 </g>
               </g>
@@ -849,22 +907,54 @@ export function Slide15Shuttling(): ReactElement {
             {/* Bottom Figure 4 Equation Pill */}
             <g transform="translate(480, 514)">
               <rect
-                x={-186}
+                x={-194}
                 y={-26}
-                width={372}
+                width={388}
                 height={50}
                 rx={8}
                 fill="oklch(0.21 0 0 / 0.94)"
                 stroke="oklch(0.95 0 0 / 0.85)"
                 strokeWidth={1.4}
               />
+
+              {/* Left Formula: Δx = 2|PA| */}
               <text
-                x={0}
+                x={-108}
                 y={5}
                 textAnchor="middle"
-                className="fill-text-primary font-mono text-base font-semibold tracking-mono"
+                filter={twoPaGlow > 0.2 ? "url(#slide15-luminous-glow)" : undefined}
+                className="fill-text-primary font-math text-base font-semibold"
               >
-                Δx = 2|PA| · R = √(r² − l²) − n/2
+                <tspan>Δ</tspan>
+                <tspan className="italic">x</tspan>
+                <tspan className="fill-text-secondary font-normal"> = </tspan>
+                <tspan className="font-mono tabular-nums">2</tspan>
+                <tspan>|PA|</tspan>
+              </text>
+
+              {/* Structural Divider */}
+              <line x1={-40} y1={-14} x2={-40} y2={14} stroke="oklch(0.55 0 0 / 0.65)" strokeWidth={1.2} />
+
+              {/* Right Formula: R = √(r² − l²) − n / 2 */}
+              <text
+                x={-18}
+                y={5}
+                textAnchor="middle"
+                className="fill-text-primary font-math text-base font-semibold italic"
+              >
+                R
+              </text>
+              <text x={0} y={5} textAnchor="middle" className="fill-text-secondary font-math text-base">
+                =
+              </text>
+              <g className="text-text-primary">
+                <RootR2MinusL2 x={50} y={3} scale={1.06} />
+              </g>
+              <text x={128} y={5} textAnchor="middle" className="font-math text-base font-semibold">
+                <tspan className="fill-text-secondary font-normal">− </tspan>
+                <tspan className="fill-text-primary italic">n</tspan>
+                <tspan className="fill-text-secondary font-normal"> / </tspan>
+                <tspan className="fill-text-primary font-mono tabular-nums">2</tspan>
               </text>
             </g>
           </g>
@@ -1001,7 +1091,7 @@ export function Slide15Shuttling(): ReactElement {
               </g>
             ) : null}
 
-            {/* Solid Hero Car Finishing Safely by Reversing Inside the Kerb */}
+            {/* Solid Hero Car Finishing Safely by Reversing Along Circular Arc Inside the Kerb */}
             <g
               transform={`translate(${act3Pose.centerX}, ${act3Pose.centerY}) rotate(${act3Pose.headingDeg}) scale(${ROAD_CAR_SCALE})`}
             >

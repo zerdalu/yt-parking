@@ -188,21 +188,29 @@ export function Slide10ConstructionGk(): ReactElement {
 
   // Beat 3 (14.86s - 22.26s): |FK| at bottom equals width w of parked car at top
   const fkFocus = pulseEnvelope(elapsedSeconds, 16.0, 16.8, 19.8, 21.8);
-  const topWidthCaliper = easeOutCubic(progressBetween(elapsedSeconds, 18.8, 20.4));
-  const bottomWidthCaliper = easeOutCubic(progressBetween(elapsedSeconds, 17.2, 18.6));
+  const bottomWidthCaliper = easeOutCubic(progressBetween(elapsedSeconds, 16.9, 18.2));
+  const topWidthCaliper = easeOutCubic(progressBetween(elapsedSeconds, 18.8, 20.2));
+  const fkEqualsW = easeOutCubic(progressBetween(elapsedSeconds, 19.0, 20.0));
+  const widthProjectionProgress = easeInOutCubic(progressBetween(elapsedSeconds, 19.1, 21.2));
+  const widthProjectionBarY = POINT_G.y + LENGTH_GK * widthProjectionProgress;
+  const widthProjectionBarOpacity =
+    easeOutCubic(progressBetween(elapsedSeconds, 18.9, 19.4)) *
+    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 21.3, 22.1)));
   const widthMatchHighlight = pulseEnvelope(elapsedSeconds, 18.6, 19.6, 22.0, 23.0);
 
   // Beat 4 (22.82s - 32.00s): Full length |FX| -> remaining segment |KX| = |FX| - w = sqrt(r^2 - l^2) - w
-  const fxFullSpanDraw = easeInOutCubic(progressBetween(elapsedSeconds, 23.6, 25.3));
+  const fxFullSpanDraw = easeInOutCubic(progressBetween(elapsedSeconds, 23.4, 25.1));
   const fxFullSpanDim = easeInOutCubic(progressBetween(elapsedSeconds, 26.2, 27.6));
   const kxHighlight = pulseEnvelope(elapsedSeconds, 25.8, 26.6, 30.2, 31.8);
-  const kxBracketOpacity = easeOutCubic(progressBetween(elapsedSeconds, 26.2, 27.4));
+  const kxBracketOpacity = easeOutCubic(progressBetween(elapsedSeconds, 26.0, 27.2));
 
-  const symbolicEqOpacity =
-    easeOutCubic(progressBetween(elapsedSeconds, 25.9, 26.8)) *
-    (1 - easeInOutCubic(progressBetween(elapsedSeconds, 28.0, 28.65)));
-  const finalEqOpacity = easeOutCubic(progressBetween(elapsedSeconds, 28.3, 29.1));
+  const cardEnterOpacity = easeOutCubic(progressBetween(elapsedSeconds, 25.8, 26.6));
+  const cardExpand = easeInOutCubic(progressBetween(elapsedSeconds, 28.0, 28.8));
+  const symbolicEqOpacity = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 28.0, 28.55));
+  const finalEqOpacity = easeOutCubic(progressBetween(elapsedSeconds, 28.35, 29.0));
   const minusWHighlight = pulseFactor(elapsedSeconds, 29.55, 0.6);
+
+  const pillWidth = 236 + 56 * cardExpand;
 
   // Spoken-letter vertex pulses
   const pulseG = Math.max(pulseFactor(elapsedSeconds, 8.15, 0.55), pulseFactor(elapsedSeconds, 4.2, 0.5));
@@ -274,7 +282,7 @@ export function Slide10ConstructionGk(): ReactElement {
           x1={PROOF_LINE_X}
           y1={76}
           x2={PROOF_LINE_X}
-          y2={480}
+          y2={474}
           stroke={`oklch(0.84 0 0 / ${(0.28 + 0.65 * kerbParallelHighlight).toFixed(2)})`}
           strokeWidth={1.2 + 1.1 * kerbParallelHighlight}
           strokeDasharray={kerbParallelHighlight > 0.2 ? undefined : "4 6"}
@@ -346,6 +354,23 @@ export function Slide10ConstructionGk(): ReactElement {
             fill="oklch(0.96 0 0 / 0.045)"
             opacity={widthMatchHighlight}
           />
+        ) : null}
+
+        {/* Animated Width Projection Bar Sliding Down from GH onto FK */}
+        {widthProjectionBarOpacity > 0.01 ? (
+          <g opacity={widthProjectionBarOpacity}>
+            <line
+              x1={POINT_G.x}
+              y1={widthProjectionBarY}
+              x2={POINT_H.x}
+              y2={widthProjectionBarY}
+              stroke="oklch(0.99 0 0)"
+              strokeWidth={2.4}
+              filter="url(#slide10-luminous-glow)"
+            />
+            <circle cx={POINT_G.x} cy={widthProjectionBarY} r={2.8} fill="oklch(0.99 0 0)" />
+            <circle cx={POINT_H.x} cy={widthProjectionBarY} r={2.8} fill="oklch(0.99 0 0)" />
+          </g>
         ) : null}
 
         {/* Horizontal Line FX */}
@@ -421,9 +446,9 @@ export function Slide10ConstructionGk(): ReactElement {
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4}
               strokeLinejoin="round"
-              className="svg-label-halo fill-text-primary font-mono text-base font-semibold"
+              className="svg-label-halo fill-text-primary font-mono text-sm font-semibold"
             >
-              w
+              w = |GH|
             </text>
           </g>
         ) : null}
@@ -445,18 +470,18 @@ export function Slide10ConstructionGk(): ReactElement {
         {bottomWidthCaliper > 0.01 ? (
           <g opacity={bottomWidthCaliper * (1 - 0.35 * kxHighlight)}>
             <path
-              d={`M ${POINT_K.x} ${POINT_K.y + 10} L ${POINT_K.x} ${POINT_K.y + 17} L ${POINT_F.x} ${POINT_F.y + 17} L ${POINT_F.x} ${POINT_F.y + 10}`}
+              d={`M ${POINT_K.x} ${POINT_K.y + 8} L ${POINT_K.x} ${POINT_K.y + 14} L ${POINT_F.x} ${POINT_F.y + 14} L ${POINT_F.x} ${POINT_F.y + 8}`}
               fill="none"
               stroke="oklch(0.94 0 0 / 0.88)"
               strokeWidth={1.5}
             />
             <text
               x={(POINT_K.x + POINT_F.x) * 0.5}
-              y={POINT_K.y + 34}
+              y={POINT_K.y + 30}
               textAnchor="middle"
-              className="fill-text-primary font-mono text-sm font-semibold"
+              className="fill-text-primary font-mono text-xs font-semibold tracking-mono"
             >
-              w
+              {fkEqualsW < 0.4 ? "|FK|" : "|FK| = w"}
             </text>
           </g>
         ) : null}
@@ -478,16 +503,16 @@ export function Slide10ConstructionGk(): ReactElement {
         {kxBracketOpacity > 0.01 ? (
           <g opacity={kxBracketOpacity}>
             <path
-              d={`M ${POINT_X.x} ${POINT_X.y + 10} L ${POINT_X.x} ${POINT_X.y + 17} L ${POINT_K.x} ${POINT_K.y + 17} L ${POINT_K.x} ${POINT_K.y + 10}`}
+              d={`M ${POINT_X.x} ${POINT_X.y + 8} L ${POINT_X.x} ${POINT_X.y + 14} L ${POINT_K.x} ${POINT_K.y + 14} L ${POINT_K.x} ${POINT_K.y + 8}`}
               fill="none"
               stroke="oklch(0.98 0 0)"
               strokeWidth={1.65}
             />
             <text
               x={(POINT_X.x + POINT_K.x) * 0.5}
-              y={POINT_X.y + 34}
+              y={POINT_X.y + 30}
               textAnchor="middle"
-              className="fill-text-primary font-mono text-sm font-semibold tracking-mono"
+              className="fill-text-primary font-mono text-xs font-semibold tracking-mono"
             >
               |KX|
             </text>
@@ -499,24 +524,24 @@ export function Slide10ConstructionGk(): ReactElement {
           <g opacity={fxFullSpanDraw * (1 - 0.35 * fxFullSpanDim)}>
             <line
               x1={POINT_X.x}
-              y1={457}
+              y1={452}
               x2={POINT_F.x}
-              y2={457}
+              y2={452}
               stroke="oklch(0.88 0 0 / 0.78)"
               strokeWidth={1.35}
               strokeDasharray={LENGTH_FX}
               strokeDashoffset={LENGTH_FX * (1 - fxFullSpanDraw)}
             />
             <g stroke="oklch(0.88 0 0 / 0.78)" strokeWidth={1.2}>
-              <line x1={POINT_X.x} y1={452} x2={POINT_X.x} y2={462} />
-              <line x1={POINT_F.x} y1={452} x2={POINT_F.x} y2={462} />
+              <line x1={POINT_X.x} y1={447} x2={POINT_X.x} y2={457} />
+              <line x1={POINT_F.x} y1={447} x2={POINT_F.x} y2={457} />
             </g>
-            <g transform="translate(490, 474)" opacity={easeOutCubic(progressBetween(fxFullSpanDraw, 0.45, 1))}>
+            <g transform="translate(490, 476)" opacity={easeOutCubic(progressBetween(fxFullSpanDraw, 0.45, 1))}>
               <text x={-32} y={0} textAnchor="end" className="fill-text-secondary font-mono text-xs font-semibold">
                 |FX| =
               </text>
               <path
-                d="M -22 -1 L -19 -1 L -16 4 L -10 -12 L 38 -12"
+                d="M -22 -1 L -19 -1 L -16 4 L -10 -13 L 38 -13 L 38 -10"
                 fill="none"
                 stroke="oklch(0.88 0 0)"
                 strokeWidth={1.25}
@@ -543,77 +568,76 @@ export function Slide10ConstructionGk(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            BOTTOM DERIVATION CARD: |KX| = |FX| - w  -->  |KX| = sqrt(r^2 - l^2) - w
+            BOTTOM DERIVATION CARD: |KX| = |FX| - w  -->  |KX| = √(r² − l²) − w
            ================================================================ */}
-        {symbolicEqOpacity > 0.01 ? (
-          <g transform="translate(490, 516)" opacity={symbolicEqOpacity}>
+        {cardEnterOpacity > 0.01 ? (
+          <g transform="translate(490, 526)" opacity={cardEnterOpacity}>
             <rect
-              x={-118}
-              y={-25}
-              width={236}
-              height={46}
-              rx={8}
-              fill="oklch(0.21 0 0 / 0.92)"
-              stroke="oklch(0.92 0 0 / 0.78)"
-              strokeWidth={1.35}
-            />
-            <text x={0} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-              |KX| = |FX| − w
-            </text>
-          </g>
-        ) : null}
-
-        {finalEqOpacity > 0.01 ? (
-          <g transform="translate(490, 516)" opacity={finalEqOpacity}>
-            <rect
-              x={-146}
+              x={-(pillWidth * 0.5)}
               y={-26}
-              width={292}
+              width={pillWidth}
               height={48}
               rx={8}
               fill="oklch(0.21 0 0 / 0.92)"
               stroke="oklch(0.95 0 0 / 0.85)"
               strokeWidth={1.4}
             />
-            <text x={-89} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-              |KX|
-            </text>
-            <text x={-55} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
-              =
-            </text>
 
-            <path
-              d="M -37 0 L -33 0 L -28 9 L -18 -18 L 57 -18"
-              fill="none"
-              stroke="oklch(0.98 0 0)"
-              strokeWidth={1.7}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <text x={-6} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-              r
-            </text>
-            <text x={3} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-              2
-            </text>
-            <text x={17} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
-              −
-            </text>
-            <text x={31} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-              l
-            </text>
-            <text x={40} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-              2
-            </text>
+            {symbolicEqOpacity > 0.01 ? (
+              <text
+                x={0}
+                y={5}
+                textAnchor="middle"
+                opacity={symbolicEqOpacity}
+                className="fill-text-primary font-mono text-lg font-semibold"
+              >
+                |KX| = |FX| − w
+              </text>
+            ) : null}
 
-            <g filter={minusWHighlight > 0.25 ? "url(#slide10-luminous-glow)" : undefined}>
-              <text x={77} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
-                −
-              </text>
-              <text x={101} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-                w
-              </text>
-            </g>
+            {finalEqOpacity > 0.01 ? (
+              <g opacity={finalEqOpacity}>
+                <text x={-89} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+                  |KX|
+                </text>
+                <text x={-55} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                  =
+                </text>
+
+                <path
+                  d="M -37 0 L -33 0 L -28 9 L -18 -18 L 53 -18 L 53 -13"
+                  fill="none"
+                  stroke="oklch(0.98 0 0)"
+                  strokeWidth={1.7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <text x={-6} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+                  r
+                </text>
+                <text x={3} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
+                  2
+                </text>
+                <text x={17} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                  −
+                </text>
+                <text x={31} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+                  l
+                </text>
+                <text x={40} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
+                  2
+                </text>
+
+                <g filter={minusWHighlight > 0.25 ? "url(#slide10-luminous-glow)" : undefined}>
+                  <text x={75} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                    −
+                  </text>
+                  <text x={99} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+                    w
+                  </text>
+                </g>
+              </g>
+            ) : null}
           </g>
         ) : null}
 

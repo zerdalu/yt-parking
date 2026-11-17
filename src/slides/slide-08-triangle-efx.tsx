@@ -1,4 +1,5 @@
 import { CutPlaneCar, CutPlaneCarDefs } from "@/components/cut-plane-car";
+import { RootR2MinusL2 } from "@/components/math-formula";
 import {
   CarSectionVariants,
   computeAckermannAngles,
@@ -13,12 +14,10 @@ const CAR_SCALE = 1.32;
 const CAR_CENTER_X = 574;
 const CAR_CENTER_Y = 340;
 
-const HALF_W = DEFAULT_VEHICLE_DIMENSIONS.width * 0.5 * CAR_SCALE; // 50.16
 const HALF_L = DEFAULT_VEHICLE_DIMENSIONS.length * 0.5 * CAR_SCALE; // 110.88
 const TRACK_HALF_W = DEFAULT_VEHICLE_DIMENSIONS.trackHalfWidth * CAR_SCALE; // 40.92
 const WHEEL_HALF_L = DEFAULT_VEHICLE_DIMENSIONS.wheelbase * 0.5 * CAR_SCALE; // 68.64
 
-const KERB_LINE_X = CAR_CENTER_X + HALF_W; // 624.16
 const WHEEL_KERB_X = CAR_CENTER_X + TRACK_HALF_W; // 614.92
 const WHEEL_LEFT_X = CAR_CENTER_X - TRACK_HALF_W; // 533.08
 const FRONT_AXLE_Y = CAR_CENTER_Y - WHEEL_HALF_L; // 271.36
@@ -36,8 +35,8 @@ const VIRTUAL_STEER_DEG = -((Math.atan2(LENGTH_EF, CAR_CENTER_X - POINT_X.x) * 1
 const ACKERMANN = computeAckermannAngles(VIRTUAL_STEER_DEG, DEFAULT_VEHICLE_DIMENSIONS);
 
 const CALIPER_X = 674;
-const TRIANGLE_PATH = `M ${POINT_X.x} ${POINT_X.y} L ${POINT_F.x} ${POINT_F.y} L ${POINT_E.x} ${POINT_E.y} Z`;
-const TRIANGLE_PERIMETER = LENGTH_FX + LENGTH_EF + LENGTH_EX;
+const TRIANGLE_PATH = `M ${POINT_E.x} ${POINT_E.y} L ${POINT_F.x} ${POINT_F.y} L ${POINT_X.x} ${POINT_X.y} Z`;
+const TRIANGLE_PERIMETER = LENGTH_EF + LENGTH_FX + LENGTH_EX;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -158,7 +157,7 @@ function VertexNode({
 export function Slide08TriangleEfx(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
 
-  // Beat 1 (0.00s - 4.46s): Cut-plane car fades in; right-angled triangle EFX draws in
+  // Beat 1 (0.00s - 4.46s): Cut-plane car fades in; right-angled triangle EFX draws in order E -> F -> X
   const stageFadeIn = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 0.9));
   const triangleDraw = easeInOutCubic(progressBetween(elapsedSeconds, 1.9, 3.85));
   const carFocusDim = easeInOutCubic(progressBetween(elapsedSeconds, 2.2, 4.2));
@@ -207,7 +206,9 @@ export function Slide08TriangleEfx(): ReactElement {
   const pythagorasGlow = pulseEnvelope(elapsedSeconds, 21.95, 22.5, 24.0, 24.8);
   const fxFocus = Math.max(pulseEnvelope(elapsedSeconds, 24.1, 24.8, 29.2, 30.8), pythagorasGlow * 0.65);
   const fxBaseLabelOpacity = easeOutCubic(progressBetween(elapsedSeconds, 24.6, 25.6));
+  const fxBaseResolvedOpacity = easeOutCubic(progressBetween(elapsedSeconds, 27.0, 28.0));
 
+  const cardEnterOpacity = easeOutCubic(progressBetween(elapsedSeconds, 22.3, 23.2));
   const setupEqOpacity =
     easeOutCubic(progressBetween(elapsedSeconds, 22.4, 23.4)) *
     (1 - easeInOutCubic(progressBetween(elapsedSeconds, 25.8, 26.45)));
@@ -252,12 +253,12 @@ export function Slide08TriangleEfx(): ReactElement {
         {/* Soft Ambient Radial Glow */}
         <circle cx={480} cy={310} r={315} fill="url(#slide08-ambient-glow)" />
 
-        {/* Subtle Architectural Kerb Reference Line */}
+        {/* Vertical Proof Line Through E and F (Shared with Slides 09-11) */}
         <line
-          x1={KERB_LINE_X}
-          y1={115}
-          x2={KERB_LINE_X}
-          y2={505}
+          x1={WHEEL_KERB_X}
+          y1={80}
+          x2={WHEEL_KERB_X}
+          y2={500}
           stroke="oklch(0.75 0 0 / 0.24)"
           strokeWidth={1.1}
           strokeDasharray="4 6"
@@ -277,12 +278,12 @@ export function Slide08TriangleEfx(): ReactElement {
           />
         </g>
 
-        {/* Car Side Edge Highlight on "side of the car" (8.8s - 11.4s) */}
+        {/* Vertical Wheel-Plane Side Highlight on "side of the car" (8.8s - 11.4s) */}
         {carSideHighlight > 0.02 ? (
           <line
-            x1={KERB_LINE_X}
+            x1={WHEEL_KERB_X}
             y1={CAR_CENTER_Y - HALF_L}
-            x2={KERB_LINE_X}
+            x2={WHEEL_KERB_X}
             y2={CAR_CENTER_Y + HALF_L}
             stroke="oklch(0.98 0 0)"
             strokeWidth={2.2}
@@ -420,7 +421,7 @@ export function Slide08TriangleEfx(): ReactElement {
             stroke="oklch(0.15 0 0 / 0.94)"
             strokeWidth={4.5}
             strokeLinejoin="round"
-            className="svg-label-halo fill-text-primary font-mono text-base font-semibold"
+            className="svg-label-halo fill-text-primary font-math text-lg font-semibold italic"
           >
             r
           </text>
@@ -453,43 +454,44 @@ export function Slide08TriangleEfx(): ReactElement {
               y={(POINT_E.y + POINT_F.y) * 0.5 + 5}
               textAnchor="start"
               opacity={easeOutCubic(progressBetween(lCaliperDraw, 0.45, 1))}
-              className="fill-text-primary font-mono text-base font-semibold"
+              className="fill-text-primary font-math text-lg font-semibold italic"
             >
               l
             </text>
           </g>
         ) : null}
 
-        {/* Base |FX| Label */}
+        {/* Base |FX| Label (Transitions to √(r² − l²) once solved, matching Slide 09) */}
         {fxBaseLabelOpacity > 0.01 ? (
-          <text
-            x={(POINT_X.x + POINT_F.x) * 0.5}
-            y={POINT_X.y + 26}
-            textAnchor="middle"
-            opacity={fxBaseLabelOpacity}
-            className="fill-text-primary font-mono text-sm font-semibold tracking-mono"
-          >
-            |FX|
-          </text>
+          <g transform={`translate(${(POINT_X.x + POINT_F.x) * 0.5}, ${POINT_X.y + 30})`} opacity={fxBaseLabelOpacity}>
+            {fxBaseResolvedOpacity < 0.99 ? (
+              <text
+                x={0}
+                y={0}
+                textAnchor="middle"
+                opacity={1 - fxBaseResolvedOpacity}
+                className="fill-text-primary font-math text-sm font-semibold"
+              >
+                |FX|
+              </text>
+            ) : null}
+            {fxBaseResolvedOpacity > 0.01 ? (
+              <g opacity={fxBaseResolvedOpacity} className="text-text-primary">
+                <RootR2MinusL2 x={0} y={0} />
+              </g>
+            ) : null}
+          </g>
         ) : null}
 
         {/* ================================================================
             PYTHAGOREAN DERIVATION RESULT: |FX|² + l² = r²  -->  |FX| = √(r² − l²)
            ================================================================ */}
-        {setupEqOpacity > 0.01 ? (
-          <g transform="translate(490, 498)" opacity={setupEqOpacity}>
-            <text x={0} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-xl font-semibold">
-              |FX|² + l² = r²
-            </text>
-          </g>
-        ) : null}
-
-        {solvedEqOpacity > 0.01 ? (
-          <g transform="translate(490, 502)" opacity={solvedEqOpacity}>
+        {cardEnterOpacity > 0.01 ? (
+          <g transform="translate(490, 502)" opacity={cardEnterOpacity}>
             <rect
-              x={-136}
+              x={-130}
               y={-28}
-              width={272}
+              width={260}
               height={52}
               rx={8}
               fill="oklch(0.21 0 0 / 0.92)"
@@ -497,50 +499,93 @@ export function Slide08TriangleEfx(): ReactElement {
               strokeWidth={1.4}
             />
 
-            <text x={-76} y={6} textAnchor="middle" className="fill-text-primary font-mono text-xl font-semibold">
-              |FX|
-            </text>
-            <text x={-38} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
-              =
-            </text>
+            {/* Step 1A: Pythagorean Identity |FX|² + l² = r² */}
+            {setupEqOpacity > 0.01 ? (
+              <g opacity={setupEqOpacity}>
+                <text x={-46} y={6} textAnchor="middle" className="fill-text-primary font-math text-xl font-semibold">
+                  <tspan>|FX|</tspan>
+                  <tspan dy={-8} className="text-xs font-semibold">
+                    2
+                  </tspan>
+                </text>
+                <text x={-10} y={6} textAnchor="middle" className="fill-text-secondary font-math text-xl">
+                  +
+                </text>
+                <text x={12} y={6} textAnchor="middle" className="fill-text-primary font-math text-xl font-semibold">
+                  <tspan className="italic">l</tspan>
+                  <tspan dy={-8} className="text-xs font-semibold">
+                    2
+                  </tspan>
+                </text>
+                <text x={36} y={6} textAnchor="middle" className="fill-text-secondary font-math text-xl">
+                  =
+                </text>
+                <text x={60} y={6} textAnchor="middle" className="fill-text-primary font-math text-xl font-semibold">
+                  <tspan className="italic">r</tspan>
+                  <tspan dy={-8} className="text-xs font-semibold">
+                    2
+                  </tspan>
+                </text>
+              </g>
+            ) : null}
 
-            {/* Vector Square Root Radical */}
-            <path
-              d="M -18 0 L -14 0 L -9 10 L 3 -19 L 108 -19"
-              fill="none"
-              stroke="oklch(0.98 0 0)"
-              strokeWidth={1.85}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={148}
-              strokeDashoffset={148 * (1 - solvedRadicalDraw)}
-              filter="url(#slide08-luminous-glow)"
-            />
+            {/* Step 1B: Solved Base |FX| = √(r² − l²) */}
+            {solvedEqOpacity > 0.01 ? (
+              <g opacity={solvedEqOpacity}>
+                <text x={-68} y={6} textAnchor="middle" className="fill-text-primary font-math text-xl font-semibold">
+                  |FX|
+                </text>
+                <text x={-34} y={6} textAnchor="middle" className="fill-text-secondary font-math text-xl">
+                  =
+                </text>
 
-            {/* r^2 */}
-            <g filter={rSqHighlight > 0.25 ? "url(#slide08-luminous-glow)" : undefined}>
-              <text x={18} y={6} textAnchor="middle" className="fill-text-primary font-mono text-xl font-semibold">
-                r
-              </text>
-              <text x={28} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                2
-              </text>
-            </g>
+                {/* Vector Square Root Radical */}
+                <path
+                  d="M -15 0 L -11 0 L -6 10 L 6 -19 L 86 -19 L 86 -14"
+                  fill="none"
+                  stroke="oklch(0.98 0 0)"
+                  strokeWidth={1.85}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray={132}
+                  strokeDashoffset={132 * (1 - solvedRadicalDraw)}
+                  filter="url(#slide08-luminous-glow)"
+                />
 
-            {/* minus */}
-            <text x={50} y={6} textAnchor="middle" className="fill-text-secondary font-mono text-xl">
-              −
-            </text>
+                {/* r² */}
+                <text
+                  x={20}
+                  y={6}
+                  textAnchor="middle"
+                  filter={rSqHighlight > 0.25 ? "url(#slide08-luminous-glow)" : undefined}
+                  className="fill-text-primary font-math text-xl font-semibold"
+                >
+                  <tspan className="italic">r</tspan>
+                  <tspan dy={-8} className="text-xs font-semibold">
+                    2
+                  </tspan>
+                </text>
 
-            {/* l^2 */}
-            <g filter={lSqHighlight > 0.25 ? "url(#slide08-luminous-glow)" : undefined}>
-              <text x={74} y={6} textAnchor="middle" className="fill-text-primary font-mono text-xl font-semibold">
-                l
-              </text>
-              <text x={83} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                2
-              </text>
-            </g>
+                {/* minus */}
+                <text x={44} y={6} textAnchor="middle" className="fill-text-secondary font-math text-xl">
+                  −
+                </text>
+
+                {/* l² */}
+                <text
+                  x={68}
+                  y={6}
+                  textAnchor="middle"
+                  filter={lSqHighlight > 0.25 ? "url(#slide08-luminous-glow)" : undefined}
+                  className="fill-text-primary font-math text-xl font-semibold"
+                >
+                  <tspan className="italic">l</tspan>
+                  <tspan dy={-8} className="text-xs font-semibold">
+                    2
+                  </tspan>
+                </text>
+              </g>
+            ) : null}
           </g>
         ) : null}
 

@@ -51,6 +51,8 @@ const ANGLE_F_PARALLEL_DEG = 0;
 const ANGLE_G_DEG = (Math.atan2(POINT_G.y - TURNING_CENTER.y, POINT_G.x - TURNING_CENTER.x) * 180) / Math.PI;
 const GRAZE_HEADING_DEG = ANGLE_G_DEG - ANGLE_A_PARALLEL_DEG; // -25.203 deg
 
+const SWEEP_START_HEADING_DEG = -52;
+
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
@@ -70,6 +72,24 @@ function progressBetween(seconds: number, start: number, end: number): number {
     return seconds >= end ? 1 : 0;
   }
   return clamp01((seconds - start) / (end - start));
+}
+
+/**
+ * C1-continuous cubic Hermite interpolation on [t0, t1] with endpoints (y0, y1) and derivatives (v0, v1).
+ */
+function cubicHermite(t: number, t0: number, t1: number, y0: number, y1: number, v0: number, v1: number): number {
+  const dt = t1 - t0;
+  if (dt <= 0) {
+    return y1;
+  }
+  const u = clamp01((t - t0) / dt);
+  const u2 = u * u;
+  const u3 = u2 * u;
+  const h00 = 2 * u3 - 3 * u2 + 1;
+  const h10 = u3 - 2 * u2 + u;
+  const h01 = -2 * u3 + 3 * u2;
+  const h11 = u3 - u2;
+  return h00 * y0 + h10 * (dt * v0) + h01 * y1 + h11 * (dt * v1);
 }
 
 function pulseFactor(seconds: number, centerTime: number, halfWidth: number = 0.58): number {
@@ -97,16 +117,25 @@ function rotateLocalPointAroundX(localX: number, localY: number, headingDeg: num
 }
 
 function buildArcSweep(center: Point2D, radius: number, startDeg: number, endDeg: number): string {
+  const delta = endDeg - startDeg;
+  if (Math.abs(delta) > 175) {
+    const midDeg = startDeg + delta * 0.5;
+    const firstHalf = buildArcSweep(center, radius, startDeg, midDeg);
+    const eRad = degToRad(endDeg);
+    const ex = center.x + radius * Math.cos(eRad);
+    const ey = center.y + radius * Math.sin(eRad);
+    const sweepFlag = delta >= 0 ? 1 : 0;
+    return `${firstHalf} A ${radius.toFixed(2)} ${radius.toFixed(2)} 0 0 ${sweepFlag} ${ex.toFixed(2)} ${ey.toFixed(2)}`;
+  }
+
   const sRad = degToRad(startDeg);
   const eRad = degToRad(endDeg);
   const sx = center.x + radius * Math.cos(sRad);
   const sy = center.y + radius * Math.sin(sRad);
   const ex = center.x + radius * Math.cos(eRad);
   const ey = center.y + radius * Math.sin(eRad);
-  const delta = endDeg - startDeg;
   const sweepFlag = delta >= 0 ? 1 : 0;
-  const largeArcFlag = Math.abs(delta) > 180 ? 1 : 0;
-  return `M ${sx.toFixed(2)} ${sy.toFixed(2)} A ${radius.toFixed(2)} ${radius.toFixed(2)} 0 ${largeArcFlag} ${sweepFlag} ${ex.toFixed(2)} ${ey.toFixed(2)}`;
+  return `M ${sx.toFixed(2)} ${sy.toFixed(2)} A ${radius.toFixed(2)} ${radius.toFixed(2)} 0 0 ${sweepFlag} ${ex.toFixed(2)} ${ey.toFixed(2)}`;
 }
 
 function buildCongruenceTicks(p1: Point2D, p2: Point2D): string {
@@ -249,7 +278,7 @@ export function Slide07Circles(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
 
   // Beat 1 (0.00s - 4.76s): Car finishes reversing parallel to kerb (-15 deg -> 0 deg)
-  // Beat 2-3 (5.38s - 26.40s): Car demonstrates full arc (-44 deg -> 0 deg), grazing G right at 20.60s
+  // Beat 2-3 (5.38s - 27.20s): C1-smooth continuous arc (-52 deg -> 0 deg), grazing G right at 20.60s
   let headingDeg = 0;
   let heroOpacity = 1;
   let isReversing = false;
@@ -259,33 +288,38 @@ export function Slide07Circles(): ReactElement {
     const finishPull = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 4.3));
     headingDeg = -15 * (1 - finishPull);
     isReversing = elapsedSeconds < 4.25;
-    isBraking = elapsedSeconds >= 4.25;
+    isBraking = elapsedSeconds >= 3.8;
     heroOpacity = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 4.7, 4.9));
   } else if (elapsedSeconds < 5.35) {
-    headingDeg = -44;
+    headingDeg = SWEEP_START_HEADING_DEG;
     heroOpacity = easeOutCubic(progressBetween(elapsedSeconds, 5.05, 5.35));
     isReversing = false;
+    isBraking = true;
+  } else if (elapsedSeconds <= 20.6) {
+    headingDeg = cubicHermite(elapsedSeconds, 5.4, 20.6, SWEEP_START_HEADING_DEG, GRAZE_HEADING_DEG, 0, 2.65);
+    isReversing = elapsedSeconds >= 5.45;
+    isBraking = elapsedSeconds < 5.45;
+  } else if (elapsedSeconds < 27.2) {
+    headingDeg = cubicHermite(elapsedSeconds, 20.6, 27.2, GRAZE_HEADING_DEG, 0, 2.65, 0);
+    isReversing = elapsedSeconds < 27.05;
+    isBraking = elapsedSeconds >= 26.5;
   } else {
-    const sweep1 = progressBetween(elapsedSeconds, 5.4, 20.6); // -44 -> -25.203 (grazes G at 20.60s)
-    const sweep2 = easeOutCubic(progressBetween(elapsedSeconds, 20.6, 26.2)); // -25.203 -> 0 parallel
-    if (elapsedSeconds <= 20.6) {
-      headingDeg = -44 + (GRAZE_HEADING_DEG - -44) * sweep1;
-      isReversing = true;
-    } else {
-      headingDeg = GRAZE_HEADING_DEG * (1 - sweep2);
-      isReversing = elapsedSeconds < 26.15;
-      isBraking = elapsedSeconds >= 26.15;
-    }
+    headingDeg = 0;
+    isReversing = false;
+    isBraking = elapsedSeconds < 28.2;
   }
 
-  const wheelRollDistance = -REAR_TO_CENTER_DX * degToRad(headingDeg + 44);
+  const wheelRollDistance = -REAR_TO_CENTER_DX * degToRad(headingDeg - SWEEP_START_HEADING_DEG);
   const carCenter = rotateLocalPointAroundX(0, 0, headingDeg);
   const pointA = rotateLocalPointAroundX(HALF_W, -HALF_L, headingDeg);
   const pointE = rotateLocalPointAroundX(TRACK_HALF_W, -WHEEL_HALF_L, headingDeg);
   const pointF = rotateLocalPointAroundX(TRACK_HALF_W, WHEEL_HALF_L, headingDeg);
 
-  // Target parallel Ghost remains subtly visible once the demonstration sweep begins
-  const parallelGhostOpacity = elapsedSeconds >= 5.05 ? 0.34 : 0;
+  // Target parallel Ghost remains subtly visible while the car is sweeping
+  const parallelGhostOpacity =
+    elapsedSeconds >= 5.05 && elapsedSeconds < 27.2
+      ? 0.34 * (1 - easeInOutCubic(progressBetween(elapsedSeconds, 26.4, 27.2)))
+      : 0;
 
   // Turning center X appears on "around center X" (5.38s - 7.36s)
   const xOpacity = easeOutCubic(progressBetween(elapsedSeconds, 5.2, 6.2));
@@ -308,10 +342,9 @@ export function Slide07Circles(): ReactElement {
   );
 
   // Active sweep arc trail traced by corner A as it approaches and clears G
-  const liveSweepStartHeading = -44;
   const showActiveTrail = elapsedSeconds >= 12.8;
   const trailEndDeg = ANGLE_A_PARALLEL_DEG + headingDeg;
-  const trailStartDeg = ANGLE_A_PARALLEL_DEG + liveSweepStartHeading;
+  const trailStartDeg = ANGLE_A_PARALLEL_DEG + SWEEP_START_HEADING_DEG;
   const activeTrailPath =
     showActiveTrail && trailEndDeg > trailStartDeg
       ? buildArcSweep(TURNING_CENTER, RADIUS_AX, trailStartDeg, trailEndDeg)
@@ -326,7 +359,7 @@ export function Slide07Circles(): ReactElement {
     pulseFactor(elapsedSeconds, 29.36, 0.65),
   );
 
-  // Beat 4 (26.6s - 34.0s): Equal-radius proof lines XA and XG draw out from X
+  // Beat 4 (27.4s - 34.0s): Equal-radius proof lines XA and XG draw out from X
   const equalRadiiDraw = easeInOutCubic(progressBetween(elapsedSeconds, 27.4, 30.2));
   const equalLabelOpacity = easeOutCubic(progressBetween(elapsedSeconds, 29.8, 31.0));
   const arcBetweenGA = buildArcSweep(TURNING_CENTER, RADIUS_AX, ANGLE_G_DEG, ANGLE_A_PARALLEL_DEG);
@@ -518,9 +551,9 @@ export function Slide07Circles(): ReactElement {
                 <path d={ticksXG} fill="none" stroke="oklch(0.98 0 0)" strokeWidth={1.6} strokeLinecap="round" />
 
                 <rect
-                  x={702}
+                  x={697}
                   y={192}
-                  width={106}
+                  width={116}
                   height={30}
                   rx={6}
                   fill="oklch(0.22 0 0 / 0.94)"
@@ -531,9 +564,11 @@ export function Slide07Circles(): ReactElement {
                   x={755}
                   y={212}
                   textAnchor="middle"
-                  className="fill-text-primary font-mono text-sm font-semibold tracking-mono"
+                  className="fill-text-primary font-math text-base font-semibold"
                 >
-                  |AX| = |GX|
+                  <tspan>|AX|</tspan>
+                  <tspan className="fill-text-secondary font-normal"> = </tspan>
+                  <tspan>|GX|</tspan>
                 </text>
               </g>
             ) : null}

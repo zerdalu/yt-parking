@@ -16,7 +16,7 @@ const HALF_CAR_W = CAR_WIDTH * 0.5; // 30.4
 
 // Multi-storey carpark bay EFGH geometry & vertical straight guide line EF
 const X_GUIDE = 540;
-const Y_0 = 434;
+const Y_0 = 446;
 const BAY_WIDTH = 90;
 const BAY_TOP_Y = 95;
 const BAY_BOT_Y = 272;
@@ -27,10 +27,10 @@ const POINT_G: Point2D = { x: X_GUIDE + BAY_WIDTH, y: BAY_BOT_Y };
 const POINT_H: Point2D = { x: X_GUIDE + BAY_WIDTH, y: BAY_TOP_Y };
 
 const BAY_DIVIDERS_X = [270, 360, 450, 540, 630, 720, 810] as const;
-const FAMILY_CIRCLE_ANGLES_DEG = [68, 56, 44, 32, 20, 10] as const;
+const FAMILY_CIRCLE_ANGLES_DEG = [70, 58, 46, 36, 26, 18] as const;
 
 const U_START_DEG = 74;
-const U_END_DEG = 10;
+const U_END_DEG = 18;
 
 interface TractrixFrame {
   readonly centerX: number;
@@ -61,6 +61,21 @@ function progressBetween(seconds: number, start: number, end: number): number {
     return seconds >= end ? 1 : 0;
   }
   return clamp01((seconds - start) / (end - start));
+}
+
+function cubicHermite(t: number, t0: number, t1: number, y0: number, y1: number, v0: number, v1: number): number {
+  const dt = t1 - t0;
+  if (dt <= 0) {
+    return y1;
+  }
+  const u = clamp01((t - t0) / dt);
+  const u2 = u * u;
+  const u3 = u2 * u;
+  const h00 = 2 * u3 - 3 * u2 + 1;
+  const h10 = u3 - 2 * u2 + u;
+  const h01 = -2 * u3 + 3 * u2;
+  const h11 = u3 - u2;
+  return h00 * y0 + h10 * (dt * v0) + h01 * y1 + h11 * (dt * v1);
 }
 
 function pulseEnvelope(seconds: number, start: number, peakStart: number, peakEnd: number, end: number): number {
@@ -116,18 +131,36 @@ function sampleTractrixGeometry(uDeg: number): {
   };
 }
 
+function buildLeftSemicircleArc(center: Point2D, radius: number): string {
+  const topY = (center.y - radius).toFixed(2);
+  const botY = (center.y + radius).toFixed(2);
+  const cx = center.x.toFixed(2);
+  const r = radius.toFixed(2);
+  return `M ${cx} ${topY} A ${r} ${r} 0 0 0 ${cx} ${botY}`;
+}
+
 const ENTRY_START_SAMPLE = sampleTractrixGeometry(U_START_DEG);
 const FINAL_END_SAMPLE = sampleTractrixGeometry(U_END_DEG);
 
+function computeTractrixUDeg(seconds: number): number {
+  if (seconds <= 4.55) {
+    return U_START_DEG;
+  }
+  if (seconds >= 11.8) {
+    return U_END_DEG;
+  }
+  return cubicHermite(seconds, 4.55, 11.8, U_START_DEG, U_END_DEG, -4.2, -6.5);
+}
+
 function computeSlide16Frame(seconds: number): TractrixFrame {
-  // Phase 1 (0.00s - 4.55s): Approach along horizontal multi-storey aisle until front corner B meets EF
+  // Phase 1 (0.00s - 4.55s): Smooth C1 approach along aisle until front corner B meets EF at (540, 408)
   if (seconds < 4.55) {
-    const u = easeInOutCubic(progressBetween(seconds, 0.0, 4.55));
-    const headingDeg = 88 + (U_START_DEG - 88) * u;
-    const centerX = 278 + (ENTRY_START_SAMPLE.centerX - 278) * u;
-    const centerY = 434 + (ENTRY_START_SAMPLE.centerY - 434) * u;
+    const progress = cubicHermite(seconds, 0.0, 4.55, 0, 1, 0, 0.28);
+    const headingDeg = 86 + (U_START_DEG - 86) * progress;
+    const centerX = 278 + (ENTRY_START_SAMPLE.centerX - 278) * progress;
+    const centerY = 492 + (ENTRY_START_SAMPLE.centerY - 492) * progress;
     const hRad = degToRad(headingDeg);
-    const steerDeg = -28 * Math.sin(degToRad(U_START_DEG)) * easeInOutCubic(progressBetween(seconds, 2.8, 4.55));
+    const steerDeg = -28 * Math.sin(degToRad(U_START_DEG)) * easeInOutCubic(progressBetween(seconds, 2.2, 4.55));
 
     const cornerB: Point2D = {
       x: centerX + -HALF_CAR_W * Math.cos(hRad) - -(CAR_LENGTH * 0.5) * Math.sin(hRad),
@@ -145,16 +178,16 @@ function computeSlide16Frame(seconds: number): TractrixFrame {
       steerDeg,
       cornerB,
       cornerC,
-      wheelRollDistance: 196 * u,
+      wheelRollDistance: (209 * progress) / CAR_SCALE,
     };
   }
 
-  // Phase 2 (4.55s - 12.10s): Corner B tracks vertical line EF while rear corner C traces the tractrix
-  if (seconds < 12.1) {
-    const u = easeInOutCubic(progressBetween(seconds, 4.55, 12.1));
-    const currentUDeg = U_START_DEG + (U_END_DEG - U_START_DEG) * u;
+  // Phase 2 (4.55s - 11.80s): Corner B tracks vertical line EF while rear corner C traces the tractrix
+  if (seconds < 11.8) {
+    const currentUDeg = computeTractrixUDeg(seconds);
     const geom = sampleTractrixGeometry(currentUDeg);
     const steerDeg = -28 * Math.sin(degToRad(currentUDeg));
+    const distanceAlongGuide = ENTRY_START_SAMPLE.cornerB.y - geom.cornerB.y;
     return {
       centerX: geom.centerX,
       centerY: geom.centerY,
@@ -162,15 +195,17 @@ function computeSlide16Frame(seconds: number): TractrixFrame {
       steerDeg,
       cornerB: geom.cornerB,
       cornerC: geom.cornerC,
-      wheelRollDistance: 196 + 290 * u,
+      wheelRollDistance: (209 + distanceAlongGuide) / CAR_SCALE,
     };
   }
 
-  // Phase 3 (12.10s - 18.00s): Straighten cleanly into bay EFGH
-  const settle = easeInOutCubic(progressBetween(seconds, 12.1, 14.0));
+  // Phase 3 (11.80s - 14.20s): Continue driving forward into bay EFGH while straightening from 18 deg to 0 deg
+  const settle = cubicHermite(seconds, 11.8, 14.2, 0, 1, 0.45, 0);
   const headingDeg = U_END_DEG * (1 - settle);
-  const centerX = FINAL_END_SAMPLE.centerX + (X_GUIDE + HALF_CAR_W + 10 - FINAL_END_SAMPLE.centerX) * settle;
-  const centerY = FINAL_END_SAMPLE.centerY + (182 - FINAL_END_SAMPLE.centerY) * settle;
+  const targetCenterX = X_GUIDE + HALF_CAR_W + 14; // 584.4 (centered in 540..630 bay)
+  const targetCenterY = 182;
+  const centerX = FINAL_END_SAMPLE.centerX + (targetCenterX - FINAL_END_SAMPLE.centerX) * settle;
+  const centerY = FINAL_END_SAMPLE.centerY + (targetCenterY - FINAL_END_SAMPLE.centerY) * settle;
   const hRad = degToRad(headingDeg);
 
   const cornerB: Point2D = {
@@ -182,6 +217,9 @@ function computeSlide16Frame(seconds: number): TractrixFrame {
     y: centerY + -HALF_CAR_W * Math.sin(hRad) + CAR_LENGTH * 0.5 * Math.cos(hRad),
   };
 
+  const guideTotal = ENTRY_START_SAMPLE.cornerB.y - FINAL_END_SAMPLE.cornerB.y; // 209.7
+  const pullInDist = FINAL_END_SAMPLE.centerY - centerY; // 89.6 * settle
+
   return {
     centerX,
     centerY,
@@ -189,7 +227,7 @@ function computeSlide16Frame(seconds: number): TractrixFrame {
     steerDeg: -28 * Math.sin(degToRad(U_END_DEG)) * (1 - settle),
     cornerB,
     cornerC,
-    wheelRollDistance: 486 + 18 * settle,
+    wheelRollDistance: (209 + guideTotal + pullInDist) / CAR_SCALE,
   };
 }
 
@@ -197,8 +235,7 @@ function buildTractrixCurvePolyline(seconds: number): string {
   if (seconds < 4.55) {
     return "";
   }
-  const u = easeInOutCubic(progressBetween(seconds, 4.55, 12.1));
-  const endUDeg = U_START_DEG + (U_END_DEG - U_START_DEG) * u;
+  const endUDeg = computeTractrixUDeg(seconds);
   const points: string[] = [];
   const stepDeg = 1.2;
 
@@ -228,11 +265,10 @@ export function Slide16Tractrix(): ReactElement {
   const tractrixLabelOpacity = easeOutCubic(progressBetween(elapsedSeconds, 9.8, 10.9));
 
   // Progress of uDeg along the tractrix for revealing the family of orthogonal circles
-  const tractrixProgress = easeInOutCubic(progressBetween(elapsedSeconds, 4.55, 12.1));
-  const currentUDeg = U_START_DEG + (U_END_DEG - U_START_DEG) * tractrixProgress;
-  const showLiveOrthogonalRadius = elapsedSeconds >= 4.55 && elapsedSeconds < 12.4;
+  const currentUDeg = computeTractrixUDeg(elapsedSeconds);
+  const showLiveOrthogonalRadius = elapsedSeconds >= 4.55 && elapsedSeconds < 12.1;
 
-  // Orthogonal right-angle marker between live tangent radius C->B and vertical/curve normal
+  // Orthogonal right-angle marker between live tangent radius C->B and circle arc at C
   const liveU = degToRad(currentUDeg);
   const tangentDirX = Math.sin(liveU);
   const tangentDirY = -Math.cos(liveU);
@@ -297,7 +333,7 @@ export function Slide16Tractrix(): ReactElement {
            ================================================================ */}
         <g opacity={stageFadeIn} mask="url(#slide16-floor-fade-mask)">
           {/* Concrete Carpark Deck */}
-          <rect x={160} y={84} width={700} height={416} fill="oklch(0.165 0 0)" />
+          <rect x={160} y={84} width={700} height={446} fill="oklch(0.165 0 0)" />
 
           {/* Top Structural Concrete Wheel-Stop Kerb */}
           <rect x={160} y={84} width={700} height={11} fill="oklch(0.26 0 0)" />
@@ -306,9 +342,9 @@ export function Slide16Tractrix(): ReactElement {
           {/* Bottom Driving Aisle Centerline */}
           <line
             x1={180}
-            y1={408}
+            y1={426}
             x2={840}
-            y2={408}
+            y2={426}
             stroke="oklch(0.7 0 0 / 0.25)"
             strokeWidth={1.5}
             strokeDasharray="20 18"
@@ -363,7 +399,7 @@ export function Slide16Tractrix(): ReactElement {
         </g>
 
         {/* ================================================================
-            FIGURE 6: FAMILY OF CIRCLES CENTERED ALONG GUIDE LINE EF
+            FIGURE 6: FAMILY OF SEMICIRCULAR ARCS CENTERED ALONG GUIDE LINE EF
            ================================================================ */}
         {elapsedSeconds >= 4.55 ? (
           <g>
@@ -376,13 +412,11 @@ export function Slide16Tractrix(): ReactElement {
               }
               return (
                 <g key={`fam-${deg}`} opacity={appear}>
-                  <circle
-                    cx={centerB.x}
-                    cy={centerB.y}
-                    r={CAR_LENGTH}
+                  <path
+                    d={buildLeftSemicircleArc(centerB, CAR_LENGTH)}
                     fill="none"
-                    stroke="oklch(0.84 0 0 / 0.24)"
-                    strokeWidth={1.1}
+                    stroke="oklch(0.84 0 0 / 0.28)"
+                    strokeWidth={1.15}
                     strokeDasharray="3 5"
                   />
                   <circle cx={centerB.x} cy={centerB.y} r={2.2} fill="oklch(0.84 0 0 / 0.55)" />
@@ -397,7 +431,7 @@ export function Slide16Tractrix(): ReactElement {
           x1={X_GUIDE}
           y1={BAY_TOP_Y}
           x2={X_GUIDE}
-          y2={425}
+          y2={438}
           stroke={`oklch(0.96 0 0 / ${(0.35 + 0.65 * guideHighlight).toFixed(2)})`}
           strokeWidth={1.5 + 0.9 * guideHighlight}
           strokeDasharray="5 5"
@@ -408,13 +442,11 @@ export function Slide16Tractrix(): ReactElement {
         {/* Live Orthogonal Radius Segment B -> C & Right-Angle Tick */}
         {showLiveOrthogonalRadius ? (
           <g>
-            <circle
-              cx={frame.cornerB.x}
-              cy={frame.cornerB.y}
-              r={CAR_LENGTH}
+            <path
+              d={buildLeftSemicircleArc(frame.cornerB, CAR_LENGTH)}
               fill="none"
-              stroke="oklch(0.92 0 0 / 0.32)"
-              strokeWidth={1.2}
+              stroke="oklch(0.92 0 0 / 0.36)"
+              strokeWidth={1.25}
             />
             <line
               x1={frame.cornerB.x}
@@ -445,8 +477,8 @@ export function Slide16Tractrix(): ReactElement {
 
         {tractrixLabelOpacity > 0.01 ? (
           <text
-            x={376}
-            y={346}
+            x={386}
+            y={362}
             textAnchor="end"
             opacity={tractrixLabelOpacity}
             stroke="oklch(0.15 0 0 / 0.94)"
@@ -472,7 +504,7 @@ export function Slide16Tractrix(): ReactElement {
             frontRightSteerDeg={ackermann.frontRightSteerDeg}
             wheelRollDistance={frame.wheelRollDistance}
             isReversing={false}
-            isBraking={elapsedSeconds >= 13.8}
+            isBraking={elapsedSeconds >= 13.7}
           />
         </g>
 

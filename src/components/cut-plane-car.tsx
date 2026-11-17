@@ -68,6 +68,18 @@ export function CutPlaneCarDefs(): ReactElement {
         <stop offset="100%" stopColor="oklch(0.75 0.18 76 / 0)" />
       </radialGradient>
 
+      <radialGradient id="cut-car-brake-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="oklch(0.68 0.24 25 / 0.85)" />
+        <stop offset="48%" stopColor="oklch(0.62 0.22 25 / 0.35)" />
+        <stop offset="100%" stopColor="oklch(0.58 0.2 25 / 0)" />
+      </radialGradient>
+
+      <radialGradient id="cut-car-reverse-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="oklch(0.98 0 0 / 0.88)" />
+        <stop offset="48%" stopColor="oklch(0.94 0 0 / 0.35)" />
+        <stop offset="100%" stopColor="oklch(0.9 0 0 / 0)" />
+      </radialGradient>
+
       <clipPath id="cut-car-tire-clip">
         <rect x={-5.5} y={-14} width={11} height={28} rx={3.5} />
       </clipPath>
@@ -243,7 +255,7 @@ export function CutPlaneCar({
 
   const taillightStroke = isHero
     ? isBraking
-      ? "oklch(0.68 0.22 25 / 0.96)"
+      ? "oklch(0.72 0.24 25 / 0.98)"
       : "oklch(0.78 0.08 25 / 0.64)"
     : "oklch(0.5 0.05 25 / 0.45)";
 
@@ -434,19 +446,28 @@ export function CutPlaneCar({
             strokeLinecap="round"
           />
 
+          {/* Red Brake Light Glow Halos */}
+          {isHero && isBraking ? (
+            <g>
+              <circle cx={-19} cy={81} r={9} fill="url(#cut-car-brake-glow)" />
+              <circle cx={19} cy={81} r={9} fill="url(#cut-car-brake-glow)" />
+              <ellipse cx={0} cy={81.5} rx={9} ry={5} fill="url(#cut-car-brake-glow)" />
+            </g>
+          ) : null}
+
           {/* Sports Taillight Blades & Brake Strip */}
           <path
             d="M -27 79 C -21 81.5, -15 82, -10 81.5"
             fill="none"
             stroke={taillightStroke}
-            strokeWidth={isHero && isBraking ? 2.1 : 1.6}
+            strokeWidth={isHero && isBraking ? 2.4 : 1.6}
             strokeLinecap="round"
           />
           <path
             d="M 10 81.5 C 15 82, 21 81.5, 27 79"
             fill="none"
             stroke={taillightStroke}
-            strokeWidth={isHero && isBraking ? 2.1 : 1.6}
+            strokeWidth={isHero && isBraking ? 2.4 : 1.6}
             strokeLinecap="round"
           />
           <line
@@ -455,15 +476,19 @@ export function CutPlaneCar({
             x2={7}
             y2={81.5}
             stroke={taillightStroke}
-            strokeWidth={isHero && isBraking ? 1.5 : 0.9}
+            strokeWidth={isHero && isBraking ? 1.8 : 0.9}
             strokeLinecap="round"
           />
 
-          {/* White Reversing Lamps */}
+          {/* White Reversing Lamps & Glow */}
           {isHero && isReversing ? (
-            <g stroke="oklch(0.97 0 0 / 0.95)" strokeWidth={1.8} strokeLinecap="round">
-              <line x1={-11} y1={82} x2={-6} y2={82} />
-              <line x1={6} y1={82} x2={11} y2={82} />
+            <g>
+              <circle cx={-8.5} cy={82.5} r={7.5} fill="url(#cut-car-reverse-glow)" />
+              <circle cx={8.5} cy={82.5} r={7.5} fill="url(#cut-car-reverse-glow)" />
+              <g stroke="oklch(0.98 0 0)" strokeWidth={2} strokeLinecap="round">
+                <line x1={-11} y1={82} x2={-6} y2={82} />
+                <line x1={6} y1={82} x2={11} y2={82} />
+              </g>
             </g>
           ) : null}
 

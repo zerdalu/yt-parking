@@ -79,7 +79,7 @@
 ### Slide 03 — Slicing the Car: The Wheel-Center Plane (`1:10 – 1:50` | `40s`)
 
 - **Minimalist Stage Content:**
-  - Enlarged 2D cut-plane car showing outer chassis rectangle `ABCD`, kerb line `AEFD`, front-left hub `E`, and rear-left hub `F`.
+  - Enlarged 2D cut-plane car showing outer chassis rectangle `ABCD`, kerb line `AEFD`, front-right hub `E`, and rear-right hub `F`.
 - **CSS Motion Graphics:**
   - Horizontal slice plane illuminates the four sectioned wheels and hubs; vertices `A, B, C, D` and wheel centers `E, F` pulse sequentially along the kerb line.
 - **Eleven v4 Voice-Over Script:**
@@ -89,9 +89,9 @@
 
 [calm] The extreme outer body forms a simple rectangle — labeled A, B, C, D. ...
 
-The kerb runs along the straight line through A, E, F, and D — or, if you prefer never to scrape your alloy wheels on concrete... an imaginary line a few centimeters to the right of the kerb. ...
+The kerb runs along the straight line through A, E, F, and D — or, if you prefer never to scrape your alloy wheels on concrete... an imaginary line a few centimeters to the left of the kerb. ...
 
-[thoughtful] Notice that our kerb-side wheels, centered at points E and F, line up closely with the left edge A-D of the car.
+[thoughtful] Notice that our kerb-side wheels, centered at points E and F, line up closely with the right edge A-D of the car.
 ```
 
 ---
@@ -101,7 +101,7 @@ The kerb runs along the straight line through A, E, F, and D — or, if you pref
 - **Minimalist Stage Content:**
   - Cut-plane car with front wheels turned at full lock and three dashed axle rays converging at turning center `X`.
 - **CSS Motion Graphics:**
-  - Rear axle line extends right to `X`. Inside and outside front wheels pivot to their respective Ackermann angles as their hub normal lines intersect at `X`.
+  - Rear axle line extends left to `X`. Inside and outside front wheels pivot to their respective Ackermann angles as their hub normal lines intersect at `X`.
 - **Eleven v4 Voice-Over Script:**
 
 ```text
@@ -167,7 +167,7 @@ Third is k — the front overhang from the front wheel E to the front bumper cor
 ```text
 [calm] Look directly down from above... just as we finish reversing parallel to the kerb. ...
 
-[conversational] As the car reverses around center X, the wheels at E and F travel along the two dashed circles. Meanwhile, the front-left corner A of our car sweeps along the outer circle. ...
+[conversational] As the car reverses around center X, the wheels at E and F travel along the two dashed circles. Meanwhile, the front-right corner A of our car sweeps along the outer circle. ...
 
 [confident] In the tightest possible parking space, that corner A will just barely miss the corner G of the car parked in front. ...
 
@@ -275,9 +275,9 @@ Let's say the wheelbase l is two point six meters, the front overhang k is one p
 ### Slide 13 — The Paradox: Why Doesn't Your Car's Width Matter? (`7:55 – 8:30` | `35s`)
 
 - **Minimalist Stage Content:**
-  - Cut-plane car expanding and contracting in width along its right edge `BC` while kerb-side edge `AD` follows the unchanged outer turning circle.
+  - Cut-plane car expanding and contracting in width along its left edge `BC` while kerb-side edge `AD` follows the unchanged outer turning circle.
 - **CSS Motion Graphics:**
-  - Right side `BC` morphs wider and narrower during the reverse arc, showing that corner `A` still traces the same path past `G`.
+  - Left side `BC` morphs wider and narrower during the reverse arc, showing that corner `A` still traces the same path past `G`.
 - **Eleven v4 Voice-Over Script:**
 
 ```text

@@ -14,8 +14,8 @@ import { SLIDE_02_DRIVER_SEGMENTS, SLIDE_02_INITIAL_POSE, SLIDE_02_TURNING_CENTE
 import { usePresentationStore } from "@/store/presentation-store";
 import { useMemo, type ReactElement } from "react";
 
-const HAZARD_START_SECONDS = 3.7;
-const HAZARD_END_SECONDS = 26.8;
+const HAZARD_START_SECONDS = 3.5;
+const HAZARD_END_SECONDS = 26.6;
 const HAZARD_CYCLE_SECONDS = 0.72;
 
 function clamp01(value: number): number {
@@ -73,10 +73,10 @@ export function Slide02PerfectParking(): ReactElement {
   const pose = sampleSimulatedTimeline(timeline, elapsedSeconds);
   const prevPose = sampleSimulatedTimeline(timeline, Math.max(0, elapsedSeconds - 0.05));
 
-  const isReversing = pose.velocity < -1;
-  const isDecelerating = Math.abs(pose.velocity) < Math.abs(prevPose.velocity) - 0.25;
+  const isReversing = pose.velocity < -0.15;
+  const isDecelerating = Math.abs(pose.velocity) < Math.abs(prevPose.velocity) - 0.18;
   const isStoppedInManeuver =
-    elapsedSeconds >= 3.6 && elapsedSeconds < HAZARD_END_SECONDS && Math.abs(pose.velocity) < 0.8;
+    elapsedSeconds >= 3.4 && elapsedSeconds < HAZARD_END_SECONDS && Math.abs(pose.velocity) < 0.8;
   const isBraking = isStoppedInManeuver || isDecelerating;
 
   const isHazardActive = elapsedSeconds >= HAZARD_START_SECONDS && elapsedSeconds < HAZARD_END_SECONDS;
@@ -86,7 +86,7 @@ export function Slide02PerfectParking(): ReactElement {
   // Phase 1 geometry illuminates right before "You reverse into the space at full steering lock..." (12.64s)
   const showPhase1Geometry = elapsedSeconds >= 11.4;
   const showPhase1Rays = elapsedSeconds >= 11.8 && elapsedSeconds < 21.6 && pose.steerDeg < -5;
-  const showPhase2Vector = elapsedSeconds >= 23.4;
+  const showPhase2Vector = elapsedSeconds >= 23.2;
 
   // Closing explanation (26.6s - 34.0s):
   // - 26.6s..29.0s: "To find the minimum space required," -> highlight parking bay footprint & MIN SPACE bracket
@@ -111,8 +111,8 @@ export function Slide02PerfectParking(): ReactElement {
     };
   }, [elapsedSeconds, showPhase1Geometry, timeline]);
 
-  // Straight forward pull-up runs 23.4s - 26.4s ("and drive straight forward into the middle of the space.")
-  const phase2Progress = clamp01((elapsedSeconds - 23.4) / 3.0);
+  // Straight forward pull-up runs 23.2s - 26.2s ("and drive straight forward into the middle of the space.")
+  const phase2Progress = clamp01((elapsedSeconds - 23.2) / 3.0);
   const phase2ArrowEndY = 250 - 28.5 * phase2Progress;
 
   return (
@@ -244,7 +244,7 @@ export function Slide02PerfectParking(): ReactElement {
               />
             </g>
 
-            {/* Equal Outer-Radius Geometry Rays (X -> Grazing Point G and X -> Phase-1 Stop Corner) */}
+            {/* Equal Outer-Radius Geometry Rays (X -> Grazing Point G and X -> Phase-1 Stop Corner A) */}
             {sweepFocus > 0.01 ? (
               <g opacity={sweepFocus}>
                 <g stroke="oklch(0.92 0 0 / 0.68)" strokeWidth={1.35} strokeDasharray="4 4">
@@ -253,6 +253,28 @@ export function Slide02PerfectParking(): ReactElement {
                 </g>
                 <circle cx={665} cy={250} r={4.2} fill="oklch(0.98 0 0)" filter="url(#luminous-glow)" />
                 <circle cx={589} cy={179} r={9} fill="none" stroke="oklch(0.96 0 0 / 0.72)" strokeWidth={1.3} />
+                <text
+                  x={576}
+                  y={174}
+                  textAnchor="end"
+                  stroke="oklch(0.15 0 0 / 0.94)"
+                  strokeWidth={4}
+                  strokeLinejoin="round"
+                  className="svg-label-halo fill-text-primary font-mono text-xs font-semibold"
+                >
+                  G
+                </text>
+                <text
+                  x={678}
+                  y={254}
+                  textAnchor="start"
+                  stroke="oklch(0.15 0 0 / 0.94)"
+                  strokeWidth={4}
+                  strokeLinejoin="round"
+                  className="svg-label-halo fill-text-primary font-mono text-xs font-semibold"
+                >
+                  A
+                </text>
               </g>
             ) : null}
 
@@ -374,7 +396,7 @@ export function Slide02PerfectParking(): ReactElement {
             kerbSide={KerbSides.Right}
             showBoundingBox={false}
             showVertexLabels={false}
-            showAxlePlaneLines={false}
+            showAxlePlaneLines={showPhase1Geometry}
             frontLeftSteerDeg={pose.frontLeftSteerDeg}
             frontRightSteerDeg={pose.frontRightSteerDeg}
             wheelRollDistance={pose.wheelRollDistance}

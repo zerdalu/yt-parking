@@ -14,8 +14,8 @@ import { SLIDE_01_DRIVER_SEGMENTS, SLIDE_01_INITIAL_POSE } from "@/simulation/sl
 import { usePresentationStore } from "@/store/presentation-store";
 import { useMemo, type ReactElement } from "react";
 
-const HAZARD_START_SECONDS = 4.8;
-const HAZARD_END_SECONDS = 26.6;
+const HAZARD_START_SECONDS = 4.6;
+const HAZARD_END_SECONDS = 26.2;
 const HAZARD_CYCLE_SECONDS = 0.72;
 
 function clamp01(value: number): number {
@@ -61,10 +61,10 @@ export function Slide01Dilemma(): ReactElement {
   const pose = sampleSimulatedTimeline(timeline, elapsedSeconds);
   const prevPose = sampleSimulatedTimeline(timeline, Math.max(0, elapsedSeconds - 0.05));
 
-  const isReversing = pose.velocity < -1;
-  const isDecelerating = Math.abs(pose.velocity) < Math.abs(prevPose.velocity) - 0.35;
+  const isReversing = pose.velocity < -0.15;
+  const isDecelerating = Math.abs(pose.velocity) < Math.abs(prevPose.velocity) - 0.2;
   const isStoppedInManeuver =
-    elapsedSeconds >= 4.7 && elapsedSeconds < HAZARD_END_SECONDS && Math.abs(pose.velocity) < 1;
+    elapsedSeconds >= 4.4 && elapsedSeconds < HAZARD_END_SECONDS && Math.abs(pose.velocity) < 0.8;
   const isBraking = isStoppedInManeuver || isDecelerating;
 
   const isHazardActive = elapsedSeconds >= HAZARD_START_SECONDS && elapsedSeconds < HAZARD_END_SECONDS;
@@ -73,23 +73,34 @@ export function Slide01Dilemma(): ReactElement {
 
   // Clean cross-fade across the reset instant at t = 20.08s
   const fadeOutBeforeReset = 1 - clamp01((elapsedSeconds - 19.8) / 0.25);
-  const fadeInAfterReset = clamp01((elapsedSeconds - 20.12) / 0.25);
+  const fadeInAfterReset = clamp01((elapsedSeconds - 20.12) / 0.22);
   const heroOpacity = elapsedSeconds < 20.08 ? fadeOutBeforeReset : fadeInAfterReset;
 
-  // Single-sweep luminous arc during 20.45s - 24.4s
-  const sweepTrail = useMemo(() => {
-    if (elapsedSeconds < 20.45) {
+  // Phase 2 multi-point shuffle trail (13.25s - 19.85s) showing the back-and-forth rear-axle path inching toward the kerb
+  const shuffleTrail = useMemo(() => {
+    if (elapsedSeconds < 13.25 || elapsedSeconds >= 20.08) {
       return "";
     }
-    return buildTrailPolyline(timeline, 20.45, Math.min(elapsedSeconds, 24.4), (s) => s.cornerB);
+    return buildTrailPolyline(timeline, 13.25, Math.min(elapsedSeconds, 19.85), (s) => ({
+      x: s.rearAxleX,
+      y: s.rearAxleY,
+    }));
+  }, [elapsedSeconds, timeline]);
+
+  // Single-sweep luminous arc during Phase 3 (20.35s - 24.3s)
+  const sweepTrail = useMemo(() => {
+    if (elapsedSeconds < 20.35) {
+      return "";
+    }
+    return buildTrailPolyline(timeline, 20.35, Math.min(elapsedSeconds, 24.3), (s) => s.cornerB);
   }, [elapsedSeconds, timeline]);
 
   const sweepTrailOpacity =
-    elapsedSeconds < 20.45 ? 0 : elapsedSeconds > 27.5 ? Math.max(0.24, 1 - (elapsedSeconds - 27.5) / 1.5) : 0.9;
+    elapsedSeconds < 20.35 ? 0 : elapsedSeconds > 27.5 ? Math.max(0.24, 1 - (elapsedSeconds - 27.5) / 1.5) : 0.9;
 
   // Closing question choreography (28.4s - 35.0s):
   // - 28.4s: "How much extra length," -> Front & rear clearance zones and brackets highlight
-  // - 30.3s: "beyond the length of your own car," -> Car-length span highlights in contrast
+  // - 30.3s: "beyond the length of your own car," -> Car-length span L highlights in contrast
   // - 32.0s: "does that parking space actually need?" -> Both extra spans converge into "+ ?" total
   const gapCalloutOpacity = easeOutCubic((elapsedSeconds - 28.4) / 0.8);
   const carLengthOpacity = easeOutCubic((elapsedSeconds - 30.3) / 0.7);
@@ -154,6 +165,18 @@ export function Slide01Dilemma(): ReactElement {
           />
         </g>
 
+        {/* Multi-Point Shuffle Zig-Zag Trace (13.25s - 20.08s) */}
+        {shuffleTrail ? (
+          <polyline
+            points={shuffleTrail}
+            fill="none"
+            stroke="oklch(0.86 0 0 / 0.72)"
+            strokeWidth={1.6}
+            strokeDasharray="4 4"
+            opacity={fadeOutBeforeReset}
+          />
+        ) : null}
+
         {/* Smooth Single-Sweep Arc Trail */}
         {sweepTrail ? (
           <polyline
@@ -210,7 +233,7 @@ export function Slide01Dilemma(): ReactElement {
               <line x1={666} y1={389.5} x2={704} y2={389.5} />
             </g>
 
-            {/* Car's Own Length Span (221.5..389.5) */}
+            {/* Car's Own Length Span L (221.5..389.5) */}
             {carLengthOpacity > 0.01 ? (
               <g opacity={carLengthOpacity}>
                 <line
@@ -218,10 +241,21 @@ export function Slide01Dilemma(): ReactElement {
                   y1={224}
                   x2={698}
                   y2={387}
-                  stroke="oklch(0.66 0 0 / 0.55)"
-                  strokeWidth={1.4}
+                  stroke="oklch(0.76 0 0 / 0.72)"
+                  strokeWidth={1.5}
                   strokeDasharray="4 4"
                 />
+                <text
+                  x={688}
+                  y={309.5}
+                  textAnchor="end"
+                  stroke="oklch(0.15 0 0 / 0.94)"
+                  strokeWidth={4}
+                  strokeLinejoin="round"
+                  className="svg-label-halo fill-text-secondary font-mono text-xs font-semibold"
+                >
+                  L
+                </text>
               </g>
             ) : null}
 
