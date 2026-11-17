@@ -1,0 +1,17 @@
+WEBVTT
+
+00:00.000 --> 00:04.680
+Before we dive into the proof, here is the exact formula we are going to build.
+
+00:05.300 --> 00:08.620
+At first glance, nested square roots might look intimidating,
+
+00:09.020 --> 00:14.180
+but every single piece inside this expression comes directly from Pythagoras' theorem
+
+00:14.180 --> 00:16.660
+applied to three right-angled triangles.
+
+00:17.460 --> 00:21.640
+Let's freeze the parking maneuver at its most critical instant and see why.
+

@@ -1,0 +1,17 @@
+WEBVTT
+
+00:00.000 --> 00:08.000
+For step two, look at the taller right-angled triangle, AFX. Its vertical side, AF, is simply
+
+00:08.000 --> 00:14.240
+the wheelbase L plus the front overhang K, and we just found the base FX in step one.
+
+00:14.760 --> 00:21.020
+Using Pythagoras' theorem a second time gives us the hypotenuse AX, the radius of the outer circle.
+
+00:21.580 --> 00:27.280
+And that leads immediately to step three. Since point G lies on that exact same circle,
+
+00:27.280 --> 00:30.360
+the distance GX is identical to AX.
+

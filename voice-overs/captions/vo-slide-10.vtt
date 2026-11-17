@@ -1,0 +1,23 @@
+WEBVTT
+
+00:00.000 --> 00:04.800
+Now for step 4, the key geometric construction shown in figure 3.
+
+00:05.340 --> 00:09.780
+We draw a new line straight down from corner G, parallel to the curve,
+
+00:10.020 --> 00:14.280
+until it meets the horizontal line f to x at a new point, k.
+
+00:14.860 --> 00:18.840
+In step 5, notice that the distance f to k at the bottom
+
+00:18.840 --> 00:22.260
+is equal to the width w of the parked car at the top.
+
+00:22.820 --> 00:25.500
+Since we already know the full length f to x,
+
+00:25.500 --> 00:29.980
+the remaining segment k to x is simply f to x minus w.
+

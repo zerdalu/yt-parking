@@ -3,6 +3,12 @@ import { Slide02PerfectParking } from "@/slides/slide-02-perfect-parking";
 import { Slide03WheelPlane } from "@/slides/slide-03-wheel-plane";
 import { Slide04Ackermann } from "@/slides/slide-04-ackermann";
 import { Slide05Inputs } from "@/slides/slide-05-inputs";
+import { Slide06Formula } from "@/slides/slide-06-formula";
+import { Slide07Circles } from "@/slides/slide-07-circles";
+import { Slide08TriangleEfx } from "@/slides/slide-08-triangle-efx";
+import { Slide09TriangleAfx } from "@/slides/slide-09-triangle-afx";
+import { Slide10ConstructionGk } from "@/slides/slide-10-construction-gk";
+import { Slide11SolvingGkx } from "@/slides/slide-11-solving-gkx";
 import { SLIDES_METADATA, usePresentationStore } from "@/store/presentation-store";
 import {
   ArrowCounterClockwiseIcon,
@@ -236,6 +242,18 @@ export function App(): ReactElement {
           <Slide04Ackermann />
         ) : currentSlideIndex === 4 ? (
           <Slide05Inputs />
+        ) : currentSlideIndex === 5 ? (
+          <Slide06Formula />
+        ) : currentSlideIndex === 6 ? (
+          <Slide07Circles />
+        ) : currentSlideIndex === 7 ? (
+          <Slide08TriangleEfx />
+        ) : currentSlideIndex === 8 ? (
+          <Slide09TriangleAfx />
+        ) : currentSlideIndex === 9 ? (
+          <Slide10ConstructionGk />
+        ) : currentSlideIndex === 10 ? (
+          <Slide11SolvingGkx />
         ) : null}
       </main>
 

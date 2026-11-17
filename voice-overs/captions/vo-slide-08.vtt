@@ -1,0 +1,23 @@
+WEBVTT
+
+00:00.000 --> 00:04.460
+Step 1 of our proof focuses on the right-angled triangle Efx.
+
+00:05.060 --> 00:10.880
+Because the rear axle line goes straight through the turning center x at a right angle to the side of the car,
+
+00:11.300 --> 00:13.320
+the angle at f is 90 degrees.
+
+00:14.040 --> 00:17.680
+We know the hypotenuse Ex is the turning radius R,
+
+00:17.840 --> 00:21.280
+and the vertical side Ef is the wheelbase L.
+
+00:21.980 --> 00:26.060
+Applying Pythagoras' theorem gives us the horizontal distance fx,
+
+00:26.060 --> 00:29.320
+the square root of R-squared minus L-squared.
+
