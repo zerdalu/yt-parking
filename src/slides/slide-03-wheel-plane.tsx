@@ -5,32 +5,46 @@ import type { ReactElement } from "react";
 
 const KERB_EXPANSION_JOINTS_Y = [92, 168, 244, 320, 396, 472, 548] as const;
 const PAVING_JOINTS_Y = [110, 198, 286, 374, 462, 550] as const;
+const WHEEL_SPOKE_ANGLES = [0, 72, 144, 216, 288] as const;
+const SIDE_CAR_SCALE = 1.88;
+const SIDE_CAR_ORIGIN_X = 240;
+const SIDE_CAR_GROUND_Y = 382;
+const SIDE_WHEEL_HUB_Y = SIDE_CAR_GROUND_Y - 14 * SIDE_CAR_SCALE;
 
 /**
- * Side-elevation silhouette facing left (ground at y = 382, length = 319.2px from x = 86.4 to 405.6).
- * Extreme front and rear bumper noses pass precisely through the wheel-hub height y = 355.4.
+ * Sports-coupe side elevation in the exact same 168-unit longitudinal coordinate space as
+ * CutPlaneCar (x = -84 rear tail to +84 front nose, y = 0 ground, wheel centers at (±52, -14)).
+ * Extreme front & rear bumper noses pass cleanly through the wheel-center slice line y = -14.
  */
 const SIDE_CAR_SILHOUETTE_PATH = [
-  "M 92 365",
-  "C 88 362, 86.4 358, 86.4 355.4",
-  "C 86.4 345, 90 335, 96 330",
-  "C 118 322, 140 318, 160 316",
-  "L 214 273",
-  "C 226 269, 272 269, 294 272",
-  "L 365 312",
-  "L 400 321",
-  "C 404 333, 405.6 346, 405.6 355.4",
-  "C 405.6 359, 403 363, 399 365",
-  "L 377 365",
-  "C 377 338, 363 324, 344.8 324",
-  "C 326.6 324, 312.6 338, 312.6 365",
-  "L 179.4 365",
-  "C 179.4 338, 165.4 324, 147.2 324",
-  "C 129 324, 115 338, 115 365",
+  "M 84 -14",
+  "C 83.5 -20, 81 -23, 74 -25",
+  "C 64 -28, 57 -31.8, 50 -32",
+  "C 40 -32.2, 32 -32.2, 24 -32.5",
+  "C 14 -40.5, 5 -48.5, -3 -51.5",
+  "C -12 -52.5, -23 -52.5, -33 -50",
+  "C -48 -46, -63 -38, -75 -33",
+  "L -82.5 -34",
+  "C -83.5 -28, -84 -21, -84 -14",
+  "C -84 -9.5, -82 -6.5, -76 -5.5",
+  "L -64.96 -5.5",
+  "A 15.5 15.5 0 1 1 -39.04 -5.5",
+  "L 39.04 -5.5",
+  "A 15.5 15.5 0 1 1 64.96 -5.5",
+  "L 79 -6.2",
+  "C 82.5 -7, 84 -10, 84 -14",
   "Z",
 ].join(" ");
 
-const SIDE_GLASS_PATH = "M 176 314 L 218 279 L 290 279 L 348 311 L 320 315 Z";
+const SIDE_GLASS_PATH = [
+  "M 20 -32.5",
+  "C 12 -40, 4 -46.5, -3 -49",
+  "C -12 -50, -23 -50, -33 -47.5",
+  "C -43 -44.5, -51 -39.5, -57 -35",
+  "L -22 -33",
+  "L 20 -32.5",
+  "Z",
+].join(" ");
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -67,26 +81,85 @@ interface SideElevationCarProps {
 
 function SideElevationCar({ isHubHighlighted }: SideElevationCarProps): ReactElement {
   return (
-    <g>
+    <g transform={`translate(${SIDE_CAR_ORIGIN_X}, ${SIDE_CAR_GROUND_Y}) scale(${SIDE_CAR_SCALE})`}>
+      {/* Sculpted Sports Coupe Side Body */}
       <path
         d={SIDE_CAR_SILHOUETTE_PATH}
         fill="url(#slide03-side-car-grad)"
         stroke="oklch(0.9 0 0 / 0.85)"
-        strokeWidth={1.5}
+        strokeWidth={0.85}
       />
-      <path d={SIDE_GLASS_PATH} fill="url(#slide03-side-glass-grad)" stroke="oklch(0.75 0 0 / 0.35)" strokeWidth={1} />
-      <line x1={256} y1={279} x2={253} y2={315} stroke="oklch(0.32 0 0)" strokeWidth={4} />
 
-      {/* Front & Rear Side Wheels (Centers at y = 355.4, radius = 26.6) */}
-      {[147.2, 344.8].map((wheelX) => (
-        <g key={wheelX} transform={`translate(${wheelX}, 355.4)`}>
-          <circle cx={0} cy={0} r={26.6} fill="oklch(0.16 0 0)" stroke="oklch(0.86 0 0 / 0.9)" strokeWidth={1.6} />
-          <circle cx={0} cy={0} r={16.8} fill="oklch(0.24 0 0)" stroke="oklch(0.62 0 0 / 0.65)" strokeWidth={1.1} />
-          <circle cx={0} cy={0} r={6} fill="none" stroke="oklch(0.7 0 0 / 0.55)" strokeWidth={1} />
+      {/* Side Coupe Glasshouse & B-Pillar */}
+      <path
+        d={SIDE_GLASS_PATH}
+        fill="url(#slide03-side-glass-grad)"
+        stroke="oklch(0.75 0 0 / 0.38)"
+        strokeWidth={0.55}
+      />
+      <line x1={-14} y1={-49.5} x2={-16} y2={-32.5} stroke="oklch(0.28 0 0)" strokeWidth={1.8} />
+
+      {/* Subtle Shoulder Crease, Fender Vent & Wing Mirror */}
+      <path
+        d="M 33 -25 C 12 -26, -12 -26, -34 -24"
+        fill="none"
+        stroke="oklch(0.72 0 0 / 0.22)"
+        strokeWidth={0.55}
+        strokeLinecap="round"
+      />
+      <line x1={31} y1={-25} x2={25} y2={-17} stroke="oklch(0.65 0 0 / 0.42)" strokeWidth={0.8} strokeLinecap="round" />
+      <rect
+        x={14}
+        y={-36}
+        width={5.5}
+        height={3.2}
+        rx={1.5}
+        fill="oklch(0.32 0 0)"
+        stroke="oklch(0.84 0 0 / 0.72)"
+        strokeWidth={0.5}
+      />
+
+      {/* Swept LED Headlight & Rear Taillight Accents */}
+      <path
+        d="M 82 -19.5 C 78 -22, 72 -23.5, 67 -24"
+        fill="none"
+        stroke="oklch(0.96 0 0 / 0.9)"
+        strokeWidth={1.1}
+        strokeLinecap="round"
+      />
+      <line
+        x1={-83}
+        y1={-26.5}
+        x2={-76}
+        y2={-26.5}
+        stroke="oklch(0.78 0.08 25 / 0.68)"
+        strokeWidth={1}
+        strokeLinecap="round"
+      />
+
+      {/* Front & Rear 5-Spoke Sports Alloy Wheels (Centers at (±52, -14), radius = 14) */}
+      {[-52, 52].map((wheelX) => (
+        <g key={wheelX} transform={`translate(${wheelX}, -14)`}>
+          <circle cx={0} cy={0} r={14} fill="oklch(0.15 0 0)" stroke="oklch(0.88 0 0 / 0.9)" strokeWidth={0.9} />
+          <circle cx={0} cy={0} r={9.8} fill="oklch(0.22 0 0)" stroke="oklch(0.66 0 0 / 0.7)" strokeWidth={0.65} />
+          <circle cx={0} cy={0} r={6.8} fill="oklch(0.18 0 0)" stroke="oklch(0.45 0 0 / 0.5)" strokeWidth={0.5} />
+          {WHEEL_SPOKE_ANGLES.map((angle) => (
+            <line
+              key={angle}
+              x1={0}
+              y1={0}
+              x2={0}
+              y2={-9.5}
+              transform={`rotate(${angle})`}
+              stroke="oklch(0.74 0 0 / 0.75)"
+              strokeWidth={1.05}
+              strokeLinecap="round"
+            />
+          ))}
           <circle
             cx={0}
             cy={0}
-            r={isHubHighlighted ? 4.2 : 2.8}
+            r={isHubHighlighted ? 2.4 : 1.7}
             fill="oklch(0.98 0 0)"
             filter={isHubHighlighted ? "url(#slide03-luminous-glow)" : undefined}
           />
@@ -162,13 +235,13 @@ function VertexNode({
 export function Slide03WheelPlane(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
 
-  // Beat 1 (0s - 11.4s): "imagine slicing the vehicle horizontally right through the centers of its four wheels, looking straight down from above." (3.54s - 10.06s)
+  // Beat 1 (0s - 11.4s): Horizontal slice through the four wheel centers -> top-down sports car
   const sideFadeIn = 0.55 + 0.45 * easeOutCubic(progressBetween(elapsedSeconds, 0.0, 0.7));
   const sideFadeOut = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 9.2, 10.5));
   const sideOpacity = sideFadeIn * sideFadeOut;
 
   const sliceSweep = easeInOutCubic(progressBetween(elapsedSeconds, 3.6, 6.8));
-  const sliceY = 248 + (355.4 - 248) * sliceSweep;
+  const sliceY = 266 + (SIDE_WHEEL_HUB_Y - 266) * sliceSweep;
   const sliceLocked = sliceSweep >= 0.92;
   const slicePlaneOpacity = easeOutCubic(progressBetween(elapsedSeconds, 3.2, 3.9)) * sideFadeOut;
 
@@ -179,13 +252,13 @@ export function Slide03WheelPlane(): ReactElement {
   const topDownScanProgress = progressBetween(elapsedSeconds, 7.6, 10.2);
   const showTopDownScan = topDownScanProgress > 0 && topDownScanProgress < 1;
 
-  // Smooth glide of top-down car from right side (x = 660, scale = 1.88) to stage center (x = 480, scale = 2.08)
+  // Smooth glide of top-down car from right side (x = 650, scale = 1.88) to stage center (x = 480, scale = 2.08)
   const centerTransition = easeInOutCubic(progressBetween(elapsedSeconds, 9.5, 11.4));
-  const carCenterX = 660 - 180 * centerTransition;
+  const carCenterX = 650 - 170 * centerTransition;
   const carCenterY = 315;
   const carScale = 1.88 + 0.2 * centerTransition;
 
-  // Scaled outer rectangle ABCD & wheel hubs E, F
+  // Scaled outer rectangle ABCD & kerb-side wheel hubs E, F (right-hand traffic -> kerb on RIGHT)
   const halfW = 38 * carScale;
   const halfL = 84 * carScale;
   const wheelOffsetX = 31 * carScale;
@@ -195,16 +268,17 @@ export function Slide03WheelPlane(): ReactElement {
   const rightX = carCenterX + halfW;
   const topY = carCenterY - halfL;
   const bottomY = carCenterY + halfL;
+  const wheelRightX = carCenterX + wheelOffsetX;
   const wheelLeftX = carCenterX - wheelOffsetX;
   const frontAxleY = carCenterY - wheelOffsetY;
   const rearAxleY = carCenterY + wheelOffsetY;
 
-  // Beat 2 (11.0s - 16.4s): "The extreme outer body forms a simple rectangle, labeled A, B, C, D." (10.78s - 16.34s)
+  // Beat 2 (11.0s - 16.4s): Outer body rectangle A, B, C, D
   const rectPerimeter = 2 * (halfW * 2 + halfL * 2);
   const rectDraw = easeInOutCubic(progressBetween(elapsedSeconds, 11.0, 13.8));
   const rectVisible = elapsedSeconds >= 11.0;
 
-  // Vertices appear & pulse strictly on spoken letters A(14.36-14.80), B(15.08-15.32), C(15.62-15.88), D(16.10-16.34)
+  // Vertices pulse right on spoken letters A, B, C, D
   const alphaA = easeOutCubic(progressBetween(elapsedSeconds, 14.1, 14.45));
   const alphaB = easeOutCubic(progressBetween(elapsedSeconds, 14.9, 15.2));
   const alphaC = easeOutCubic(progressBetween(elapsedSeconds, 15.45, 15.75));
@@ -223,18 +297,17 @@ export function Slide03WheelPlane(): ReactElement {
     pulseFactor(elapsedSeconds, 35.97, 0.55),
   );
 
-  // Beat 3 (16.9s - 28.9s): "The curb runs along the straight line through A, E, F, and D. Or... an imaginary line a few centimeters to the right of the curb."
+  // Beat 3 (16.9s - 28.9s): Right-hand kerb along A, E, F, D & safe clearance offset rightward
   const kerbVisibility = easeOutCubic(progressBetween(elapsedSeconds, 16.9, 17.8));
   const kerbLineDraw = easeInOutCubic(progressBetween(elapsedSeconds, 17.8, 19.4));
   const alloyHighlight = Math.max(pulseFactor(elapsedSeconds, 24.1, 0.85), pulseFactor(elapsedSeconds, 30.2, 0.9));
   const kerbShift = easeInOutCubic(progressBetween(elapsedSeconds, 25.6, 28.2));
-  const kerbEdgeX = leftX - 24 * kerbShift;
+  const kerbEdgeX = rightX + 24 * kerbShift;
 
-  // Beat 4 (28.9s - 36.64s): "Notice that our curbside wheels, centered at points E and F, line up closely with the left edge A to D of the car."
+  // Beat 4 (28.9s - 36.64s): Kerb-side wheels E and F align closely with right edge A-D
   const wheelFocus = easeInOutCubic(progressBetween(elapsedSeconds, 29.4, 31.2));
   const carShellOpacity = 1 - 0.36 * wheelFocus;
 
-  // Hubs E & F appear on "through A, E, F, and D" (19.86s, 20.32s) and reach full emphasis on "points E and F" (32.18s, 32.78s)
   const alphaE = Math.max(
     easeOutCubic(progressBetween(elapsedSeconds, 19.7, 20.05)) * 0.9,
     easeOutCubic(progressBetween(elapsedSeconds, 31.5, 32.1)),
@@ -260,8 +333,8 @@ export function Slide03WheelPlane(): ReactElement {
   const edgeAlignConnectors = easeOutCubic(progressBetween(elapsedSeconds, 33.6, 34.8));
 
   const scanLineY = topY + (bottomY - topY) * easeInOutCubic(topDownScanProgress);
-  const aboveSliceClipHeight = Math.max(0, sliceY - 200);
-  const belowSliceClipHeight = Math.max(0, 412 - sliceY);
+  const aboveSliceClipHeight = Math.max(0, sliceY - 250);
+  const belowSliceClipHeight = Math.max(0, 398 - sliceY);
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center">
@@ -274,7 +347,7 @@ export function Slide03WheelPlane(): ReactElement {
       </div>
 
       <svg viewBox="0 0 960 620" className="h-full w-full max-w-6xl p-4 select-none">
-        <title>Horizontal wheel-center slice plane, chassis rectangle ABCD, and kerb line AEFD</title>
+        <title>Horizontal wheel-center slice plane, sports-coupe rectangle ABCD, and right-side kerb line AEFD</title>
         <defs>
           <radialGradient id="slide03-ambient-glow" cx="50%" cy="50%" r="54%">
             <stop offset="0%" stopColor="oklch(0.28 0 0 / 0.5)" />
@@ -291,14 +364,14 @@ export function Slide03WheelPlane(): ReactElement {
           </filter>
 
           <linearGradient id="slide03-side-car-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="oklch(0.36 0 0)" />
-            <stop offset="52%" stopColor="oklch(0.27 0 0)" />
+            <stop offset="0%" stopColor="oklch(0.38 0 0)" />
+            <stop offset="52%" stopColor="oklch(0.28 0 0)" />
             <stop offset="100%" stopColor="oklch(0.2 0 0)" />
           </linearGradient>
 
           <linearGradient id="slide03-side-glass-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="oklch(0.13 0 0 / 0.9)" />
-            <stop offset="100%" stopColor="oklch(0.18 0 0 / 0.85)" />
+            <stop offset="0%" stopColor="oklch(0.12 0 0 / 0.92)" />
+            <stop offset="100%" stopColor="oklch(0.17 0 0 / 0.88)" />
           </linearGradient>
 
           <linearGradient id="slide03-slice-plane-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -318,18 +391,18 @@ export function Slide03WheelPlane(): ReactElement {
             <rect x={0} y={40} width={960} height={540} fill="url(#slide03-kerb-fade-grad)" />
           </mask>
 
-          <linearGradient id="slide03-sidewalk-left-grad" x1="100%" y1="0%" x2="0%" y2="0%">
+          <linearGradient id="slide03-sidewalk-right-grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="oklch(0.22 0 0 / 0.88)" />
             <stop offset="55%" stopColor="oklch(0.19 0 0 / 0.42)" />
             <stop offset="100%" stopColor="oklch(0.16 0 0 / 0)" />
           </linearGradient>
 
           <clipPath id="slide03-above-slice-clip">
-            <rect x={50} y={200} width={410} height={aboveSliceClipHeight} />
+            <rect x={60} y={250} width={365} height={aboveSliceClipHeight} />
           </clipPath>
 
           <clipPath id="slide03-below-slice-clip">
-            <rect x={50} y={sliceY} width={410} height={belowSliceClipHeight} />
+            <rect x={60} y={sliceY} width={365} height={belowSliceClipHeight} />
           </clipPath>
 
           <CutPlaneCarDefs />
@@ -339,12 +412,19 @@ export function Slide03WheelPlane(): ReactElement {
         <circle cx={480} cy={315} r={315} fill="url(#slide03-ambient-glow)" />
 
         {/* ================================================================
-            BEAT 1: Side-Elevation Horizontal Slice & Top-Down Projection
+            BEAT 1: Side-Elevation Sports Coupe Slice & Top-Down Projection
            ================================================================ */}
         {sideOpacity > 0.01 ? (
           <g opacity={sideOpacity}>
             {/* Road Ground Line */}
-            <line x1={60} y1={382} x2={436} y2={382} stroke="oklch(0.54 0 0 / 0.5)" strokeWidth={1.4} />
+            <line
+              x1={60}
+              y1={SIDE_CAR_GROUND_Y}
+              x2={424}
+              y2={SIDE_CAR_GROUND_Y}
+              stroke="oklch(0.54 0 0 / 0.5)"
+              strokeWidth={1.4}
+            />
 
             {/* Ghosted Upper Section Above the Descending Slice Plane */}
             <g clipPath="url(#slide03-above-slice-clip)" opacity={0.22}>
@@ -359,10 +439,10 @@ export function Slide03WheelPlane(): ReactElement {
             {/* Wheel-Center Axis Line Highlight Once Slice Locks onto Hubs */}
             {sliceLocked ? (
               <line
-                x1={86.4}
-                y1={355.4}
-                x2={405.6}
-                y2={355.4}
+                x1={82}
+                y1={SIDE_WHEEL_HUB_Y}
+                x2={398}
+                y2={SIDE_WHEEL_HUB_Y}
                 stroke="oklch(0.97 0 0 / 0.85)"
                 strokeWidth={1.6}
                 strokeDasharray="4 4"
@@ -373,15 +453,15 @@ export function Slide03WheelPlane(): ReactElement {
             {slicePlaneOpacity > 0.01 ? (
               <g opacity={slicePlaneOpacity}>
                 <polygon
-                  points={`64,${sliceY + 9} 96,${sliceY - 9} 432,${sliceY - 9} 400,${sliceY + 9}`}
+                  points={`64,${sliceY + 9} 96,${sliceY - 9} 422,${sliceY - 9} 390,${sliceY + 9}`}
                   fill="url(#slide03-slice-plane-grad)"
                   stroke="oklch(0.96 0 0 / 0.88)"
                   strokeWidth={1.3}
                 />
                 <line
-                  x1={76}
+                  x1={74}
                   y1={sliceY}
-                  x2={420}
+                  x2={410}
                   y2={sliceY}
                   stroke="oklch(0.98 0 0)"
                   strokeWidth={1.5}
@@ -396,22 +476,22 @@ export function Slide03WheelPlane(): ReactElement {
         {projectionBridgeOpacity > 0.01 ? (
           <g opacity={projectionBridgeOpacity}>
             <line
-              x1={432}
-              y1={355.4}
-              x2={552}
-              y2={355.4}
+              x1={420}
+              y1={SIDE_WHEEL_HUB_Y}
+              x2={536}
+              y2={SIDE_WHEEL_HUB_Y}
               stroke="oklch(0.84 0 0 / 0.55)"
               strokeWidth={1.2}
               strokeDasharray="4 5"
             />
             <path
-              d="M 552 355.4 C 566 355.4, 566 315, 580 315"
+              d={`M 536 ${SIDE_WHEEL_HUB_Y} C 550 ${SIDE_WHEEL_HUB_Y}, 550 315, 566 315`}
               fill="none"
               stroke="oklch(0.9 0 0 / 0.72)"
               strokeWidth={1.3}
             />
             <polyline
-              points="573,310 580,315 573,320"
+              points="559,310 566,315 559,320"
               fill="none"
               stroke="oklch(0.9 0 0 / 0.72)"
               strokeWidth={1.3}
@@ -422,46 +502,46 @@ export function Slide03WheelPlane(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            BEATS 3 & 4: Concrete Kerb & Imaginary Safe Offset Line
+            BEATS 3 & 4: Right-Side Concrete Kerb & Safe Clearance Offset Line
            ================================================================ */}
         {kerbVisibility > 0.01 ? (
           <g opacity={kerbVisibility} mask="url(#slide03-kerb-fade-mask)">
-            {/* Sidewalk Slab Fading Leftward */}
-            <rect x={kerbEdgeX - 135} y={48} width={126} height={524} fill="url(#slide03-sidewalk-left-grad)" />
+            {/* Sidewalk Slab Fading Rightward */}
+            <rect x={kerbEdgeX + 9} y={48} width={145} height={524} fill="url(#slide03-sidewalk-right-grad)" />
             <g stroke="oklch(0.32 0 0 / 0.36)" strokeWidth={1}>
               {PAVING_JOINTS_Y.map((y) => (
-                <line key={`pave-${y}`} x1={kerbEdgeX - 120} y1={y} x2={kerbEdgeX - 9} y2={y} />
+                <line key={`pave-${y}`} x1={kerbEdgeX + 9} y1={y} x2={kerbEdgeX + 135} y2={y} />
               ))}
             </g>
 
             {/* Physical Raised Concrete Kerb Edge */}
-            <rect x={kerbEdgeX - 9} y={48} width={9} height={524} fill="oklch(0.31 0 0)" />
+            <rect x={kerbEdgeX} y={48} width={9} height={524} fill="oklch(0.31 0 0)" />
             <line x1={kerbEdgeX} y1={48} x2={kerbEdgeX} y2={572} stroke="oklch(0.76 0 0 / 0.74)" strokeWidth={1.6} />
             <line
-              x1={kerbEdgeX - 9}
+              x1={kerbEdgeX + 9}
               y1={48}
-              x2={kerbEdgeX - 9}
+              x2={kerbEdgeX + 9}
               y2={572}
               stroke="oklch(0.42 0 0 / 0.55)"
               strokeWidth={1}
             />
             <g stroke="oklch(0.45 0 0 / 0.65)" strokeWidth={1}>
               {KERB_EXPANSION_JOINTS_Y.map((y) => (
-                <line key={`kerb-${y}`} x1={kerbEdgeX - 9} y1={y} x2={kerbEdgeX} y2={y} />
+                <line key={`kerb-${y}`} x1={kerbEdgeX} y1={y} x2={kerbEdgeX + 9} y2={y} />
               ))}
             </g>
 
-            {/* Clearance Corridor Between Concrete Kerb & Imaginary Line AD */}
+            {/* Clearance Corridor Between Imaginary Line AD & Concrete Kerb */}
             {kerbShift > 0.03 ? (
               <g opacity={kerbShift}>
-                <rect x={kerbEdgeX} y={56} width={leftX - kerbEdgeX} height={508} fill="oklch(0.95 0 0 / 0.035)" />
+                <rect x={rightX} y={56} width={kerbEdgeX - rightX} height={508} fill="oklch(0.95 0 0 / 0.035)" />
 
-                {/* Subtle Caliper Clearance Ticks Aligned with Front & Rear Wheels */}
+                {/* Caliper Clearance Ticks Aligned with Curbside Wheels E & F */}
                 {[frontAxleY, rearAxleY].map((ty) => (
                   <g key={`gap-tick-${ty}`} stroke="oklch(0.84 0 0 / 0.68)" strokeWidth={1.1}>
-                    <line x1={kerbEdgeX + 2} y1={ty} x2={leftX - 2} y2={ty} />
-                    <line x1={kerbEdgeX + 2} y1={ty - 3.5} x2={kerbEdgeX + 2} y2={ty + 3.5} />
-                    <line x1={leftX - 2} y1={ty - 3.5} x2={leftX - 2} y2={ty + 3.5} />
+                    <line x1={rightX + 2} y1={ty} x2={kerbEdgeX - 2} y2={ty} />
+                    <line x1={rightX + 2} y1={ty - 3.5} x2={rightX + 2} y2={ty + 3.5} />
+                    <line x1={kerbEdgeX - 2} y1={ty - 3.5} x2={kerbEdgeX - 2} y2={ty + 3.5} />
                   </g>
                 ))}
               </g>
@@ -470,19 +550,19 @@ export function Slide03WheelPlane(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            MAIN STAGE: Enlarged 2D Cut-Plane Car (Kerb on Left Edge AD)
+            MAIN STAGE: Enlarged 2D Cut-Plane Sports Coupe (Kerb on Right Edge AD)
            ================================================================ */}
         <g transform={`translate(${carCenterX}, ${carCenterY}) scale(${carScale})`} opacity={carShellOpacity}>
           <CutPlaneCar
             variant={CarSectionVariants.Hero}
-            kerbSide={KerbSides.Left}
+            kerbSide={KerbSides.Right}
             showBoundingBox={false}
             showVertexLabels={false}
             showAxlePlaneLines={true}
           />
         </g>
 
-        {/* Protective Rim Glow Around Curbside Wheels E & F ("alloy wheels on concrete" / "curbside wheels") */}
+        {/* Protective Rim Glow Around Right-Side Curbside Wheels E & F */}
         {alloyHighlight > 0.03 ? (
           <g
             fill="none"
@@ -491,8 +571,8 @@ export function Slide03WheelPlane(): ReactElement {
             opacity={alloyHighlight * 0.8}
             filter="url(#slide03-luminous-glow)"
           >
-            <rect x={wheelLeftX - 14} y={frontAxleY - 30} width={28} height={60} rx={8} />
-            <rect x={wheelLeftX - 14} y={rearAxleY - 30} width={28} height={60} rx={8} />
+            <rect x={wheelRightX - 14} y={frontAxleY - 30} width={28} height={60} rx={8} />
+            <rect x={wheelRightX - 14} y={rearAxleY - 30} width={28} height={60} rx={8} />
           </g>
         ) : null}
 
@@ -538,15 +618,15 @@ export function Slide03WheelPlane(): ReactElement {
             {/* Right-Angle Corner Caliper Brackets */}
             {rectDraw > 0.15 ? (
               <g fill="none" stroke="oklch(0.98 0 0)" strokeWidth={1.8}>
-                <path d={`M ${leftX} ${topY + 12} L ${leftX} ${topY} L ${leftX + 12} ${topY}`} />
+                <path d={`M ${rightX - 12} ${topY} L ${rightX} ${topY} L ${rightX} ${topY + 12}`} />
                 {rectDraw > 0.3 ? (
-                  <path d={`M ${rightX - 12} ${topY} L ${rightX} ${topY} L ${rightX} ${topY + 12}`} />
+                  <path d={`M ${leftX} ${topY + 12} L ${leftX} ${topY} L ${leftX + 12} ${topY}`} />
                 ) : null}
                 {rectDraw > 0.68 ? (
-                  <path d={`M ${rightX} ${bottomY - 12} L ${rightX} ${bottomY} L ${rightX - 12} ${bottomY}`} />
+                  <path d={`M ${leftX + 12} ${bottomY} L ${leftX} ${bottomY} L ${leftX} ${bottomY - 12}`} />
                 ) : null}
                 {rectDraw > 0.85 ? (
-                  <path d={`M ${leftX + 12} ${bottomY} L ${leftX} ${bottomY} L ${leftX} ${bottomY - 12}`} />
+                  <path d={`M ${rightX} ${bottomY - 12} L ${rightX} ${bottomY} L ${rightX - 12} ${bottomY}`} />
                 ) : null}
               </g>
             ) : null}
@@ -554,13 +634,13 @@ export function Slide03WheelPlane(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            BEAT 3: Luminous Kerb / Imaginary Line Through A and D
+            BEAT 3: Luminous Kerb / Imaginary Line Through A and D (Right Edge)
            ================================================================ */}
         {kerbLineDraw > 0.01 ? (
           <line
-            x1={leftX}
+            x1={rightX}
             y1={64}
-            x2={leftX}
+            x2={rightX}
             y2={560}
             stroke="oklch(0.98 0 0)"
             strokeWidth={kerbShift > 0.5 ? 1.7 : 2.1}
@@ -571,14 +651,14 @@ export function Slide03WheelPlane(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            BEAT 4: Wheel-Center Line E-F & Alignment with Edge A-D
+            BEAT 4: Wheel-Center Line E-F & Alignment with Right Edge A-D
            ================================================================ */}
         {efAxisDraw > 0.01 ? (
           <g>
             <line
-              x1={wheelLeftX}
+              x1={wheelRightX}
               y1={topY}
-              x2={wheelLeftX}
+              x2={wheelRightX}
               y2={bottomY}
               stroke="oklch(0.96 0 0 / 0.82)"
               strokeWidth={1.5}
@@ -586,7 +666,7 @@ export function Slide03WheelPlane(): ReactElement {
               strokeDashoffset={efAxisLength * (1 - efAxisDraw)}
             />
 
-            {/* Radial Alignment Connectors Linking Hubs E & F to Edge AD */}
+            {/* Radial Alignment Connectors Linking Curbside Hubs E & F to Edge AD */}
             {edgeAlignConnectors > 0.01 ? (
               <g
                 stroke="oklch(0.94 0 0 / 0.82)"
@@ -594,17 +674,17 @@ export function Slide03WheelPlane(): ReactElement {
                 strokeDasharray="2.5 2.5"
                 opacity={edgeAlignConnectors}
               >
-                <line x1={leftX} y1={frontAxleY} x2={wheelLeftX} y2={frontAxleY} />
-                <line x1={leftX} y1={rearAxleY} x2={wheelLeftX} y2={rearAxleY} />
+                <line x1={wheelRightX} y1={frontAxleY} x2={rightX} y2={frontAxleY} />
+                <line x1={wheelRightX} y1={rearAxleY} x2={rightX} y2={rearAxleY} />
               </g>
             ) : null}
 
             {/* Wheel-Center Section Rings Around All Four Hubs */}
             <g fill="none" stroke="oklch(0.94 0 0 / 0.55)" strokeWidth={1.2} opacity={wheelFocus}>
-              <circle cx={wheelLeftX} cy={frontAxleY} r={14} />
-              <circle cx={wheelLeftX} cy={rearAxleY} r={14} />
-              <circle cx={carCenterX + wheelOffsetX} cy={frontAxleY} r={11} opacity={0.45} />
-              <circle cx={carCenterX + wheelOffsetX} cy={rearAxleY} r={11} opacity={0.45} />
+              <circle cx={wheelRightX} cy={frontAxleY} r={14} />
+              <circle cx={wheelRightX} cy={rearAxleY} r={14} />
+              <circle cx={wheelLeftX} cy={frontAxleY} r={11} opacity={0.45} />
+              <circle cx={wheelLeftX} cy={rearAxleY} r={11} opacity={0.45} />
             </g>
           </g>
         ) : null}
@@ -613,62 +693,62 @@ export function Slide03WheelPlane(): ReactElement {
             SEQUENTIAL GEOMETRIC VERTEX NODES: A, B, C, D and Hubs E, F
            ================================================================ */}
         <VertexNode
-          cx={leftX}
+          cx={rightX}
           cy={topY}
           label="A"
-          labelX={leftX + 10}
+          labelX={rightX - 10}
           labelY={topY - 12}
-          textAnchor="start"
+          textAnchor="end"
           opacity={alphaA}
           pulse={pulseA}
         />
         <VertexNode
-          cx={rightX}
+          cx={leftX}
           cy={topY}
           label="B"
-          labelX={rightX - 10}
+          labelX={leftX + 10}
           labelY={topY - 12}
-          textAnchor="end"
+          textAnchor="start"
           opacity={alphaB}
           pulse={pulseB}
         />
         <VertexNode
-          cx={rightX}
+          cx={leftX}
           cy={bottomY}
           label="C"
-          labelX={rightX - 10}
+          labelX={leftX + 10}
           labelY={bottomY + 22}
-          textAnchor="end"
+          textAnchor="start"
           opacity={alphaC}
           pulse={pulseC}
         />
         <VertexNode
-          cx={leftX}
+          cx={rightX}
           cy={bottomY}
           label="D"
-          labelX={leftX + 10}
+          labelX={rightX - 10}
           labelY={bottomY + 22}
-          textAnchor="start"
+          textAnchor="end"
           opacity={alphaD}
           pulse={pulseD}
         />
         <VertexNode
-          cx={wheelLeftX}
+          cx={wheelRightX}
           cy={frontAxleY}
           label="E"
-          labelX={wheelLeftX + 19}
+          labelX={wheelRightX - 18}
           labelY={frontAxleY + 4}
-          textAnchor="start"
+          textAnchor="end"
           opacity={alphaE}
           pulse={pulseE}
         />
         <VertexNode
-          cx={wheelLeftX}
+          cx={wheelRightX}
           cy={rearAxleY}
           label="F"
-          labelX={wheelLeftX + 19}
+          labelX={wheelRightX - 18}
           labelY={rearAxleY + 4}
-          textAnchor="start"
+          textAnchor="end"
           opacity={alphaF}
           pulse={pulseF}
         />

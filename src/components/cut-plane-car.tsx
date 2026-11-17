@@ -29,14 +29,14 @@ export function CutPlaneCarDefs(): ReactElement {
   return (
     <>
       <linearGradient id="cut-car-hero-grad" x1="15%" y1="0%" x2="85%" y2="100%">
-        <stop offset="0%" stopColor="oklch(0.39 0 0)" />
-        <stop offset="48%" stopColor="oklch(0.29 0 0)" />
+        <stop offset="0%" stopColor="oklch(0.41 0 0)" />
+        <stop offset="48%" stopColor="oklch(0.3 0 0)" />
         <stop offset="100%" stopColor="oklch(0.22 0 0)" />
       </linearGradient>
 
       <linearGradient id="cut-car-hero-cabin-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="oklch(0.32 0 0 / 0.85)" />
-        <stop offset="100%" stopColor="oklch(0.22 0 0 / 0.9)" />
+        <stop offset="0%" stopColor="oklch(0.34 0 0 / 0.88)" />
+        <stop offset="100%" stopColor="oklch(0.23 0 0 / 0.92)" />
       </linearGradient>
 
       <linearGradient id="cut-car-parked-grad" x1="15%" y1="0%" x2="85%" y2="100%">
@@ -46,8 +46,8 @@ export function CutPlaneCarDefs(): ReactElement {
       </linearGradient>
 
       <linearGradient id="cut-car-glass-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="oklch(0.12 0 0 / 0.92)" />
-        <stop offset="100%" stopColor="oklch(0.17 0 0 / 0.88)" />
+        <stop offset="0%" stopColor="oklch(0.11 0 0 / 0.94)" />
+        <stop offset="100%" stopColor="oklch(0.16 0 0 / 0.9)" />
       </linearGradient>
 
       <linearGradient id="cut-car-tire-hero-grad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -76,35 +76,38 @@ export function CutPlaneCarDefs(): ReactElement {
 }
 
 /**
- * Outer sculpted automotive planform inside the 76x168 ABCD envelope (-38..38 x -84..84),
- * with flared wheel-arch pockets around (±31, ±52) so Ackermann wheel angles remain unobstructed.
+ * Outer sculpted sports-coupe planform inside the 76x168 ABCD envelope (-38..38 x -84..84),
+ * featuring a tapered nose, scalloped waist, flared rear haunches, and open wheel-arch
+ * cutouts around (±31, ±52) so full-lock Ackermann steering remains unobstructed.
  */
 const CAR_BODY_PATH = [
-  "M -24 -84",
-  "C -10 -85, 10 -85, 24 -84",
-  "C 32 -83, 35 -79, 35 -71",
+  "M -16 -84",
+  "C -6 -84, 6 -84, 16 -84",
+  "C 26 -83.5, 34 -78, 35 -70",
   "L 34 -68",
-  "C 24 -68, 22 -63, 22 -52",
-  "C 22 -41, 24 -36, 34 -36",
+  "C 22 -68, 18.5 -63, 18.5 -52",
+  "C 18.5 -41, 22 -36, 34 -36",
   "L 35 -33",
-  "L 35 33",
-  "L 34 36",
+  "C 34 -18, 33 -2, 33.5 14",
+  "C 34 24, 35.5 29, 36 33",
+  "L 35 36",
   "C 24 36, 22 41, 22 52",
-  "C 22 63, 24 68, 34 68",
-  "L 35 71",
-  "C 35 79, 32 83, 24 84",
-  "C 10 85, -10 85, -24 84",
-  "C -32 83, -35 79, -35 71",
-  "L -34 68",
+  "C 22 63, 24 68, 35 68",
+  "L 35.5 71",
+  "C 35 79, 29 83.2, 20 84",
+  "C 8 84, -8 84, -20 84",
+  "C -29 83.2, -35 79, -35.5 71",
+  "L -35 68",
   "C -24 68, -22 63, -22 52",
-  "C -22 41, -24 36, -34 36",
-  "L -35 33",
-  "L -35 -33",
+  "C -22 41, -24 36, -35 36",
+  "L -36 33",
+  "C -35.5 29, -34 24, -33.5 14",
+  "C -33 -2, -34 -18, -35 -33",
   "L -34 -36",
-  "C -24 -36, -22 -41, -22 -52",
-  "C -22 -63, -24 -68, -34 -68",
-  "L -35 -71",
-  "C -35 -79, -32 -83, -24 -84",
+  "C -22 -36, -18.5 -41, -18.5 -52",
+  "C -18.5 -63, -22 -68, -34 -68",
+  "L -35 -70",
+  "C -34 -78, -26 -83.5, -16 -84",
   "Z",
 ].join(" ");
 
@@ -197,10 +200,10 @@ function TireWheel({
 }
 
 /**
- * 2D Top-Down Car sliced by a horizontal plane formed from the four wheel centers.
+ * 2D Top-Down Sports Coupe sliced by a horizontal plane formed from the four wheel centers.
  * Local SVG coordinates (centered at geometric center (0,0) of ABCD):
  * - Width: 76px (-38 to +38)
- * - Length: 168px (-84 front bumper to +84 rear bumper)
+ * - Length: 168px (-84 front nose to +84 rear tail)
  * - Front wheel centers at y = -52, x = -31 / +31
  * - Rear wheel centers at y = +52, x = -31 / +31
  */
@@ -241,15 +244,15 @@ export function CutPlaneCar({
   const taillightStroke = isHero
     ? isBraking
       ? "oklch(0.68 0.22 25 / 0.96)"
-      : "oklch(0.78 0.08 25 / 0.62)"
+      : "oklch(0.78 0.08 25 / 0.64)"
     : "oklch(0.5 0.05 25 / 0.45)";
 
   return (
     <g className="select-none">
-      {/* Contoured Ground Contact Shadow (keeps wheel wells clean against asphalt) */}
+      {/* Contoured Ground Contact Shadow */}
       {!isGhost ? <path d={CAR_BODY_PATH} fill="oklch(0 0 0 / 0.45)" transform="translate(0, 4)" /> : null}
 
-      {/* Mathematical Bounding Envelope ABCD (Enabled explicitly in proof/cut-plane slides) */}
+      {/* Mathematical Bounding Envelope ABCD */}
       {isHero && showBoundingBox ? (
         <g>
           <rect
@@ -272,7 +275,7 @@ export function CutPlaneCar({
         </g>
       ) : null}
 
-      {/* Sectioned Rolling & Steering Wheels Inside Flared Wheel Wells */}
+      {/* Sectioned Rolling & Steering Wheels Inside Open Wheel Wells */}
       <TireWheel
         x={-31}
         y={-52}
@@ -310,7 +313,7 @@ export function CutPlaneCar({
         showAxlePlaneLines={false}
       />
 
-      {/* Sculpted Main Body Shell */}
+      {/* Sculpted Sports Coupe Body Shell */}
       <path
         d={CAR_BODY_PATH}
         fill={bodyFill}
@@ -319,99 +322,148 @@ export function CutPlaneCar({
         strokeDasharray={isGhost ? "4 4" : undefined}
       />
 
-      {/* Sleek Wing Mirrors (kept strictly inside ±38 width envelope) */}
+      {/* Aerodynamic Wing Mirrors (tangent to ±38 bounding width) */}
       {!isGhost ? (
         <g
           fill={isHero ? "oklch(0.32 0 0)" : "oklch(0.24 0 0)"}
           stroke={isHero ? "oklch(0.84 0 0 / 0.75)" : "oklch(0.45 0 0 / 0.6)"}
           strokeWidth={0.9}
         >
-          <path d="M -35 -31 L -38 -29 L -38 -24 L -35 -25 Z" />
-          <path d="M 35 -31 L 38 -29 L 38 -24 L 35 -25 Z" />
+          <path d="M -33.5 -22 L -38 -20 L -38 -15.5 L -33.5 -17 Z" />
+          <path d="M 33.5 -22 L 38 -20 L 38 -15.5 L 33.5 -17 Z" />
         </g>
       ) : null}
 
-      {/* Automotive Hood Contours, Smoked Glasshouse & Lighting */}
+      {/* Sports Coupe Bonnet Contours, Fastback Glasshouse, Ducktail & LED Signatures */}
       {!isGhost ? (
         <g>
-          {/* Subtle bonnet crease lines */}
+          {/* Subtle front chin splitter rim */}
           <path
-            d="M -18 -74 L -15 -42 M 18 -74 L 15 -42"
+            d="M -21 -83 C -8 -83.6, 8 -83.6, 21 -83"
             fill="none"
-            stroke={isHero ? "oklch(0.65 0 0 / 0.35)" : "oklch(0.38 0 0 / 0.32)"}
+            stroke={isHero ? "oklch(0.75 0 0 / 0.32)" : "oklch(0.42 0 0 / 0.25)"}
+            strokeWidth={0.9}
+          />
+
+          {/* Long sculpted bonnet creases */}
+          <path
+            d="M -15 -78 C -13 -60, -11 -42, -10 -25 M 15 -78 C 13 -60, 11 -42, 10 -25"
+            fill="none"
+            stroke={isHero ? "oklch(0.68 0 0 / 0.36)" : "oklch(0.38 0 0 / 0.3)"}
             strokeWidth={0.9}
             strokeLinecap="round"
           />
 
-          {/* Smoked Glass Windshield */}
+          {/* Central bonnet NACA extractor */}
           <path
-            d="M -23 -36 C -10 -39, 10 -39, 23 -36 L 19 -16 C 8 -18, -8 -18, -19 -16 Z"
+            d="M -5 -58 C -2 -59, 2 -59, 5 -58 L 6 -45 C 2 -46, -2 -46, -6 -45 Z"
+            fill={isHero ? "oklch(0.18 0 0 / 0.5)" : "oklch(0.15 0 0 / 0.4)"}
+          />
+
+          {/* Front fender aero louvers */}
+          <path
+            d="M -32 -32 L -27 -27 M 32 -32 L 27 -27"
+            fill="none"
+            stroke={isHero ? "oklch(0.6 0 0 / 0.42)" : "oklch(0.35 0 0 / 0.3)"}
+            strokeWidth={1}
+            strokeLinecap="round"
+          />
+
+          {/* Rear haunch shoulder lines */}
+          <path
+            d="M -27 24 C -29 42, -29 58, -26 74 M 27 24 C 29 42, 29 58, 26 74"
+            fill="none"
+            stroke={isHero ? "oklch(0.7 0 0 / 0.34)" : "oklch(0.38 0 0 / 0.28)"}
+            strokeWidth={0.9}
+            strokeLinecap="round"
+          />
+
+          {/* Steeply Raked Sports Windshield */}
+          <path
+            d="M -22 -24 C -9 -28, 9 -28, 22 -24 L 17.5 2 C 7 0, -7 0, -17.5 2 Z"
             fill="url(#cut-car-glass-grad)"
             stroke={isHero ? "oklch(0.76 0 0 / 0.35)" : "oklch(0.42 0 0 / 0.32)"}
             strokeWidth={0.9}
           />
 
-          {/* Smoked Glass Side Windows */}
-          <path d="M -25 -30 L -21 -14 L -21 24 L -24 36 C -26 16, -26 -10, -25 -30 Z" fill="oklch(0.13 0 0 / 0.82)" />
-          <path d="M 25 -30 L 21 -14 L 21 24 L 24 36 C 26 16, 26 -10, 25 -30 Z" fill="oklch(0.13 0 0 / 0.82)" />
-
-          {/* Smoked Glass Rear Window */}
+          {/* Sleek Coupe Side Quarter Windows */}
           <path
-            d="M -19 28 C -8 29, 8 29, 19 28 L 22 48 C 9 50, -9 50, -22 48 Z"
+            d="M -24 -19 L -18.5 3 L -16.5 31 L -20.5 46 C -23.5 26, -25 4, -24 -19 Z"
+            fill="oklch(0.12 0 0 / 0.85)"
+          />
+          <path d="M 24 -19 L 18.5 3 L 16.5 31 L 20.5 46 C 23.5 26, 25 4, 24 -19 Z" fill="oklch(0.12 0 0 / 0.85)" />
+
+          {/* Fastback Rear Glass */}
+          <path
+            d="M -15 32 C -6 33.5, 6 33.5, 15 32 L 18 58 C 7 61, -7 61, -18 58 Z"
             fill="url(#cut-car-glass-grad)"
             stroke={isHero ? "oklch(0.72 0 0 / 0.3)" : "oklch(0.4 0 0 / 0.28)"}
             strokeWidth={0.9}
           />
 
-          {/* Clean Roof Panel */}
-          <rect
-            x={-18}
-            y={-15}
-            width={36}
-            height={42}
-            rx={6}
+          {/* Tapered Teardrop Coupe Roof Panel */}
+          <path
+            d="M -17.5 2 C -7 0, 7 0, 17.5 2 L 15 32 C 6 33.5, -6 33.5, -15 32 Z"
             fill={isHero ? "url(#cut-car-hero-cabin-grad)" : "oklch(0.2 0 0 / 0.9)"}
-            stroke={isHero ? "oklch(0.78 0 0 / 0.3)" : "oklch(0.42 0 0 / 0.25)"}
+            stroke={isHero ? "oklch(0.78 0 0 / 0.32)" : "oklch(0.42 0 0 / 0.25)"}
             strokeWidth={0.9}
           />
 
-          {/* Luminous Headlight Slits (Front) */}
+          {/* Integrated Rear Ducktail Lip Spoiler */}
           <path
-            d="M -27 -81 C -23 -82, -17 -82, -13 -80"
+            d="M -23 76 C -10 78.5, 10 78.5, 23 76"
             fill="none"
-            stroke={isHero ? "oklch(0.96 0 0 / 0.92)" : "oklch(0.62 0 0 / 0.55)"}
+            stroke={isHero ? "oklch(0.84 0 0 / 0.48)" : "oklch(0.45 0 0 / 0.35)"}
+            strokeWidth={1.1}
+            strokeLinecap="round"
+          />
+
+          {/* Swept LED Headlight Blades */}
+          <path
+            d="M -29 -76 C -24 -80, -17 -81.5, -12 -80"
+            fill="none"
+            stroke={isHero ? "oklch(0.96 0 0 / 0.94)" : "oklch(0.62 0 0 / 0.55)"}
             strokeWidth={isHero ? 2 : 1.5}
             strokeLinecap="round"
           />
           <path
-            d="M 13 -80 C 17 -82, 23 -82, 27 -81"
+            d="M 12 -80 C 17 -81.5, 24 -80, 29 -76"
             fill="none"
-            stroke={isHero ? "oklch(0.96 0 0 / 0.92)" : "oklch(0.62 0 0 / 0.55)"}
+            stroke={isHero ? "oklch(0.96 0 0 / 0.94)" : "oklch(0.62 0 0 / 0.55)"}
             strokeWidth={isHero ? 2 : 1.5}
             strokeLinecap="round"
           />
 
-          {/* Rear Taillight & Brake Light Bars */}
+          {/* Sports Taillight Blades & Brake Strip */}
           <path
-            d="M -26 81 C -21 82, -16 82, -12 81"
+            d="M -27 79 C -21 81.5, -15 82, -10 81.5"
             fill="none"
             stroke={taillightStroke}
             strokeWidth={isHero && isBraking ? 2.1 : 1.6}
             strokeLinecap="round"
           />
           <path
-            d="M 12 81 C 16 82, 21 82, 26 81"
+            d="M 10 81.5 C 15 82, 21 81.5, 27 79"
             fill="none"
             stroke={taillightStroke}
             strokeWidth={isHero && isBraking ? 2.1 : 1.6}
             strokeLinecap="round"
           />
+          <line
+            x1={-7}
+            y1={81.5}
+            x2={7}
+            y2={81.5}
+            stroke={taillightStroke}
+            strokeWidth={isHero && isBraking ? 1.5 : 0.9}
+            strokeLinecap="round"
+          />
 
-          {/* White Reversing Lamps (Rear Inner Bumper) */}
+          {/* White Reversing Lamps */}
           {isHero && isReversing ? (
             <g stroke="oklch(0.97 0 0 / 0.95)" strokeWidth={1.8} strokeLinecap="round">
-              <line x1={-10} y1={82} x2={-5} y2={82} />
-              <line x1={5} y1={82} x2={10} y2={82} />
+              <line x1={-11} y1={82} x2={-6} y2={82} />
+              <line x1={6} y1={82} x2={11} y2={82} />
             </g>
           ) : null}
 
@@ -420,10 +472,10 @@ export function CutPlaneCar({
             <g>
               {isHazardLit ? (
                 <g>
-                  <circle cx={-32.5} cy={-76.5} r={11} fill="url(#cut-car-hazard-glow)" />
-                  <circle cx={32.5} cy={-76.5} r={11} fill="url(#cut-car-hazard-glow)" />
-                  <circle cx={-32.5} cy={76.5} r={11} fill="url(#cut-car-hazard-glow)" />
-                  <circle cx={32.5} cy={76.5} r={11} fill="url(#cut-car-hazard-glow)" />
+                  <circle cx={-30} cy={-75} r={11} fill="url(#cut-car-hazard-glow)" />
+                  <circle cx={30} cy={-75} r={11} fill="url(#cut-car-hazard-glow)" />
+                  <circle cx={-30} cy={75} r={11} fill="url(#cut-car-hazard-glow)" />
+                  <circle cx={30} cy={75} r={11} fill="url(#cut-car-hazard-glow)" />
                 </g>
               ) : null}
 
@@ -433,10 +485,10 @@ export function CutPlaneCar({
                 strokeWidth={isHazardLit ? 2.4 : 1.4}
                 strokeLinecap="round"
               >
-                <path d="M -33.5 -74 L -30.5 -79" />
-                <path d="M 33.5 -74 L 30.5 -79" />
-                <path d="M -33.5 74 L -30.5 79" />
-                <path d="M 33.5 74 L 30.5 79" />
+                <path d="M -31 -73 L -28 -77.5" />
+                <path d="M 31 -73 L 28 -77.5" />
+                <path d="M -31 73 L -28 77.5" />
+                <path d="M 31 73 L 28 77.5" />
               </g>
             </g>
           ) : null}
@@ -446,7 +498,6 @@ export function CutPlaneCar({
       {/* Wheel-Center Cut-Plane Axle Geometry Overlay */}
       {showAxlePlaneLines ? (
         <g>
-          {/* Front steering tie-rod axis */}
           <line
             x1={-25}
             y1={-52}
@@ -456,7 +507,6 @@ export function CutPlaneCar({
             strokeWidth={1.2}
             strokeDasharray="2.5 2.5"
           />
-          {/* Fixed rear axle shaft */}
           <line
             x1={-25}
             y1={52}
@@ -473,7 +523,6 @@ export function CutPlaneCar({
             stroke={hubFill}
             strokeWidth={1.2}
           />
-          {/* Subtle centerline connecting front & rear axle midpoints */}
           <line
             x1={0}
             y1={-52}

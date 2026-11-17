@@ -18,6 +18,27 @@ const HAZARD_START_SECONDS = 3.7;
 const HAZARD_END_SECONDS = 26.8;
 const HAZARD_CYCLE_SECONDS = 0.72;
 
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function easeInOutCubic(t: number): number {
+  const x = clamp01(t);
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
+function easeOutCubic(t: number): number {
+  const x = clamp01(t);
+  return 1 - Math.pow(1 - x, 3);
+}
+
+function progressBetween(seconds: number, start: number, end: number): number {
+  if (end <= start) {
+    return seconds >= end ? 1 : 0;
+  }
+  return clamp01((seconds - start) / (end - start));
+}
+
 function buildTrailPolyline(
   timeline: SimulatedTimeline,
   startSeconds: number,
@@ -66,9 +87,18 @@ export function Slide02PerfectParking(): ReactElement {
   const showPhase1Geometry = elapsedSeconds >= 11.4;
   const showPhase1Rays = elapsedSeconds >= 11.8 && elapsedSeconds < 21.6 && pose.steerDeg < -5;
   const showPhase2Vector = elapsedSeconds >= 23.4;
-  const isClosingHighlight = elapsedSeconds >= 29.2;
 
-  const showReverseTargetGhost = elapsedSeconds >= 11.4 && elapsedSeconds < 19.9;
+  // Closing explanation (26.6s - 34.0s):
+  // - 26.6s..29.0s: "To find the minimum space required," -> highlight parking bay footprint & MIN SPACE bracket
+  // - 29.0s..34.0s: "we only need to analyze the geometry of that reversing sweep." -> dim Phase 2 & spotlight Phase 1 sweep
+  const minSpaceIntro = easeOutCubic(progressBetween(elapsedSeconds, 26.6, 27.6));
+  const sweepFocus = easeInOutCubic(progressBetween(elapsedSeconds, 29.0, 30.2));
+  const minSpaceOpacity = minSpaceIntro * (1 - 0.52 * sweepFocus);
+
+  const phase1GhostOpacity =
+    elapsedSeconds >= 11.4 && elapsedSeconds < 19.9 ? 0.75 : sweepFocus > 0.01 ? 0.52 * sweepFocus : 0;
+  const heroOpacity = 1 - 0.42 * sweepFocus;
+  const phase2Opacity = 1 - 0.78 * sweepFocus;
 
   const phase1Trails = useMemo(() => {
     if (!showPhase1Geometry) {
@@ -82,7 +112,7 @@ export function Slide02PerfectParking(): ReactElement {
   }, [elapsedSeconds, showPhase1Geometry, timeline]);
 
   // Straight forward pull-up runs 23.4s - 26.4s ("and drive straight forward into the middle of the space.")
-  const phase2Progress = Math.max(0, Math.min(1, (elapsedSeconds - 23.4) / 3.0));
+  const phase2Progress = clamp01((elapsedSeconds - 23.4) / 3.0);
   const phase2ArrowEndY = 250 - 28.5 * phase2Progress;
 
   return (
@@ -133,11 +163,6 @@ export function Slide02PerfectParking(): ReactElement {
           />
         </g>
 
-        {/* Front Corner Grazing Node G(589, 179) */}
-        {showPhase1Geometry ? (
-          <circle cx={589} cy={179} r={4} fill="oklch(0.98 0 0)" filter="url(#luminous-glow)" />
-        ) : null}
-
         {/* Parked Car Behind */}
         <g transform="translate(627, 516)">
           <CutPlaneCar
@@ -149,9 +174,43 @@ export function Slide02PerfectParking(): ReactElement {
           />
         </g>
 
+        {/* Minimum Space Bay Highlight (26.6s - 34.0s) */}
+        {minSpaceOpacity > 0.01 ? (
+          <g opacity={minSpaceOpacity}>
+            <rect
+              x={589}
+              y={179}
+              width={76}
+              height={253}
+              rx={4}
+              fill="oklch(0.96 0 0 / 0.07)"
+              stroke="oklch(0.94 0 0 / 0.42)"
+              strokeWidth={1.2}
+              strokeDasharray="4 4"
+            />
+            <g stroke="oklch(0.92 0 0 / 0.75)" strokeWidth={1.2}>
+              <line x1={589} y1={179} x2={704} y2={179} />
+              <line x1={589} y1={432} x2={704} y2={432} />
+            </g>
+            <g stroke="oklch(0.98 0 0)" strokeWidth={2} filter="url(#luminous-glow)">
+              <line x1={698} y1={179} x2={698} y2={432} />
+              <line x1={693} y1={179} x2={703} y2={179} strokeWidth={1.6} />
+              <line x1={693} y1={432} x2={703} y2={432} strokeWidth={1.6} />
+            </g>
+            <text
+              x={714}
+              y={309}
+              textAnchor="start"
+              className="fill-text-primary font-mono text-xs font-semibold tracking-mono"
+            >
+              MIN SPACE
+            </text>
+          </g>
+        ) : null}
+
         {/* Ghost Outline Showing Exact Parallel Stop Point at End of Phase 1 (Center 627, 334) */}
-        {showReverseTargetGhost ? (
-          <g transform="translate(627, 334)" opacity={0.75}>
+        {phase1GhostOpacity > 0.01 ? (
+          <g transform="translate(627, 334)" opacity={phase1GhostOpacity}>
             <CutPlaneCar
               variant={CarSectionVariants.Ghost}
               kerbSide={KerbSides.Right}
@@ -166,22 +225,47 @@ export function Slide02PerfectParking(): ReactElement {
         {showPhase1Geometry ? (
           <g>
             {/* Concentric Turning Reference Rings Centered at X */}
-            <g
-              stroke={isClosingHighlight ? "oklch(0.76 0 0 / 0.34)" : "oklch(0.6 0 0 / 0.16)"}
-              strokeWidth={1}
-              fill="none"
-            >
-              <circle cx={SLIDE_02_TURNING_CENTER.x} cy={SLIDE_02_TURNING_CENTER.y} r={191.22} strokeDasharray="3 7" />
-              <circle cx={SLIDE_02_TURNING_CENTER.x} cy={SLIDE_02_TURNING_CENTER.y} r={240.39} strokeDasharray="2 6" />
+            <g fill="none">
+              <circle
+                cx={SLIDE_02_TURNING_CENTER.x}
+                cy={SLIDE_02_TURNING_CENTER.y}
+                r={191.22}
+                stroke={`oklch(0.76 0 0 / ${(0.16 + 0.2 * sweepFocus).toFixed(2)})`}
+                strokeWidth={1 + 0.3 * sweepFocus}
+                strokeDasharray="3 7"
+              />
+              <circle
+                cx={SLIDE_02_TURNING_CENTER.x}
+                cy={SLIDE_02_TURNING_CENTER.y}
+                r={240.39}
+                stroke={`oklch(0.88 0 0 / ${(0.16 + 0.32 * sweepFocus).toFixed(2)})`}
+                strokeWidth={1 + 0.45 * sweepFocus}
+                strokeDasharray="3 5"
+              />
             </g>
+
+            {/* Equal Outer-Radius Geometry Rays (X -> Grazing Point G and X -> Phase-1 Stop Corner) */}
+            {sweepFocus > 0.01 ? (
+              <g opacity={sweepFocus}>
+                <g stroke="oklch(0.92 0 0 / 0.68)" strokeWidth={1.35} strokeDasharray="4 4">
+                  <line x1={SLIDE_02_TURNING_CENTER.x} y1={SLIDE_02_TURNING_CENTER.y} x2={589} y2={179} />
+                  <line x1={SLIDE_02_TURNING_CENTER.x} y1={SLIDE_02_TURNING_CENTER.y} x2={665} y2={250} />
+                </g>
+                <circle cx={665} cy={250} r={4.2} fill="oklch(0.98 0 0)" filter="url(#luminous-glow)" />
+                <circle cx={589} cy={179} r={9} fill="none" stroke="oklch(0.96 0 0 / 0.72)" strokeWidth={1.3} />
+              </g>
+            ) : null}
+
+            {/* Front Corner Grazing Node G(589, 179) */}
+            <circle cx={589} cy={179} r={4 + 0.8 * sweepFocus} fill="oklch(0.98 0 0)" filter="url(#luminous-glow)" />
 
             {/* Hexagonal Turning Center X(466.78, 386) */}
             <g transform={`translate(${SLIDE_02_TURNING_CENTER.x}, ${SLIDE_02_TURNING_CENTER.y})`}>
               <polygon
                 points="0,-20 17.3,-10 17.3,10 0,20 -17.3,10 -17.3,-10"
                 fill="oklch(0.25 0 0 / 0.92)"
-                stroke="oklch(0.86 0 0 / 0.85)"
-                strokeWidth={1.4}
+                stroke="oklch(0.92 0 0 / 0.88)"
+                strokeWidth={1.4 + 0.35 * sweepFocus}
               />
               <circle cx={0} cy={0} r={6} fill="oklch(0.98 0 0)" filter="url(#luminous-glow)" />
               <text x={0} y={36} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
@@ -218,8 +302,8 @@ export function Slide02PerfectParking(): ReactElement {
               <polyline
                 points={phase1Trails.rearKerbTrail}
                 fill="none"
-                stroke="oklch(0.76 0 0 / 0.68)"
-                strokeWidth={1.6}
+                stroke={`oklch(0.82 0 0 / ${(0.68 + 0.2 * sweepFocus).toFixed(2)})`}
+                strokeWidth={1.6 + 0.35 * sweepFocus}
                 strokeDasharray="5 4"
               />
             ) : null}
@@ -230,7 +314,7 @@ export function Slide02PerfectParking(): ReactElement {
                 points={phase1Trails.cornerKerbTrail}
                 fill="none"
                 stroke="oklch(0.98 0 0)"
-                strokeWidth={isClosingHighlight ? 2.8 : 2.2}
+                strokeWidth={2.2 + 0.8 * sweepFocus}
                 filter="url(#luminous-glow)"
               />
             ) : null}
@@ -251,7 +335,7 @@ export function Slide02PerfectParking(): ReactElement {
 
         {/* Phase 2 Trajectory Vector: Straight Forward Pull-Up into Bay Center */}
         {showPhase2Vector ? (
-          <g opacity={isClosingHighlight ? 0.28 : 1}>
+          <g opacity={phase2Opacity}>
             <line x1={686} y1={250} x2={706} y2={250} stroke="oklch(0.84 0 0 / 0.7)" strokeWidth={1.2} />
             <line
               x1={696}
@@ -284,7 +368,7 @@ export function Slide02PerfectParking(): ReactElement {
         ) : null}
 
         {/* Hero Car Driven by the 2D Simulator */}
-        <g transform={`translate(${pose.centerX}, ${pose.centerY}) rotate(${pose.headingDeg})`}>
+        <g transform={`translate(${pose.centerX}, ${pose.centerY}) rotate(${pose.headingDeg})`} opacity={heroOpacity}>
           <CutPlaneCar
             variant={CarSectionVariants.Hero}
             kerbSide={KerbSides.Right}

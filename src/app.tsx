@@ -1,6 +1,8 @@
 import { Slide01Dilemma } from "@/slides/slide-01-dilemma";
 import { Slide02PerfectParking } from "@/slides/slide-02-perfect-parking";
 import { Slide03WheelPlane } from "@/slides/slide-03-wheel-plane";
+import { Slide04Ackermann } from "@/slides/slide-04-ackermann";
+import { Slide05Inputs } from "@/slides/slide-05-inputs";
 import { SLIDES_METADATA, usePresentationStore } from "@/store/presentation-store";
 import {
   ArrowCounterClockwiseIcon,
@@ -230,6 +232,10 @@ export function App(): ReactElement {
           <Slide02PerfectParking />
         ) : currentSlideIndex === 2 ? (
           <Slide03WheelPlane />
+        ) : currentSlideIndex === 3 ? (
+          <Slide04Ackermann />
+        ) : currentSlideIndex === 4 ? (
+          <Slide05Inputs />
         ) : null}
       </main>
 

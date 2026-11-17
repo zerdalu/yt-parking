@@ -1,0 +1,32 @@
+WEBVTT
+
+00:00.000 --> 00:02.780
+How does a car actually rotate when reversing?
+
+00:03.440 --> 00:06.540
+Its rear wheels are fixed parallel to the sides of the car.
+
+00:06.980 --> 00:10.920
+That means the imaginary line passing through both rear wheel centers
+
+00:10.920 --> 00:15.560
+must always point directly at the center of the turning circle, labeled X.
+
+00:16.200 --> 00:17.360
+What about the front wheels?
+
+00:17.960 --> 00:22.220
+Because the inside front wheel travels along a tighter circle than the outside wheel,
+
+00:22.560 --> 00:25.980
+it has to steer at a sharper angle to avoid dragging sideways.
+
+00:26.660 --> 00:28.360
+This is called Ackerman Steering.
+
+00:28.360 --> 00:31.880
+Patented back in 1818 for horse-drawn carriages,
+
+00:32.440 --> 00:38.720
+when all wheel axle lines meet at a single point X, every part of the car turns cleanly around X.
+

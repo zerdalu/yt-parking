@@ -87,9 +87,13 @@ export function Slide01Dilemma(): ReactElement {
   const sweepTrailOpacity =
     elapsedSeconds < 20.45 ? 0 : elapsedSeconds > 27.5 ? Math.max(0.24, 1 - (elapsedSeconds - 27.5) / 1.5) : 0.9;
 
-  // Extra-length question callout during 28.4s - 35.0s ("How much extra length, beyond the length of your own car...")
-  const gapCalloutOpacity = easeOutCubic((elapsedSeconds - 28.4) / 0.9);
-  const extraSpanOpacity = easeOutCubic((elapsedSeconds - 30.2) / 0.9);
+  // Closing question choreography (28.4s - 35.0s):
+  // - 28.4s: "How much extra length," -> Front & rear clearance zones and brackets highlight
+  // - 30.3s: "beyond the length of your own car," -> Car-length span highlights in contrast
+  // - 32.0s: "does that parking space actually need?" -> Both extra spans converge into "+ ?" total
+  const gapCalloutOpacity = easeOutCubic((elapsedSeconds - 28.4) / 0.8);
+  const carLengthOpacity = easeOutCubic((elapsedSeconds - 30.3) / 0.7);
+  const totalCalloutOpacity = easeOutCubic((elapsedSeconds - 32.0) / 0.8);
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center">
@@ -162,49 +166,104 @@ export function Slide01Dilemma(): ReactElement {
           />
         ) : null}
 
-        {/* Minimalist Extra-Length Bracket Along Kerb Side (28.4s - 35.0s) */}
+        {/* Front & Rear Extra-Length Highlight and Total Summation (28.4s - 35.0s) */}
         {gapCalloutOpacity > 0.01 ? (
           <g opacity={gapCalloutOpacity}>
-            {/* Front & Rear Bay Boundary Extensions */}
-            <g stroke="oklch(0.86 0 0 / 0.65)" strokeWidth={1.2}>
-              <line x1={676} y1={179} x2={710} y2={179} />
-              <line x1={676} y1={432} x2={710} y2={432} />
+            {/* Highlighted Front & Rear Clearance Bands Inside Parking Bay */}
+            <rect
+              x={589}
+              y={179}
+              width={76}
+              height={42.5}
+              rx={3}
+              fill="oklch(0.96 0 0 / 0.08)"
+              stroke="oklch(0.92 0 0 / 0.35)"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+            <text x={627} y={205} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
+              +
+            </text>
+
+            <rect
+              x={589}
+              y={389.5}
+              width={76}
+              height={42.5}
+              rx={3}
+              fill="oklch(0.96 0 0 / 0.08)"
+              stroke="oklch(0.92 0 0 / 0.35)"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+            <text x={627} y={415.5} textAnchor="middle" className="fill-text-primary font-mono text-sm font-semibold">
+              +
+            </text>
+
+            {/* Bumper Extension Lines to Kerbside Caliper */}
+            <g stroke="oklch(0.84 0 0 / 0.65)" strokeWidth={1.15}>
+              <line x1={676} y1={179} x2={704} y2={179} />
+              <line x1={676} y1={432} x2={704} y2={432} />
+            </g>
+            <g stroke="oklch(0.76 0 0 / 0.55)" strokeWidth={1.1} strokeDasharray="3 3">
+              <line x1={666} y1={221.5} x2={704} y2={221.5} />
+              <line x1={666} y1={389.5} x2={704} y2={389.5} />
             </g>
 
-            {/* Full Bay Height Hairline */}
-            <line x1={700} y1={179} x2={700} y2={432} stroke="oklch(0.62 0 0 / 0.45)" strokeWidth={1.2} />
-
-            {/* Car Length Span Sub-Markers (168px centered at y = 305.5 -> 221.5..389.5) */}
-            <g stroke="oklch(0.74 0 0 / 0.65)" strokeWidth={1.1} strokeDasharray="3 3">
-              <line x1={672} y1={221.5} x2={704} y2={221.5} />
-              <line x1={672} y1={389.5} x2={704} y2={389.5} />
-            </g>
-
-            {/* Luminous Highlight on the Extra Margin Beyond the Car's Own Length */}
-            {extraSpanOpacity > 0.01 ? (
-              <g opacity={extraSpanOpacity}>
+            {/* Car's Own Length Span (221.5..389.5) */}
+            {carLengthOpacity > 0.01 ? (
+              <g opacity={carLengthOpacity}>
                 <line
-                  x1={700}
-                  y1={179}
-                  x2={700}
-                  y2={221.5}
-                  stroke="oklch(0.98 0 0)"
-                  strokeWidth={2.4}
-                  filter="url(#slide01-luminous-glow)"
+                  x1={698}
+                  y1={224}
+                  x2={698}
+                  y2={387}
+                  stroke="oklch(0.66 0 0 / 0.55)"
+                  strokeWidth={1.4}
+                  strokeDasharray="4 4"
                 />
-                <line
-                  x1={700}
-                  y1={389.5}
-                  x2={700}
-                  y2={432}
-                  stroke="oklch(0.98 0 0)"
-                  strokeWidth={2.4}
-                  filter="url(#slide01-luminous-glow)"
+              </g>
+            ) : null}
+
+            {/* Luminous Caliper Brackets for BOTH Front (179..221.5) and Rear (389.5..432) Extra Spaces */}
+            <g stroke="oklch(0.98 0 0)" strokeWidth={2.4} strokeLinecap="round" filter="url(#slide01-luminous-glow)">
+              <line x1={698} y1={179} x2={698} y2={221.5} />
+              <line x1={694} y1={179} x2={702} y2={179} strokeWidth={1.6} />
+              <line x1={694} y1={221.5} x2={702} y2={221.5} strokeWidth={1.6} />
+
+              <line x1={698} y1={389.5} x2={698} y2={432} />
+              <line x1={694} y1={389.5} x2={702} y2={389.5} strokeWidth={1.6} />
+              <line x1={694} y1={432} x2={702} y2={432} strokeWidth={1.6} />
+            </g>
+
+            {/* Summation Collector Fork Joining Front & Rear Gaps into Total "+ ?" */}
+            {totalCalloutOpacity > 0.01 ? (
+              <g opacity={totalCalloutOpacity}>
+                <circle cx={703} cy={200.25} r={2.8} fill="oklch(0.98 0 0)" />
+                <circle cx={703} cy={410.75} r={2.8} fill="oklch(0.98 0 0)" />
+
+                <path
+                  d="M 703 200.25 L 728 200.25 L 728 410.75 L 703 410.75 M 728 305.5 L 744 305.5"
+                  fill="none"
+                  stroke="oklch(0.92 0 0 / 0.85)"
+                  strokeWidth={1.4}
+                  strokeLinejoin="round"
+                />
+
+                <rect
+                  x={744}
+                  y={290.5}
+                  width={48}
+                  height={30}
+                  rx={6}
+                  fill="oklch(0.22 0 0 / 0.94)"
+                  stroke="oklch(0.96 0 0 / 0.88)"
+                  strokeWidth={1.4}
                 />
                 <text
-                  x={716}
-                  y={204}
-                  textAnchor="start"
+                  x={768}
+                  y={310.5}
+                  textAnchor="middle"
                   className="fill-text-primary font-mono text-sm font-semibold tracking-mono"
                 >
                   + ?

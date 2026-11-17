@@ -48,6 +48,24 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     cumulativeStart: "01:09",
     cumulativeEnd: "01:47",
   },
+  {
+    index: 3,
+    numberLabel: "04",
+    title: "Ackermann Steering & The Turning Center X",
+    subtitle: "Fixed rear axle normal, sharper inside front angle & convergence at X",
+    durationSeconds: 40,
+    cumulativeStart: "01:47",
+    cumulativeEnd: "02:27",
+  },
+  {
+    index: 4,
+    numberLabel: "05",
+    title: "The Four Measurable Inputs",
+    subtitle: "Turning radius r, wheelbase l, overhang k, parked width w & target AH",
+    durationSeconds: 38,
+    cumulativeStart: "02:27",
+    cumulativeEnd: "03:05",
+  },
 ];
 
 const LAST_SLIDE_STORAGE_KEY = "parking:last-slide-index";
