@@ -1,0 +1,414 @@
+@source "../ui";
+@import "tailwindcss";
+
+@theme {
+  /* Base Spacing Unit */
+  --spacing: 0.25rem;
+
+  /* Typography Families */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Typography Metrics */
+  --tracking-ui: -0.01em;
+  --tracking-mono: 0.02em;
+  --tracking-heading: -0.02em;
+  --font-weight-ui: 500;
+  --font-weight-heading: 600;
+
+  /* Surface Hierarchy (Monochrome Obsidian & Smoked Graphite — Art Direction) */
+  --color-surface-canvas: oklch(0.19 0 0);
+  --color-surface-100: oklch(0.23 0 0);
+  --color-surface-200: oklch(0.27 0 0);
+  --color-surface-300: oklch(0.31 0 0);
+  --color-surface-sunken: oklch(0.15 0 0);
+  --color-surface-hover: oklch(0.34 0 0);
+  --color-surface-active: oklch(0.38 0 0);
+  --color-surface-backdrop: oklch(0.1 0 0 / 0.78);
+
+  /* Text Hierarchy (WCAG AA Compliant on Dark Graphite) */
+  --color-text-primary: oklch(0.96 0 0);
+  --color-text-secondary: oklch(0.83 0 0);
+  --color-text-muted: oklch(0.72 0 0);
+  --color-text-disabled: oklch(0.55 0 0);
+  --color-text-on-accent: oklch(0.16 0 0);
+  --color-text-inverse: oklch(0.16 0 0);
+
+  /* Borders & Focus Rings */
+  --color-border-subtle: oklch(0.32 0 0);
+  --color-border-default: oklch(0.52 0 0);
+  --color-border-strong: oklch(0.72 0 0);
+  --color-border-focus: oklch(0.92 0 0);
+
+  /* Brand & Accent (Luminous Silver-White & Telemetry Pearl) */
+  --color-accent-primary: oklch(0.95 0 0);
+  --color-accent-primary-hover: oklch(0.99 0 0);
+  --color-accent-primary-active: oklch(0.88 0 0);
+  --color-accent-subtle: oklch(0.95 0 0 / 0.12);
+  --color-accent-border: oklch(0.95 0 0 / 0.48);
+  --color-accent-secondary: oklch(0.78 0 0);
+
+  /* Semantic Status: Success */
+  --color-status-success: oklch(0.78 0.12 155);
+  --color-status-success-bg: oklch(0.78 0.12 155 / 0.14);
+  --color-status-success-border: oklch(0.78 0.12 155 / 0.45);
+  --color-status-success-text: oklch(0.88 0.1 155);
+
+  /* Semantic Status: Warning */
+  --color-status-warning: oklch(0.82 0.13 82);
+  --color-status-warning-bg: oklch(0.82 0.13 82 / 0.15);
+  --color-status-warning-border: oklch(0.82 0.13 82 / 0.46);
+  --color-status-warning-text: oklch(0.9 0.11 82);
+
+  /* Semantic Status: Danger */
+  --color-status-danger: oklch(0.7 0.16 25);
+  --color-status-danger-bg: oklch(0.7 0.16 25 / 0.15);
+  --color-status-danger-border: oklch(0.7 0.16 25 / 0.46);
+  --color-status-danger-text: oklch(0.86 0.12 25);
+
+  /* Semantic Status: Info */
+  --color-status-info: oklch(0.82 0.08 235);
+  --color-status-info-bg: oklch(0.82 0.08 235 / 0.14);
+  --color-status-info-border: oklch(0.82 0.08 235 / 0.45);
+  --color-status-info-text: oklch(0.9 0.06 235);
+
+  /* Architectural Geometry (Radii) */
+  --radius-control: 0.25rem;
+  --radius-panel: 0.5rem;
+  --radius-badge: 0.25rem;
+  --radius-toggle: 0.25rem;
+  --radius-track: 9999px;
+
+  /* Elevation & Depth (Soft Ambient Occlusion Shadows) */
+  --shadow-control: 0 2px 4px 0 oklch(0 0 0 / 0.35);
+  --shadow-panel: 0 12px 32px -8px oklch(0 0 0 / 0.55), 0 2px 6px 0 oklch(0 0 0 / 0.35);
+  --shadow-floating: 0 18px 40px -8px oklch(0 0 0 / 0.65), 0 4px 12px -2px oklch(0 0 0 / 0.4);
+  --shadow-modal: 0 28px 60px -12px oklch(0 0 0 / 0.75), 0 8px 20px -4px oklch(0 0 0 / 0.5);
+
+  /* Backdrop Blur */
+  --blur-overlay: 8px;
+  --blur-floating: 16px;
+
+  /* Motion Curves */
+  --ease-ui: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@utility h-control-xs {
+  height: var(--control-h-xs);
+}
+
+@utility h-control-sm {
+  height: var(--control-h-sm);
+}
+
+@utility h-control-md {
+  height: var(--control-h-md);
+}
+
+@utility h-control-lg {
+  height: var(--control-h-lg);
+}
+
+@utility min-h-control-sm {
+  min-height: var(--control-h-sm);
+}
+
+@utility size-control-xs {
+  width: var(--control-h-xs);
+  height: var(--control-h-xs);
+}
+
+@utility size-control-sm {
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+}
+
+@utility size-control-md {
+  width: var(--control-h-md);
+  height: var(--control-h-md);
+}
+
+@utility px-control-px-xs {
+  padding-inline: var(--control-px-xs);
+}
+
+@utility px-control-px-sm {
+  padding-inline: var(--control-px-sm);
+}
+
+@utility px-control-px-md {
+  padding-inline: var(--control-px-md);
+}
+
+@utility px-control-px-lg {
+  padding-inline: var(--control-px-lg);
+}
+
+@utility p-panel-sm {
+  padding: var(--panel-p-sm);
+}
+
+@utility p-panel {
+  padding: var(--panel-p);
+}
+
+@utility p-panel-lg {
+  padding: var(--panel-p-lg);
+}
+
+@utility px-panel {
+  padding-inline: var(--panel-p);
+}
+
+@utility py-panel-sm {
+  padding-block: var(--panel-p-sm);
+}
+
+/* ============================================================================
+   SLIDE 01 MOTION GRAPHICS KEYFRAMES (35-Second Master Choreography)
+   ============================================================================ */
+
+/* Full 35s car choreography:
+   0% - 31% (0s - 11s): Pulls up parallel to the front car, sizing up the gap.
+   31% - 66% (11s - 23s): Multi-point shuffling back and forth into the tight space.
+   66% - 100% (23s - 35s): Resets & executes single smooth full-lock sweep into the bay. */
+@keyframes slide01-car-master {
+  0% {
+    transform: translate3d(88px, 150px, 0) rotate(0deg);
+  }
+  12% {
+    transform: translate3d(88px, -118px, 0) rotate(0deg);
+  }
+  31% {
+    transform: translate3d(88px, -118px, 0) rotate(0deg);
+  }
+  /* Shuffle Pass 1 (Reverse shallow) */
+  38% {
+    transform: translate3d(52px, -32px, 0) rotate(24deg);
+  }
+  /* Shuffle Pass 2 (Reverse counter-steer) */
+  44% {
+    transform: translate3d(26px, 28px, 0) rotate(7deg);
+  }
+  /* Shuffle Pass 3 (Forward pull-up) */
+  50% {
+    transform: translate3d(20px, -14px, 0) rotate(-6deg);
+  }
+  /* Shuffle Pass 4 (Reverse inching in) */
+  56% {
+    transform: translate3d(11px, 26px, 0) rotate(3deg);
+  }
+  /* Shuffle Pass 5 (Forward straighten) */
+  61% {
+    transform: translate3d(8px, 4px, 0) rotate(0deg);
+  }
+  65% {
+    transform: translate3d(88px, -118px, 0) rotate(0deg);
+  }
+  /* Phase 3: Single-sweep full-lock reverse arc */
+  72% {
+    transform: translate3d(88px, -118px, 0) rotate(0deg);
+  }
+  82% {
+    transform: translate3d(50px, -42px, 0) rotate(32deg);
+  }
+  91% {
+    transform: translate3d(0px, 24px, 0) rotate(0deg);
+  }
+  97% {
+    transform: translate3d(0px, 0px, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) rotate(0deg);
+  }
+}
+
+/* Front wheel steering angle choreography synchronized with slide01-car-master */
+@keyframes slide01-front-steer {
+  0%,
+  31% {
+    transform: rotate(0deg);
+  }
+  33%,
+  38% {
+    transform: rotate(28deg);
+  }
+  40%,
+  44% {
+    transform: rotate(-26deg);
+  }
+  46%,
+  50% {
+    transform: rotate(22deg);
+  }
+  52%,
+  56% {
+    transform: rotate(-18deg);
+  }
+  58%,
+  72% {
+    transform: rotate(0deg);
+  }
+  74%,
+  83% {
+    transform: rotate(33deg);
+  }
+  84%,
+  90% {
+    transform: rotate(-33deg);
+  }
+  92%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Phase 2 (11s - 23s) Shuffle Path Overlay Visibility */
+@keyframes slide01-shuffle-overlay {
+  0%,
+  30% {
+    opacity: 0;
+  }
+  33%,
+  62% {
+    opacity: 1;
+  }
+  66%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Phase 3 (23s - 35s) Single-Sweep Arc & Question Callout Visibility */
+@keyframes slide01-sweep-overlay {
+  0%,
+  65% {
+    opacity: 0;
+  }
+  70%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slide01-arc-draw {
+  0%,
+  66% {
+    stroke-dashoffset: 420;
+  }
+  88%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pulse-node {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
+/* Inspection Mode Overrides when user clicks a specific phase pill */
+@keyframes inspect-shuffle-loop {
+  0% {
+    transform: translate3d(88px, -118px, 0) rotate(0deg);
+  }
+  22% {
+    transform: translate3d(52px, -32px, 0) rotate(24deg);
+  }
+  44% {
+    transform: translate3d(26px, 28px, 0) rotate(7deg);
+  }
+  66% {
+    transform: translate3d(18px, -14px, 0) rotate(-5deg);
+  }
+  85% {
+    transform: translate3d(10px, 22px, 0) rotate(2deg);
+  }
+  100% {
+    transform: translate3d(88px, -118px, 0) rotate(0deg);
+  }
+}
+
+@keyframes inspect-sweep-loop {
+  0%,
+  12% {
+    transform: translate3d(88px, -118px, 0) rotate(0deg);
+  }
+  45% {
+    transform: translate3d(48px, -40px, 0) rotate(32deg);
+  }
+  78% {
+    transform: translate3d(0px, 24px, 0) rotate(0deg);
+  }
+  92%,
+  100% {
+    transform: translate3d(0px, 0px, 0) rotate(0deg);
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    isolation: isolate;
+
+    /* Control Density & Panel Spacing Tokens */
+    --control-h-xs: 1.5rem;
+    --control-h-sm: 1.875rem;
+    --control-h-md: 2.25rem;
+    --control-h-lg: 2.625rem;
+    --control-px-xs: 0.5rem;
+    --control-px-sm: 0.625rem;
+    --control-px-md: 0.875rem;
+    --control-px-lg: 1.125rem;
+    --panel-p-sm: 0.875rem;
+    --panel-p: 1.25rem;
+    --panel-p-lg: 1.5rem;
+  }
+
+  body {
+    position: relative;
+    font-family: var(--font-sans);
+    background-color: var(--color-surface-canvas);
+    background-image: radial-gradient(
+      65% 65% at 50% 48%,
+      oklch(0.25 0 0) 0%,
+      oklch(0.17 0 0) 75%,
+      oklch(0.14 0 0) 100%
+    );
+    color: var(--color-text-primary);
+    overflow-x: hidden;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-default) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-default);
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-border-strong);
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf", "jsx-a11y", "promise", "import"],
+  "categories": {
+    "correctness": "error"
+  },
+  "options": {
+    "typeAware": true,
+    "typeCheck": true
+  },
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@base-ui/react",
+            "message": "Direct imports of Base UI primitives are restricted to 'ui/'. Import design system components via '@ui/...' instead."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["@base-ui/*"],
+            "message": "Direct imports of Base UI primitives are restricted to 'ui/'. Import design system components via '@ui/...' instead."
+          }
+        ]
+      }
+    ],
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["ui/**"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}
