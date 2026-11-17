@@ -1,8 +1,0 @@
-start	end	text
-0	5640	To turn a real car into clean geometry, imagine slicing the vehicle horizontally
-5640	10060	right through the centers of its four wheels, looking straight down from above.
-10780	16340	The extreme outer body forms a simple rectangle, labeled A, B, C, D.
-16960	23620	The curb runs along the straight line through A, E, F, and D. Or, if you prefer never to scrape
-23620	28920	your alloy wheels on concrete, an imaginary line a few centimeters to the right of the curb.
-28920	33120	Notice that our curbside wheels, centered at points E and F,
-33580	36640	line up closely with the left edge A to D of the car.

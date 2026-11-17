@@ -1,7 +1,0 @@
-start	end	text
-0	6800	In 2009, mathematician Simon Blackburn formulated a precise model for what he called a perfect
-6800	12780	parking maneuver. First, there is no handbrake skidding and no multi-point shuffling. You
-12780	18880	reverse into the space at full steering lock in a single continuous arc, stopping the exact moment
-18880	24360	your car is parallel to the curb. Then, you straighten your front wheels and drive straight
-24360	28640	forward into the middle of the space. To find the minimum space required,
-29040	32400	we only need to analyze the geometry of that reversing sweep.

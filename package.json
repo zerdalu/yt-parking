@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "fmt": "oxfmt",
-    "fmt:check": "oxfmt --check"
+    "fmt:check": "oxfmt --check",
+    "transcribe": "bash voice-overs/transcribe.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
