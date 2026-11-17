@@ -14,8 +14,8 @@ import { SLIDE_02_DRIVER_SEGMENTS, SLIDE_02_INITIAL_POSE, SLIDE_02_TURNING_CENTE
 import { usePresentationStore } from "@/store/presentation-store";
 import { useMemo, type ReactElement } from "react";
 
-const HAZARD_START_SECONDS = 3.4;
-const HAZARD_END_SECONDS = 23.6;
+const HAZARD_START_SECONDS = 3.7;
+const HAZARD_END_SECONDS = 26.8;
 const HAZARD_CYCLE_SECONDS = 0.72;
 
 function buildTrailPolyline(
@@ -55,32 +55,34 @@ export function Slide02PerfectParking(): ReactElement {
   const isReversing = pose.velocity < -1;
   const isDecelerating = Math.abs(pose.velocity) < Math.abs(prevPose.velocity) - 0.25;
   const isStoppedInManeuver =
-    elapsedSeconds >= 3.3 && elapsedSeconds < HAZARD_END_SECONDS && Math.abs(pose.velocity) < 0.8;
+    elapsedSeconds >= 3.6 && elapsedSeconds < HAZARD_END_SECONDS && Math.abs(pose.velocity) < 0.8;
   const isBraking = isStoppedInManeuver || isDecelerating;
 
   const isHazardActive = elapsedSeconds >= HAZARD_START_SECONDS && elapsedSeconds < HAZARD_END_SECONDS;
   const isHazardLit =
     isHazardActive && (elapsedSeconds - HAZARD_START_SECONDS) % HAZARD_CYCLE_SECONDS < HAZARD_CYCLE_SECONDS * 0.54;
 
-  const showPhase1Geometry = elapsedSeconds >= 8.7;
-  const showPhase1Rays = elapsedSeconds >= 9.2 && elapsedSeconds < 17.5 && pose.steerDeg < -5;
-  const showPhase2Vector = elapsedSeconds >= 19.1;
-  const isClosingHighlight = elapsedSeconds >= 24.0;
+  // Phase 1 geometry illuminates right before "You reverse into the space at full steering lock..." (12.64s)
+  const showPhase1Geometry = elapsedSeconds >= 11.4;
+  const showPhase1Rays = elapsedSeconds >= 11.8 && elapsedSeconds < 21.6 && pose.steerDeg < -5;
+  const showPhase2Vector = elapsedSeconds >= 23.4;
+  const isClosingHighlight = elapsedSeconds >= 29.2;
 
-  const showReverseTargetGhost = elapsedSeconds >= 8.7 && elapsedSeconds < 16.9;
+  const showReverseTargetGhost = elapsedSeconds >= 11.4 && elapsedSeconds < 19.9;
 
   const phase1Trails = useMemo(() => {
     if (!showPhase1Geometry) {
       return { rearKerbTrail: "", cornerKerbTrail: "" };
     }
-    const trailEnd = Math.min(elapsedSeconds, 17.2);
+    const trailEnd = Math.min(elapsedSeconds, 20.0);
     return {
-      rearKerbTrail: buildTrailPolyline(timeline, 9.4, trailEnd, (s) => s.wheelRearRight),
-      cornerKerbTrail: buildTrailPolyline(timeline, 9.4, trailEnd, (s) => s.cornerB),
+      rearKerbTrail: buildTrailPolyline(timeline, 12.4, trailEnd, (s) => s.wheelRearRight),
+      cornerKerbTrail: buildTrailPolyline(timeline, 12.4, trailEnd, (s) => s.cornerB),
     };
   }, [elapsedSeconds, showPhase1Geometry, timeline]);
 
-  const phase2Progress = Math.max(0, Math.min(1, (elapsedSeconds - 19.1) / 3.2));
+  // Straight forward pull-up runs 23.4s - 26.4s ("and drive straight forward into the middle of the space.")
+  const phase2Progress = Math.max(0, Math.min(1, (elapsedSeconds - 23.4) / 3.0));
   const phase2ArrowEndY = 250 - 28.5 * phase2Progress;
 
   return (
@@ -165,7 +167,7 @@ export function Slide02PerfectParking(): ReactElement {
           <g>
             {/* Concentric Turning Reference Rings Centered at X */}
             <g
-              stroke={isClosingHighlight ? "oklch(0.7 0 0 / 0.24)" : "oklch(0.6 0 0 / 0.16)"}
+              stroke={isClosingHighlight ? "oklch(0.76 0 0 / 0.34)" : "oklch(0.6 0 0 / 0.16)"}
               strokeWidth={1}
               fill="none"
             >
@@ -228,13 +230,13 @@ export function Slide02PerfectParking(): ReactElement {
                 points={phase1Trails.cornerKerbTrail}
                 fill="none"
                 stroke="oklch(0.98 0 0)"
-                strokeWidth={isClosingHighlight ? 2.6 : 2.2}
+                strokeWidth={isClosingHighlight ? 2.8 : 2.2}
                 filter="url(#luminous-glow)"
               />
             ) : null}
 
             {/* Minimalist Phase 01 Tag */}
-            {elapsedSeconds >= 9.4 ? (
+            {elapsedSeconds >= 12.4 ? (
               <text
                 x={482}
                 y={214}
@@ -249,7 +251,7 @@ export function Slide02PerfectParking(): ReactElement {
 
         {/* Phase 2 Trajectory Vector: Straight Forward Pull-Up into Bay Center */}
         {showPhase2Vector ? (
-          <g opacity={isClosingHighlight ? 0.3 : 1}>
+          <g opacity={isClosingHighlight ? 0.28 : 1}>
             <line x1={686} y1={250} x2={706} y2={250} stroke="oklch(0.84 0 0 / 0.7)" strokeWidth={1.2} />
             <line
               x1={696}

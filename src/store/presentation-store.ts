@@ -1,3 +1,4 @@
+import * as v from "valibot";
 import { create } from "zustand";
 
 export const SlidePhaseModes = {
@@ -34,11 +35,60 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     numberLabel: "02",
     title: "Defining Perfect Parking",
     subtitle: "Single continuous full-lock reverse arc & straight forward pull-up",
-    durationSeconds: 32,
+    durationSeconds: 34,
     cumulativeStart: "00:35",
-    cumulativeEnd: "01:07",
+    cumulativeEnd: "01:09",
+  },
+  {
+    index: 2,
+    numberLabel: "03",
+    title: "Slicing the Car: The Wheel-Center Plane",
+    subtitle: "Horizontal wheel-center cross-section, rectangle ABCD & kerb line AEFD",
+    durationSeconds: 38,
+    cumulativeStart: "01:09",
+    cumulativeEnd: "01:47",
   },
 ];
+
+const LAST_SLIDE_STORAGE_KEY = "parking:last-slide-index";
+
+const StoredSlideIndexSchema = v.pipe(v.number(), v.integer(), v.minValue(0));
+
+function readInitialSlideIndex(): number {
+  if (typeof window === "undefined") {
+    return 0;
+  }
+  try {
+    const rawValue: string | null = window.localStorage.getItem(LAST_SLIDE_STORAGE_KEY);
+    if (rawValue === null) {
+      return 0;
+    }
+    const parsedJson: unknown = JSON.parse(rawValue);
+    const result = v.safeParse(StoredSlideIndexSchema, parsedJson);
+    if (!result.success) {
+      return 0;
+    }
+    return Math.max(0, Math.min(result.output, SLIDES_METADATA.length - 1));
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.warn("Failed to read last slide index from localStorage:", error.message);
+    }
+    return 0;
+  }
+}
+
+function saveLastSlideIndex(index: number): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(LAST_SLIDE_STORAGE_KEY, JSON.stringify(index));
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.warn("Failed to save last slide index to localStorage:", error.message);
+    }
+  }
+}
 
 export interface PresentationState {
   readonly currentSlideIndex: number;
@@ -51,13 +101,14 @@ export interface PresentationState {
   readonly togglePlay: () => void;
   readonly setPlaying: (playing: boolean) => void;
   readonly tickElapsed: (deltaSeconds: number) => void;
+  readonly seekTo: (seconds: number) => void;
   readonly restartSlide: () => void;
   readonly toggleHud: () => void;
   readonly setPhaseMode: (mode: SlidePhaseMode) => void;
 }
 
 export const usePresentationStore = create<PresentationState>((set) => ({
-  currentSlideIndex: 0,
+  currentSlideIndex: readInitialSlideIndex(),
   isPlaying: true,
   elapsedSeconds: 0,
   replayGeneration: 0,
@@ -66,6 +117,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
 
   setSlideIndex: (index: number): void => {
     const safeIndex = Math.max(0, Math.min(index, SLIDES_METADATA.length - 1));
+    saveLastSlideIndex(safeIndex);
     set((state) => ({
       currentSlideIndex: safeIndex,
       elapsedSeconds: 0,
@@ -110,6 +162,18 @@ export const usePresentationStore = create<PresentationState>((set) => ({
       }
       return {
         elapsedSeconds: nextElapsed,
+      };
+    });
+  },
+
+  seekTo: (seconds: number): void => {
+    set((state) => {
+      const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
+      const maxDuration = currentMeta ? currentMeta.durationSeconds : 35;
+      const clamped = Math.max(0, Math.min(seconds, maxDuration));
+      return {
+        elapsedSeconds: clamped,
+        phaseMode: SlidePhaseModes.Auto,
       };
     });
   },

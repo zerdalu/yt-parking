@@ -1,5 +1,6 @@
 import { Slide01Dilemma } from "@/slides/slide-01-dilemma";
 import { Slide02PerfectParking } from "@/slides/slide-02-perfect-parking";
+import { Slide03WheelPlane } from "@/slides/slide-03-wheel-plane";
 import { SLIDES_METADATA, usePresentationStore } from "@/store/presentation-store";
 import {
   ArrowCounterClockwiseIcon,
@@ -9,7 +10,19 @@ import {
   PauseIcon,
   PlayIcon,
 } from "@phosphor-icons/react";
-import { Button, ButtonSizes, ButtonVariants } from "@ui/index";
+import {
+  Button,
+  ButtonSizes,
+  ButtonVariants,
+  Menu,
+  MenuContent,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuTrigger,
+  Slider,
+} from "@ui/index";
 import { useEffect, useRef, type ReactElement } from "react";
 
 function formatSeconds(seconds: number): string {
@@ -28,6 +41,7 @@ export function App(): ReactElement {
   const togglePlay = usePresentationStore((state) => state.togglePlay);
   const setPlaying = usePresentationStore((state) => state.setPlaying);
   const tickElapsed = usePresentationStore((state) => state.tickElapsed);
+  const seekTo = usePresentationStore((state) => state.seekTo);
   const restartSlide = usePresentationStore((state) => state.restartSlide);
   const setSlideIndex = usePresentationStore((state) => state.setSlideIndex);
   const toggleHud = usePresentationStore((state) => state.toggleHud);
@@ -39,7 +53,46 @@ export function App(): ReactElement {
   const slideNumberPadded = currentSlide ? currentSlide.numberLabel : "01";
   const audioSrc = `/vo-slide-${slideNumberPadded}.mp3`;
 
-  // Sync HTML5 Voice-Over Audio with Play/Pause and Replay
+  const prevSyncRef = useRef<{ readonly audioSrc: string; readonly replayGeneration: number }>({
+    audioSrc,
+    replayGeneration,
+  });
+
+  // Reset and reload audio ONLY when switching slides or explicitly restarting ('R' / replay)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+
+    const prev = prevSyncRef.current;
+    const srcChanged = prev.audioSrc !== audioSrc;
+    const replayChanged = prev.replayGeneration !== replayGeneration;
+
+    if (!srcChanged && !replayChanged) {
+      return;
+    }
+
+    prevSyncRef.current = { audioSrc, replayGeneration };
+
+    if (srcChanged) {
+      audio.load();
+    }
+    audio.currentTime = 0;
+
+    if (usePresentationStore.getState().isPlaying) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "NotAllowedError") {
+            setPlaying(false);
+          }
+        });
+      }
+    }
+  }, [audioSrc, replayGeneration, setPlaying]);
+
+  // Sync Play / Pause cleanly without resetting audio.currentTime
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) {
@@ -47,33 +100,32 @@ export function App(): ReactElement {
     }
 
     if (isPlaying) {
+      if (audio.error) {
+        return;
+      }
+      const storeElapsed = usePresentationStore.getState().elapsedSeconds;
+      const hasFiniteDuration = Number.isFinite(audio.duration);
+      if (audio.readyState >= 1) {
+        if (hasFiniteDuration && storeElapsed >= audio.duration) {
+          return;
+        }
+        if (Math.abs(audio.currentTime - storeElapsed) > 0.12) {
+          audio.currentTime = hasFiniteDuration ? Math.min(storeElapsed, audio.duration) : storeElapsed;
+        }
+      }
+
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          setPlaying(false);
+        playPromise.catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "NotAllowedError") {
+            setPlaying(false);
+          }
         });
       }
     } else {
       audio.pause();
     }
   }, [isPlaying, setPlaying]);
-
-  // Reset audio to 0.0s when user restarts slide ('R') or changes slide
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) {
-      return;
-    }
-    audio.currentTime = 0;
-    if (isPlaying) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          setPlaying(false);
-        });
-      }
-    }
-  }, [replayGeneration, currentSlideIndex, isPlaying, setPlaying]);
 
   // High-precision animation loop locked to voice-over audio clock when available
   useEffect(() => {
@@ -88,7 +140,7 @@ export function App(): ReactElement {
       lastTime = now;
 
       const audio = audioRef.current;
-      if (audio && !audio.paused && !audio.ended && audio.readyState >= 2) {
+      if (audio && !audio.error && !audio.paused && !audio.ended && audio.readyState >= 2) {
         const drift = audio.currentTime - usePresentationStore.getState().elapsedSeconds;
         if (Math.abs(drift) > 0.04) {
           tickElapsed(drift);
@@ -110,9 +162,12 @@ export function App(): ReactElement {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      const target = event.target;
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
         return;
       }
+      const isSliderFocused = target instanceof HTMLElement && target.getAttribute("role") === "slider";
+
       if (event.code === "Space") {
         event.preventDefault();
         togglePlay();
@@ -122,10 +177,10 @@ export function App(): ReactElement {
       } else if (event.key === "h" || event.key === "H") {
         event.preventDefault();
         toggleHud();
-      } else if (event.code === "ArrowRight") {
+      } else if (event.code === "ArrowRight" && !isSliderFocused) {
         event.preventDefault();
         setSlideIndex(currentSlideIndex + 1);
-      } else if (event.code === "ArrowLeft") {
+      } else if (event.code === "ArrowLeft" && !isSliderFocused) {
         event.preventDefault();
         setSlideIndex(currentSlideIndex - 1);
       }
@@ -137,6 +192,31 @@ export function App(): ReactElement {
     };
   }, [currentSlideIndex, restartSlide, setSlideIndex, toggleHud, togglePlay]);
 
+  const handleSeek = (value: number | readonly number[]): void => {
+    const rawSeconds = typeof value === "number" ? value : (value[0] ?? 0);
+    const nextSeconds = Math.max(0, Math.min(rawSeconds, slideDuration));
+    seekTo(nextSeconds);
+
+    const audio = audioRef.current;
+    if (!audio || audio.error || audio.readyState < 1) {
+      return;
+    }
+
+    const hasFiniteDuration = Number.isFinite(audio.duration);
+    audio.currentTime = hasFiniteDuration ? Math.min(nextSeconds, audio.duration) : nextSeconds;
+
+    if (isPlaying && (!hasFiniteDuration || nextSeconds < audio.duration) && audio.paused) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "NotAllowedError") {
+            setPlaying(false);
+          }
+        });
+      }
+    }
+  };
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-surface-canvas text-text-primary">
       <audio ref={audioRef} src={audioSrc} preload="auto">
@@ -144,12 +224,18 @@ export function App(): ReactElement {
       </audio>
 
       <main className="h-full w-full">
-        {currentSlideIndex === 0 ? <Slide01Dilemma /> : currentSlideIndex === 1 ? <Slide02PerfectParking /> : null}
+        {currentSlideIndex === 0 ? (
+          <Slide01Dilemma />
+        ) : currentSlideIndex === 1 ? (
+          <Slide02PerfectParking />
+        ) : currentSlideIndex === 2 ? (
+          <Slide03WheelPlane />
+        ) : null}
       </main>
 
       {/* Minimal Floating Control Pill (Toggle with 'H' key) */}
       {isHudVisible ? (
-        <div className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1.5 rounded-track border border-border-subtle bg-surface-100/90 px-2.5 py-1.5 shadow-floating backdrop-blur-floating">
+        <div className="fixed bottom-5 left-1/2 z-50 flex w-fit -translate-x-1/2 items-center gap-1.5 rounded-track border border-border-subtle bg-surface-100/90 px-2.5 py-1.5 shadow-floating backdrop-blur-floating">
           <Button
             variant={ButtonVariants.Ghost}
             size={ButtonSizes.IconXs}
@@ -168,7 +254,19 @@ export function App(): ReactElement {
             <ArrowCounterClockwiseIcon className="size-4" />
           </Button>
 
-          <span className="px-2 font-mono text-xs text-text-secondary tabular-nums">
+          <div className="px-1">
+            <Slider
+              aria-label="Seek slide timeline"
+              className="w-28 sm:w-36"
+              min={0}
+              max={slideDuration}
+              step={0.1}
+              value={elapsedSeconds}
+              onValueChange={handleSeek}
+            />
+          </div>
+
+          <span className="px-1.5 font-mono text-xs whitespace-nowrap text-text-secondary tabular-nums">
             {formatSeconds(elapsedSeconds)} / {formatSeconds(slideDuration)}
           </span>
 
@@ -184,7 +282,39 @@ export function App(): ReactElement {
             <CaretLeftIcon className="size-4" />
           </Button>
 
-          <span className="px-1 font-mono text-xs text-text-primary tabular-nums">{slideNumberPadded} / 16</span>
+          <Menu>
+            <MenuTrigger
+              aria-label="Select slide"
+              className="min-size-6 inline-flex h-control-xs cursor-pointer items-center justify-center rounded-control px-1.5 font-mono text-xs whitespace-nowrap text-text-primary tabular-nums transition-colors duration-150 ease-ui hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+            >
+              {slideNumberPadded} / 16
+            </MenuTrigger>
+            <MenuContent side="top" align="center" sideOffset={10} className="w-72">
+              <MenuGroup>
+                <MenuGroupLabel>Slides</MenuGroupLabel>
+                <MenuRadioGroup
+                  value={String(currentSlideIndex)}
+                  onValueChange={(value: unknown): void => {
+                    if (typeof value === "string") {
+                      const parsed = Number.parseInt(value, 10);
+                      if (!Number.isNaN(parsed)) {
+                        setSlideIndex(parsed);
+                      }
+                    }
+                  }}
+                >
+                  {SLIDES_METADATA.map((slide) => (
+                    <MenuRadioItem key={slide.index} value={String(slide.index)}>
+                      <span className="flex items-center gap-2 truncate">
+                        <span className="font-mono text-text-muted tabular-nums">{slide.numberLabel}</span>
+                        <span className="truncate">{slide.title}</span>
+                      </span>
+                    </MenuRadioItem>
+                  ))}
+                </MenuRadioGroup>
+              </MenuGroup>
+            </MenuContent>
+          </Menu>
 
           <Button
             variant={ButtonVariants.Ghost}

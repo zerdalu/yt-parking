@@ -1,0 +1,20 @@
+WEBVTT
+
+00:00.000 --> 00:06.800
+In 2009, mathematician Simon Blackburn formulated a precise model for what he called a perfect
+
+00:06.800 --> 00:12.780
+parking maneuver. First, there is no handbrake skidding and no multi-point shuffling. You
+
+00:12.780 --> 00:18.880
+reverse into the space at full steering lock in a single continuous arc, stopping the exact moment
+
+00:18.880 --> 00:24.360
+your car is parallel to the curb. Then, you straighten your front wheels and drive straight
+
+00:24.360 --> 00:28.640
+forward into the middle of the space. To find the minimum space required,
+
+00:29.040 --> 00:32.400
+we only need to analyze the geometry of that reversing sweep.
+

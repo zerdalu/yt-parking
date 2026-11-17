@@ -166,6 +166,10 @@
   padding-block: var(--panel-p-sm);
 }
 
+.svg-label-halo {
+  paint-order: stroke;
+}
+
 /* ============================================================================
    SLIDE 01 MOTION GRAPHICS KEYFRAMES (35-Second Master Choreography)
    ============================================================================ */

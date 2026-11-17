@@ -1,0 +1,28 @@
+1
+00:00:00,000 --> 00:00:05,640
+To turn a real car into clean geometry, imagine slicing the vehicle horizontally
+
+2
+00:00:05,640 --> 00:00:10,060
+right through the centers of its four wheels, looking straight down from above.
+
+3
+00:00:10,780 --> 00:00:16,340
+The extreme outer body forms a simple rectangle, labeled A, B, C, D.
+
+4
+00:00:16,960 --> 00:00:23,620
+The curb runs along the straight line through A, E, F, and D. Or, if you prefer never to scrape
+
+5
+00:00:23,620 --> 00:00:28,920
+your alloy wheels on concrete, an imaginary line a few centimeters to the right of the curb.
+
+6
+00:00:28,920 --> 00:00:33,120
+Notice that our curbside wheels, centered at points E and F,
+
+7
+00:00:33,580 --> 00:00:36,640
+line up closely with the left edge A to D of the car.
+
