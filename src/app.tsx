@@ -9,6 +9,11 @@ import { Slide08TriangleEfx } from "@/slides/slide-08-triangle-efx";
 import { Slide09TriangleAfx } from "@/slides/slide-09-triangle-afx";
 import { Slide10ConstructionGk } from "@/slides/slide-10-construction-gk";
 import { Slide11SolvingGkx } from "@/slides/slide-11-solving-gkx";
+import { Slide12Numerical } from "@/slides/slide-12-numerical";
+import { Slide13WidthParadox } from "@/slides/slide-13-width-paradox";
+import { Slide14AngledApproach } from "@/slides/slide-14-angled-approach";
+import { Slide15Shuttling } from "@/slides/slide-15-shuttling";
+import { Slide16Tractrix } from "@/slides/slide-16-tractrix";
 import { SLIDES_METADATA, usePresentationStore } from "@/store/presentation-store";
 import {
   ArrowCounterClockwiseIcon,
@@ -254,6 +259,16 @@ export function App(): ReactElement {
           <Slide10ConstructionGk />
         ) : currentSlideIndex === 10 ? (
           <Slide11SolvingGkx />
+        ) : currentSlideIndex === 11 ? (
+          <Slide12Numerical />
+        ) : currentSlideIndex === 12 ? (
+          <Slide13WidthParadox />
+        ) : currentSlideIndex === 13 ? (
+          <Slide14AngledApproach />
+        ) : currentSlideIndex === 14 ? (
+          <Slide15Shuttling />
+        ) : currentSlideIndex === 15 ? (
+          <Slide16Tractrix />
         ) : null}
       </main>
 
