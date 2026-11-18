@@ -15,7 +15,7 @@ export function SelectTrigger({ className, children, ...props }: SelectTriggerPr
   return (
     <BaseSelect.Trigger
       className={cn(
-        "min-size-6 inline-flex h-control-md w-full min-w-36 cursor-pointer items-center justify-between gap-2 border border-border-default bg-surface-sunken px-control-px-md font-sans text-sm text-text-primary shadow-control select-none",
+        "inline-flex h-control-md min-h-6 w-full min-w-36 cursor-pointer items-center justify-between gap-2 border border-border-default bg-surface-sunken px-control-px-md font-sans text-sm text-text-primary shadow-control select-none",
         "rounded-control transition-colors duration-150 ease-ui",
         "hover:border-border-strong",
         "focus-visible:border-border-focus focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-focus",
@@ -82,7 +82,7 @@ export function SelectItem({ className, children, ...props }: SelectItemProps): 
   return (
     <BaseSelect.Item
       className={cn(
-        "min-size-6 relative flex min-h-control-sm cursor-pointer items-center justify-between gap-2 px-control-px-sm py-1.5 font-sans text-xs text-text-secondary outline-none select-none",
+        "relative flex min-h-control-sm min-w-6 cursor-pointer items-center justify-between gap-2 px-control-px-sm py-1.5 font-sans text-xs text-text-secondary outline-none select-none",
         "rounded-control transition-colors duration-100 ease-ui",
         "data-highlighted:bg-surface-hover data-highlighted:text-text-primary",
         "data-selected:font-ui data-selected:text-text-primary",

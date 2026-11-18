@@ -49,7 +49,7 @@ export function DialogContent({
           <BaseDialog.Close
             aria-label="Close dialog"
             className={cn(
-              "min-size-6 absolute top-3.5 right-3.5 inline-flex size-control-xs cursor-pointer items-center justify-center text-text-muted",
+              "absolute top-3.5 right-3.5 inline-flex size-control-xs min-h-6 min-w-6 cursor-pointer items-center justify-center text-text-muted",
               "rounded-control transition-colors duration-150 ease-ui",
               "hover:bg-surface-hover hover:text-text-primary",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",

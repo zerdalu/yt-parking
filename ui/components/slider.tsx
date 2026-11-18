@@ -24,7 +24,7 @@ export function Slider({ className, label, showValue = false, ...props }: Slider
         </BaseSlider.Track>
         <BaseSlider.Thumb
           className={cn(
-            "min-size-6 size-4.5 cursor-grab rounded-track border-2 border-accent-primary bg-surface-100 shadow-control",
+            "size-4.5 min-h-6 min-w-6 cursor-grab rounded-track border-2 border-accent-primary bg-surface-100 shadow-control",
             "transition-transform duration-100 ease-ui",
             "hover:scale-105 active:cursor-grabbing",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",

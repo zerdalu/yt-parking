@@ -19,9 +19,9 @@ When you clone Parking to start a new project, you never need to edit the compon
 
 ## 2. Base Spacing
 
-| CSS Variable | Default           | Generated Utilities                           | Purpose & Usage                                                                                                                                                             |
-| :----------- | :---------------- | :-------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--spacing`  | `0.25rem` (`4px`) | `p-*`, `m-*`, `gap-*`, `size-*`, `w-*`, `h-*` | Multiplier for all standard Tailwind spacing and sizing utilities (`size-4.5` = `18px`, `min-size-6` = `24px`). Scaling this value scales the entire layout proportionally. |
+| CSS Variable | Default           | Generated Utilities                           | Purpose & Usage                                                                                                                                                         |
+| :----------- | :---------------- | :-------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--spacing`  | `0.25rem` (`4px`) | `p-*`, `m-*`, `gap-*`, `size-*`, `w-*`, `h-*` | Multiplier for all standard Tailwind spacing and sizing utilities (`size-4.5` = `18px`, `size-6` = `24px`). Scaling this value scales the entire layout proportionally. |
 
 ---
 

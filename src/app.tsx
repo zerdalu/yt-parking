@@ -324,7 +324,7 @@ export function App(): ReactElement {
           <Menu>
             <MenuTrigger
               aria-label="Select slide"
-              className="min-size-6 inline-flex h-control-xs cursor-pointer items-center justify-center rounded-control px-1.5 font-mono text-xs whitespace-nowrap text-text-primary tabular-nums transition-colors duration-150 ease-ui hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+              className="inline-flex h-control-xs min-h-6 min-w-6 cursor-pointer items-center justify-center rounded-control px-1.5 font-mono text-xs whitespace-nowrap text-text-primary tabular-nums transition-colors duration-150 ease-ui hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
             >
               {slideNumberPadded} / 16
             </MenuTrigger>

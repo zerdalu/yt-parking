@@ -38,7 +38,7 @@ export function TabsTrigger({ className, ...props }: TabsTriggerProps): ReactEle
   return (
     <BaseTabs.Tab
       className={cn(
-        "min-size-6 relative z-10 inline-flex h-control-sm cursor-pointer items-center justify-center gap-1.5 px-control-px-md font-mono text-xs font-ui tracking-ui text-text-muted select-none",
+        "relative z-10 inline-flex h-control-sm min-h-6 min-w-6 cursor-pointer items-center justify-center gap-1.5 px-control-px-md font-mono text-xs font-ui tracking-ui text-text-muted select-none",
         "rounded-control transition-colors duration-150 ease-ui",
         "hover:text-text-secondary",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",

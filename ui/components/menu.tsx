@@ -54,7 +54,7 @@ export function MenuItem({ className, danger = false, ...props }: MenuItemProps)
   return (
     <BaseMenu.Item
       className={cn(
-        "min-size-6 flex min-h-control-sm cursor-pointer items-center justify-between gap-2 px-control-px-sm py-1.5 font-sans text-xs outline-none select-none",
+        "flex min-h-control-sm min-w-6 cursor-pointer items-center justify-between gap-2 px-control-px-sm py-1.5 font-sans text-xs outline-none select-none",
         "rounded-control transition-colors duration-100 ease-ui",
         danger
           ? "text-status-danger-text data-highlighted:bg-status-danger-bg data-highlighted:text-status-danger-text"
@@ -73,7 +73,7 @@ export function MenuCheckboxItem({ className, children, ...props }: MenuCheckbox
   return (
     <BaseMenu.CheckboxItem
       className={cn(
-        "min-size-6 flex min-h-control-sm cursor-pointer items-center justify-between gap-2 px-control-px-sm py-1.5 font-sans text-xs text-text-secondary outline-none select-none",
+        "flex min-h-control-sm min-w-6 cursor-pointer items-center justify-between gap-2 px-control-px-sm py-1.5 font-sans text-xs text-text-secondary outline-none select-none",
         "rounded-control transition-colors duration-100 ease-ui",
         "data-highlighted:bg-surface-hover data-highlighted:text-text-primary",
         "data-checked:font-ui data-checked:text-text-primary",
@@ -102,7 +102,7 @@ export function MenuRadioItem({ className, children, ...props }: MenuRadioItemPr
   return (
     <BaseMenu.RadioItem
       className={cn(
-        "min-size-6 flex min-h-control-sm cursor-pointer items-center justify-between gap-2 px-control-px-sm py-1.5 font-sans text-xs text-text-secondary outline-none select-none",
+        "flex min-h-control-sm min-w-6 cursor-pointer items-center justify-between gap-2 px-control-px-sm py-1.5 font-sans text-xs text-text-secondary outline-none select-none",
         "rounded-control transition-colors duration-100 ease-ui",
         "data-highlighted:bg-surface-hover data-highlighted:text-text-primary",
         "data-checked:font-ui data-checked:text-text-primary",

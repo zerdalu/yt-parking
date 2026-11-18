@@ -8,7 +8,7 @@ export function Switch({ className, ...props }: SwitchProps): ReactElement {
   return (
     <BaseSwitch.Root
       className={cn(
-        "group min-size-6 relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center border border-border-default bg-surface-sunken p-0.5 shadow-control",
+        "group relative inline-flex h-6 min-h-6 w-11 min-w-6 shrink-0 cursor-pointer items-center border border-border-default bg-surface-sunken p-0.5 shadow-control",
         "rounded-track transition-colors duration-150 ease-ui",
         "hover:border-border-strong",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",

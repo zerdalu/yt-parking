@@ -20,7 +20,7 @@ export function Input({ size = InputSizes.Md, className, ...props }: InputProps)
   return (
     <BaseInput
       className={cn(
-        "min-size-6 w-full min-w-0 border border-border-default bg-surface-sunken font-sans text-text-primary shadow-control",
+        "min-h-6 w-full min-w-6 border border-border-default bg-surface-sunken font-sans text-text-primary shadow-control",
         "rounded-control transition-colors duration-150 ease-ui",
         "placeholder:text-text-muted",
         "hover:border-border-strong",

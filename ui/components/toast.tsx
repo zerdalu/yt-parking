@@ -83,7 +83,7 @@ function ToastList(): ReactElement {
             <BaseToast.Close
               aria-label="Dismiss notification"
               className={cn(
-                "min-size-6 inline-flex size-control-xs shrink-0 cursor-pointer items-center justify-center text-text-muted",
+                "inline-flex size-control-xs min-h-6 min-w-6 shrink-0 cursor-pointer items-center justify-center text-text-muted",
                 "rounded-control transition-colors duration-150 ease-ui",
                 "hover:bg-surface-hover hover:text-text-primary",
                 "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-focus",
