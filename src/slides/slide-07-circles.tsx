@@ -163,6 +163,10 @@ function buildCongruenceTicks(p1: Point2D, p2: Point2D): string {
   ].join(" ");
 }
 
+const CARRY_OUTER_ARC = buildArcSweep(TURNING_CENTER, RADIUS_AX, -80, -14);
+const CARRY_E_ARC = buildArcSweep(TURNING_CENTER, RADIUS_EX, -76, -8);
+const CARRY_F_ARC = buildArcSweep(TURNING_CENTER, RADIUS_FX, -70, 12);
+
 interface ConcentricCircleProps {
   readonly radius: number;
   readonly startDeg: number;
@@ -277,28 +281,27 @@ function VertexMarker({
 export function Slide07Circles(): ReactElement {
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
 
-  // Beat 1 (0.00s - 4.76s): Car finishes reversing parallel to kerb (-15 deg -> 0 deg)
-  // Beat 2-3 (5.38s - 27.20s): C1-smooth continuous arc (-52 deg -> 0 deg), grazing G right at 20.60s
+  // Beat 1 (0.00s - 4.75s): Opens directly on the exact frozen parallel pose from Slide 06 (0 deg at 627, 324)
+  // Beat 2-3 (5.35s - 27.20s): C1-smooth continuous arc (-52 deg -> 0 deg), grazing G right at 20.60s
   let headingDeg = 0;
   let heroOpacity = 1;
   let isReversing = false;
   let isBraking = false;
 
-  if (elapsedSeconds < 4.9) {
-    const finishPull = easeOutCubic(progressBetween(elapsedSeconds, 0.0, 4.3));
-    headingDeg = -15 * (1 - finishPull);
-    isReversing = elapsedSeconds < 4.25;
-    isBraking = elapsedSeconds >= 3.8;
-    heroOpacity = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 4.7, 4.9));
+  if (elapsedSeconds < 4.75) {
+    headingDeg = 0;
+    isReversing = false;
+    isBraking = true;
+    heroOpacity = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 4.3, 4.75));
   } else if (elapsedSeconds < 5.35) {
     headingDeg = SWEEP_START_HEADING_DEG;
-    heroOpacity = easeOutCubic(progressBetween(elapsedSeconds, 5.05, 5.35));
+    heroOpacity = easeOutCubic(progressBetween(elapsedSeconds, 4.8, 5.3));
     isReversing = false;
     isBraking = true;
   } else if (elapsedSeconds <= 20.6) {
-    headingDeg = cubicHermite(elapsedSeconds, 5.4, 20.6, SWEEP_START_HEADING_DEG, GRAZE_HEADING_DEG, 0, 2.65);
-    isReversing = elapsedSeconds >= 5.45;
-    isBraking = elapsedSeconds < 5.45;
+    headingDeg = cubicHermite(elapsedSeconds, 5.35, 20.6, SWEEP_START_HEADING_DEG, GRAZE_HEADING_DEG, 0, 2.65);
+    isReversing = elapsedSeconds >= 5.4;
+    isBraking = elapsedSeconds < 5.4;
   } else if (elapsedSeconds < 27.2) {
     headingDeg = cubicHermite(elapsedSeconds, 20.6, 27.2, GRAZE_HEADING_DEG, 0, 2.65, 0);
     isReversing = elapsedSeconds < 27.05;
@@ -309,20 +312,24 @@ export function Slide07Circles(): ReactElement {
     isBraking = elapsedSeconds < 28.2;
   }
 
-  const wheelRollDistance = -REAR_TO_CENTER_DX * degToRad(headingDeg - SWEEP_START_HEADING_DEG);
+  const wheelRollDistance =
+    elapsedSeconds < 4.75 ? 0 : -REAR_TO_CENTER_DX * degToRad(headingDeg - SWEEP_START_HEADING_DEG);
   const carCenter = rotateLocalPointAroundX(0, 0, headingDeg);
   const pointA = rotateLocalPointAroundX(HALF_W, -HALF_L, headingDeg);
   const pointE = rotateLocalPointAroundX(TRACK_HALF_W, -WHEEL_HALF_L, headingDeg);
   const pointF = rotateLocalPointAroundX(TRACK_HALF_W, WHEEL_HALF_L, headingDeg);
 
+  // Smooth carry-over dissolve from Slide 06's final frozen frame (0.3s -> 1.8s)
+  const carryOverOpacity = 1 - easeInOutCubic(progressBetween(elapsedSeconds, 0.3, 1.8));
+
   // Target parallel Ghost remains subtly visible while the car is sweeping
   const parallelGhostOpacity =
-    elapsedSeconds >= 5.05 && elapsedSeconds < 27.2
+    elapsedSeconds >= 4.8 && elapsedSeconds < 27.2
       ? 0.34 * (1 - easeInOutCubic(progressBetween(elapsedSeconds, 26.4, 27.2)))
       : 0;
 
-  // Turning center X appears on "around center X" (5.38s - 7.36s)
-  const xOpacity = easeOutCubic(progressBetween(elapsedSeconds, 5.2, 6.2));
+  // Turning center X carries seamlessly from Slide 06, gently dims, then illuminates on "around center X" (5.38s - 7.36s)
+  const xOpacity = Math.max(0.28 + 0.72 * carryOverOpacity, easeOutCubic(progressBetween(elapsedSeconds, 5.2, 6.2)));
   const xPulse = Math.max(pulseFactor(elapsedSeconds, 7.15, 0.6), pulseFactor(elapsedSeconds, 32.1, 0.65));
 
   // Two inner dashed circles (E and F) draw cleanly during 7.6s - 11.44s
@@ -351,7 +358,7 @@ export function Slide07Circles(): ReactElement {
       : "";
 
   // Grazing corner G highlights at 18.8s - 23.3s ("just barely miss the corner G") and again on 26.2s+
-  const gOpacity = easeOutCubic(progressBetween(elapsedSeconds, 18.2, 19.2));
+  const gOpacity = Math.max(carryOverOpacity, easeOutCubic(progressBetween(elapsedSeconds, 18.2, 19.2)));
   const gPulse = Math.max(
     pulseFactor(elapsedSeconds, 20.6, 0.85),
     pulseFactor(elapsedSeconds, 21.75, 0.6),
@@ -409,7 +416,7 @@ export function Slide07Circles(): ReactElement {
         <circle cx={480} cy={310} r={315} fill="url(#slide07-ambient-glow)" />
 
         {/* Architectural Two-Lane Road Stage */}
-        <RoadStage showTangentGuide={elapsedSeconds >= 4.0} />
+        <RoadStage showTangentGuide={true} />
 
         {/* Parked Car in Front (Rear-left corner G sits on outer circle) */}
         <g transform={`translate(${PARALLEL_CENTER_X}, ${FRONT_PARKED_CENTER_Y})`}>
@@ -447,14 +454,57 @@ export function Slide07Circles(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            CONCENTRIC TURNING CIRCLES CENTERED AT X
+            HERO 2D CUT-PLANE SPORTS COUPE (Rendered Below Geometric Overlays)
+           ================================================================ */}
+        <g transform={`translate(${carCenter.x}, ${carCenter.y}) rotate(${headingDeg})`} opacity={heroOpacity}>
+          <CutPlaneCar
+            variant={CarSectionVariants.Hero}
+            kerbSide={KerbSides.Right}
+            showBoundingBox={false}
+            showVertexLabels={false}
+            showAxlePlaneLines={true}
+            frontLeftSteerDeg={ACKERMANN.frontLeftSteerDeg}
+            frontRightSteerDeg={ACKERMANN.frontRightSteerDeg}
+            wheelRollDistance={wheelRollDistance}
+            isReversing={isReversing}
+            isBraking={isBraking}
+          />
+        </g>
+
+        {/* ================================================================
+            CARRY-OVER FROZEN ARCS FROM SLIDE 06 (SMOOTH DISSOLVE 0.3s - 1.8s)
+           ================================================================ */}
+        {carryOverOpacity > 0.01 ? (
+          <g fill="none" opacity={carryOverOpacity}>
+            <path d={CARRY_F_ARC} stroke="oklch(0.75 0 0 / 0.34)" strokeWidth={1.25} strokeDasharray="4 6" />
+            <path d={CARRY_E_ARC} stroke="oklch(0.78 0 0 / 0.38)" strokeWidth={1.25} strokeDasharray="4 6" />
+            <path
+              d={CARRY_OUTER_ARC}
+              stroke="oklch(0.96 0 0 / 0.8)"
+              strokeWidth={1.7}
+              filter="url(#slide07-luminous-glow)"
+            />
+            <line
+              x1={TURNING_CENTER.x}
+              y1={TURNING_CENTER.y}
+              x2={POINT_G.x}
+              y2={POINT_G.y}
+              stroke="oklch(0.92 0 0 / 0.42)"
+              strokeWidth={1.3}
+              strokeDasharray="4 4"
+            />
+          </g>
+        ) : null}
+
+        {/* ================================================================
+            CONCENTRIC TURNING CIRCLES CENTERED AT X (Rendered Above Car)
            ================================================================ */}
         {/* Inner Dashed Circle (Wheel F) */}
         <ConcentricCircle
           radius={RADIUS_FX}
           startDeg={ANGLE_F_PARALLEL_DEG + headingDeg}
           drawProgress={dashedCircleDraw}
-          stroke="oklch(0.76 0 0 / 0.45)"
+          stroke="oklch(0.76 0 0 / 0.48)"
           strokeWidth={1.3}
           strokeDasharray="5 5"
         />
@@ -464,7 +514,7 @@ export function Slide07Circles(): ReactElement {
           radius={RADIUS_EX}
           startDeg={ANGLE_E_PARALLEL_DEG + headingDeg}
           drawProgress={dashedCircleDraw}
-          stroke="oklch(0.84 0 0 / 0.55)"
+          stroke="oklch(0.84 0 0 / 0.58)"
           strokeWidth={1.4}
           strokeDasharray="5 5"
         />
@@ -474,7 +524,7 @@ export function Slide07Circles(): ReactElement {
           radius={RADIUS_AX}
           startDeg={ANGLE_A_PARALLEL_DEG + headingDeg}
           drawProgress={outerCircleDraw}
-          stroke="oklch(0.92 0 0 / 0.65)"
+          stroke="oklch(0.92 0 0 / 0.68)"
           strokeWidth={1.5}
         />
 
@@ -496,7 +546,7 @@ export function Slide07Circles(): ReactElement {
             y1={pointF.y}
             x2={TURNING_CENTER.x}
             y2={TURNING_CENTER.y}
-            stroke="oklch(0.86 0 0 / 0.45)"
+            stroke="oklch(0.86 0 0 / 0.48)"
             strokeWidth={1.2}
             strokeDasharray="4 4"
             opacity={xOpacity}
@@ -576,24 +626,6 @@ export function Slide07Circles(): ReactElement {
         ) : null}
 
         {/* ================================================================
-            HERO 2D CUT-PLANE SPORTS COUPE
-           ================================================================ */}
-        <g transform={`translate(${carCenter.x}, ${carCenter.y}) rotate(${headingDeg})`} opacity={heroOpacity}>
-          <CutPlaneCar
-            variant={CarSectionVariants.Hero}
-            kerbSide={KerbSides.Right}
-            showBoundingBox={false}
-            showVertexLabels={false}
-            showAxlePlaneLines={true}
-            frontLeftSteerDeg={ACKERMANN.frontLeftSteerDeg}
-            frontRightSteerDeg={ACKERMANN.frontRightSteerDeg}
-            wheelRollDistance={wheelRollDistance}
-            isReversing={isReversing}
-            isBraking={isBraking}
-          />
-        </g>
-
-        {/* ================================================================
             TURNING CENTER X NODE
            ================================================================ */}
         {xOpacity > 0.01 ? (
@@ -663,8 +695,8 @@ export function Slide07Circles(): ReactElement {
         <VertexMarker
           point={POINT_G}
           label="G"
-          labelX={POINT_G.x - 13}
-          labelY={POINT_G.y - 10}
+          labelX={POINT_G.x - 14}
+          labelY={POINT_G.y - 12}
           textAnchor="end"
           opacity={gOpacity}
           pulse={gPulse}

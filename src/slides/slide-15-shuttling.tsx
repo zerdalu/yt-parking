@@ -75,16 +75,26 @@ interface ShuttlePassSpec {
 }
 
 const ACT1_PASSES: readonly ShuttlePassSpec[] = [
-  // 4 shuttle passes in c < 1.43 m (0.0s - 7.6s), stepping rearAxleX: 584 -> 592 -> 600 -> 608 -> 615
-  { startTime: 0.0, endTime: 1.85, startX: 584, endX: 592, startY: 274, endY: 332, cumulativeRollStart: 0 },
-  { startTime: 1.95, endTime: 3.75, startX: 592, endX: 600, startY: 332, endY: 274, cumulativeRollStart: -60 },
-  { startTime: 3.85, endTime: 5.65, startX: 600, endX: 608, startY: 274, endY: 332, cumulativeRollStart: -2 },
-  { startTime: 5.75, endTime: 7.55, startX: 608, endX: 615, startY: 332, endY: 278, cumulativeRollStart: -60 },
-  // 3 tighter shuttle passes after bay squeezes (7.8s - 13.8s), stepping rearAxleX: 615 -> 619 -> 623 -> 627
-  { startTime: 7.8, endTime: 9.65, startX: 615, endX: 619, startY: 278, endY: 320, cumulativeRollStart: -6 },
-  { startTime: 9.75, endTime: 11.6, startX: 619, endX: 623, startY: 320, endY: 280, cumulativeRollStart: -49 },
-  { startTime: 11.7, endTime: 13.7, startX: 623, endX: 627, startY: 280, endY: 318, cumulativeRollStart: -9 },
+  // 4 shuttle passes in c < 1.43 m (0.0s - 7.55s): front bumper >= 164.6 (> 157.6), rear bumper <= 349.8 (< 356.8)
+  { startTime: 0.0, endTime: 1.85, startX: 612, endX: 614, startY: 321, endY: 287, cumulativeRollStart: 0 },
+  { startTime: 1.95, endTime: 3.75, startX: 614, endX: 616, startY: 287, endY: 321, cumulativeRollStart: 34 },
+  { startTime: 3.85, endTime: 5.65, startX: 616, endX: 618, startY: 321, endY: 287, cumulativeRollStart: 0 },
+  { startTime: 5.75, endTime: 7.55, startX: 618, endX: 619.1, startY: 287, endY: 312, cumulativeRollStart: 34 },
+  // 3 tighter shuttle passes after bay squeezes (7.8s - 13.7s): front bumper >= 171.6 (> 167.6), rear bumper <= 340.8 (< 346.8)
+  { startTime: 7.8, endTime: 9.65, startX: 619.1, endX: 619.7, startY: 312, endY: 294, cumulativeRollStart: 9 },
+  { startTime: 9.75, endTime: 11.6, startX: 619.7, endX: 620.3, startY: 294, endY: 312, cumulativeRollStart: 27 },
+  { startTime: 11.7, endTime: 13.7, startX: 620.3, endX: 620.9, startY: 312, endY: 294, cumulativeRollStart: 9 },
 ];
+
+const ACT3_FINISH_PASS: ShuttlePassSpec = {
+  startTime: 26.8,
+  endTime: 29.4,
+  startX: 625,
+  endX: 627,
+  startY: 290,
+  endY: 318,
+  cumulativeRollStart: 0,
+};
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -285,37 +295,10 @@ function computeFig4Pose(seconds: number): {
 }
 
 /**
- * Exact non-holonomic circular-arc reverse finish around turning center X on the left (R = 156 px).
+ * Exact non-holonomic reverse S-curve finish inside the bay without colliding with parked cars or swinging onto pavement.
  */
 function computeAct3FinishPose(seconds: number): ShuttlePose {
-  const radius = 156;
-  const startHeadingDeg = -22;
-  const targetRearAxleX = ROAD_BAY_X; // 627
-  const targetRearAxleY = 304;
-  const turnCenterX = targetRearAxleX - radius; // 471
-
-  const u = easeInOutCubic(progressBetween(seconds, 26.8, 29.4));
-  const headingDeg = startHeadingDeg * (1 - u);
-  const headingRad = degToRad(headingDeg);
-
-  const rearAxleX = turnCenterX + radius * Math.cos(headingRad);
-  const rearAxleY = targetRearAxleY + radius * Math.sin(headingRad);
-  const centerX = rearAxleX + ROAD_HALF_WHEELBASE * Math.sin(headingRad);
-  const centerY = rearAxleY - ROAD_HALF_WHEELBASE * Math.cos(headingRad);
-
-  const straighten = easeInOutCubic(progressBetween(seconds, 28.9, 29.4));
-  const steerDeg = -31 * (1 - straighten);
-  const arcTravel = radius * degToRad(Math.abs(startHeadingDeg)) * u;
-
-  return {
-    centerX,
-    centerY,
-    headingDeg,
-    steerDeg,
-    wheelRollDistance: -arcTravel / ROAD_CAR_SCALE,
-    isReversing: seconds >= 26.8 && seconds < 29.35,
-    isBraking: seconds >= 29.0,
-  };
+  return sampleShuttlePass(seconds, ACT3_FINISH_PASS);
 }
 
 interface Fig4PointNodeProps {
@@ -390,10 +373,10 @@ export function Slide15Shuttling(): ReactElement {
 
   // Act 1 Bay Tightening
   const squeezeProgress = easeInOutCubic(progressBetween(elapsedSeconds, 7.6, 9.2));
-  const frontParkedCenterY = 88 + 10 * squeezeProgress; // 88 -> 98
-  const rearParkedCenterY = 426.4 - 10 * squeezeProgress; // 426.4 -> 416.4
-  const frontRearBumperY = frontParkedCenterY + ROAD_CAR_HALF_L; // 163.6 -> 173.6
-  const rearFrontBumperY = rearParkedCenterY - ROAD_CAR_HALF_L; // 350.8 -> 340.8
+  const frontParkedCenterY = 82 + 10 * squeezeProgress; // 82 -> 92
+  const rearParkedCenterY = 432.4 - 10 * squeezeProgress; // 432.4 -> 422.4
+  const frontRearBumperY = frontParkedCenterY + ROAD_CAR_HALF_L; // 157.6 -> 167.6
+  const rearFrontBumperY = rearParkedCenterY - ROAD_CAR_HALF_L; // 356.8 -> 346.8
   const act1Pose = computeAct1ShuttlePose(elapsedSeconds);
   const act1Ack = computeAckermannAngles(act1Pose.steerDeg, DEFAULT_VEHICLE_DIMENSIONS);
 

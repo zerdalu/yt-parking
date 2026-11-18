@@ -659,7 +659,7 @@ export function Slide09TriangleAfx(): ReactElement {
           filter={fxFocus > 0.25 ? "url(#slide09-luminous-glow)" : undefined}
           className="text-text-primary"
         >
-          <RootR2MinusL2 x={(POINT_X.x + POINT_F.x) * 0.5} y={POINT_X.y + 30} />
+          <RootR2MinusL2 x={(POINT_X.x + POINT_F.x) * 0.5 - 35} y={POINT_X.y + 30} />
         </g>
 
         {/* ================================================================

@@ -11,13 +11,14 @@ import {
 import { usePresentationStore } from "@/store/presentation-store";
 import type { ReactElement } from "react";
 
-// Frozen critical-instant geometry (Scale 1.0 aligned to RoadStage bay at x = 627)
+// Frozen critical-instant geometry matching Slide 07 (Scale 1.0 aligned to RoadStage bay at x = 627)
 const PARALLEL_CENTER_X = 627;
-const PARALLEL_CENTER_Y = 360;
-const REAR_AXLE_Y = PARALLEL_CENTER_Y + DEFAULT_VEHICLE_DIMENSIONS.wheelbase * 0.5; // 412
-const TURNING_CENTER: Point2D = { x: 450, y: REAR_AXLE_Y };
+const PARALLEL_CENTER_Y = 324;
+const REAR_AXLE_Y = PARALLEL_CENTER_Y + DEFAULT_VEHICLE_DIMENSIONS.wheelbase * 0.5; // 376
+const TURNING_CENTER: Point2D = { x: 475, y: REAR_AXLE_Y };
+const REAR_TO_CENTER_DX = PARALLEL_CENTER_X - TURNING_CENTER.x; // 152
 
-const VIRTUAL_STEER_DEG = -((Math.atan2(DEFAULT_VEHICLE_DIMENSIONS.wheelbase, 177) * 180) / Math.PI); // -30.436 deg
+const VIRTUAL_STEER_DEG = -((Math.atan2(DEFAULT_VEHICLE_DIMENSIONS.wheelbase, REAR_TO_CENTER_DX) * 180) / Math.PI); // -34.38 deg
 const ACKERMANN = computeAckermannAngles(VIRTUAL_STEER_DEG, DEFAULT_VEHICLE_DIMENSIONS);
 
 const HALF_W = DEFAULT_VEHICLE_DIMENSIONS.width * 0.5; // 38
@@ -25,31 +26,31 @@ const HALF_L = DEFAULT_VEHICLE_DIMENSIONS.length * 0.5; // 84
 const TRACK_HALF_W = DEFAULT_VEHICLE_DIMENSIONS.trackHalfWidth; // 31
 const WHEEL_HALF_L = DEFAULT_VEHICLE_DIMENSIONS.wheelbase * 0.5; // 52
 
-// Exact radii around turning center X(450, 412)
+// Exact radii around turning center X(475, 376)
 const RADIUS_AX = Math.hypot(
   PARALLEL_CENTER_X + HALF_W - TURNING_CENTER.x,
   PARALLEL_CENTER_Y - HALF_L - TURNING_CENTER.y,
-); // 254.403
+); // 233.658
 const RADIUS_EX = Math.hypot(
   PARALLEL_CENTER_X + TRACK_HALF_W - TURNING_CENTER.x,
   PARALLEL_CENTER_Y - WHEEL_HALF_L - TURNING_CENTER.y,
-); // 232.551
-const RADIUS_FX = PARALLEL_CENTER_X + TRACK_HALF_W - TURNING_CENTER.x; // 208
+); // 210.487
+const RADIUS_FX = PARALLEL_CENTER_X + TRACK_HALF_W - TURNING_CENTER.x; // 183
 
 // Front parked car rear-left corner G positioned on the exact outer circle of radius RADIUS_AX
 const POINT_G_X = PARALLEL_CENTER_X - HALF_W; // 589
-const POINT_G_Y = TURNING_CENTER.y - Math.sqrt(RADIUS_AX * RADIUS_AX - (POINT_G_X - TURNING_CENTER.x) ** 2); // 198.927
-const FRONT_PARKED_CENTER_Y = POINT_G_Y - HALF_L; // 114.927
-const REAR_PARKED_CENTER_Y = 534;
+const POINT_G_Y = TURNING_CENTER.y - Math.sqrt(RADIUS_AX * RADIUS_AX - (POINT_G_X - TURNING_CENTER.x) ** 2); // 172.039
+const FRONT_PARKED_CENTER_Y = POINT_G_Y - HALF_L; // 88.039
+const REAR_PARKED_CENTER_Y = 520;
 
-const POINT_A_PARALLEL: Point2D = { x: PARALLEL_CENTER_X + HALF_W, y: PARALLEL_CENTER_Y - HALF_L }; // (665, 276)
+const POINT_A_PARALLEL: Point2D = { x: PARALLEL_CENTER_X + HALF_W, y: PARALLEL_CENTER_Y - HALF_L }; // (665, 240)
 const POINT_G: Point2D = { x: POINT_G_X, y: POINT_G_Y };
 const POINT_H: Point2D = { x: PARALLEL_CENTER_X + HALF_W, y: POINT_G_Y };
 
 const ANGLE_A_PARALLEL_DEG =
   (Math.atan2(POINT_A_PARALLEL.y - TURNING_CENTER.y, POINT_A_PARALLEL.x - TURNING_CENTER.x) * 180) / Math.PI;
 const ANGLE_G_DEG = (Math.atan2(POINT_G.y - TURNING_CENTER.y, POINT_G.x - TURNING_CENTER.x) * 180) / Math.PI;
-const GRAZE_HEADING_DEG = ANGLE_G_DEG - ANGLE_A_PARALLEL_DEG; // -24.565 deg
+const GRAZE_HEADING_DEG = ANGLE_G_DEG - ANGLE_A_PARALLEL_DEG; // -25.203 deg
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -110,7 +111,7 @@ function rotateCarCenterAroundX(headingDeg: number): Point2D {
   };
 }
 
-const OUTER_CIRCLE_ARC = buildArcFromAngles(TURNING_CENTER, RADIUS_AX, -78, -14);
+const OUTER_CIRCLE_ARC = buildArcFromAngles(TURNING_CENTER, RADIUS_AX, -80, -14);
 const WHEEL_E_CIRCLE_ARC = buildArcFromAngles(TURNING_CENTER, RADIUS_EX, -76, -8);
 const WHEEL_F_CIRCLE_ARC = buildArcFromAngles(TURNING_CENTER, RADIUS_FX, -70, 12);
 const GRAZE_CAR_CENTER = rotateCarCenterAroundX(GRAZE_HEADING_DEG);
@@ -192,7 +193,7 @@ function RightTriangleDiagram({
           x={pTop.x + 11}
           y={pTop.y - 2}
           textAnchor="start"
-          className="fill-text-primary font-mono text-xs font-semibold"
+          className="fill-text-primary font-math text-xs font-semibold"
         >
           {topLabel}
         </text>
@@ -200,7 +201,7 @@ function RightTriangleDiagram({
           x={pCorner.x + 11}
           y={pCorner.y + 8}
           textAnchor="start"
-          className="fill-text-primary font-mono text-xs font-semibold"
+          className="fill-text-primary font-math text-xs font-semibold"
         >
           {cornerLabel}
         </text>
@@ -208,7 +209,7 @@ function RightTriangleDiagram({
           x={pLeft.x - 11}
           y={pLeft.y + 8}
           textAnchor="end"
-          className="fill-text-primary font-mono text-xs font-semibold"
+          className="fill-text-primary font-math text-xs font-semibold"
         >
           {leftLabel}
         </text>
@@ -257,7 +258,7 @@ export function Slide06Formula(): ReactElement {
   const headingDeg = -36 * (1 - sweepProgress);
   const isReversing = elapsedSeconds >= 17.35 && elapsedSeconds < 19.5;
   const isBraking = elapsedSeconds >= 19.2;
-  const wheelRollDistance = -177 * degToRad(headingDeg + 36);
+  const wheelRollDistance = -REAR_TO_CENTER_DX * degToRad(headingDeg + 36);
 
   const carCenter = rotateCarCenterAroundX(headingDeg);
   const freezePulse = pulseEnvelope(elapsedSeconds, 19.3, 19.65, 21.2, 22.4);
@@ -471,18 +472,6 @@ export function Slide06Formula(): ReactElement {
             {/* Architectural Road Stage */}
             <RoadStage showTangentGuide={true} />
 
-            {/* Concentric Turning Circles Centered at X */}
-            <g fill="none">
-              <path d={WHEEL_F_CIRCLE_ARC} stroke="oklch(0.75 0 0 / 0.3)" strokeWidth={1.2} strokeDasharray="4 6" />
-              <path d={WHEEL_E_CIRCLE_ARC} stroke="oklch(0.78 0 0 / 0.34)" strokeWidth={1.2} strokeDasharray="4 6" />
-              <path
-                d={OUTER_CIRCLE_ARC}
-                stroke="oklch(0.96 0 0 / 0.78)"
-                strokeWidth={1.65}
-                filter="url(#slide06-luminous-glow)"
-              />
-            </g>
-
             {/* Parked Car in Front (Rear-left corner G sits directly on outer circle) */}
             <g transform={`translate(${PARALLEL_CENTER_X}, ${FRONT_PARKED_CENTER_Y})`}>
               <CutPlaneCar
@@ -520,6 +509,34 @@ export function Slide06Formula(): ReactElement {
                 />
               </g>
             ) : null}
+
+            {/* Hero Sports Coupe Reversing Past G and Freezing Parallel to Kerb */}
+            <g transform={`translate(${carCenter.x}, ${carCenter.y}) rotate(${headingDeg})`}>
+              <CutPlaneCar
+                variant={CarSectionVariants.Hero}
+                kerbSide={KerbSides.Right}
+                showBoundingBox={false}
+                showVertexLabels={false}
+                showAxlePlaneLines={true}
+                frontLeftSteerDeg={ACKERMANN.frontLeftSteerDeg}
+                frontRightSteerDeg={ACKERMANN.frontRightSteerDeg}
+                wheelRollDistance={wheelRollDistance}
+                isReversing={isReversing}
+                isBraking={isBraking}
+              />
+            </g>
+
+            {/* Concentric Turning Circles Centered at X (Rendered Above Car) */}
+            <g fill="none">
+              <path d={WHEEL_F_CIRCLE_ARC} stroke="oklch(0.75 0 0 / 0.34)" strokeWidth={1.25} strokeDasharray="4 6" />
+              <path d={WHEEL_E_CIRCLE_ARC} stroke="oklch(0.78 0 0 / 0.38)" strokeWidth={1.25} strokeDasharray="4 6" />
+              <path
+                d={OUTER_CIRCLE_ARC}
+                stroke="oklch(0.96 0 0 / 0.8)"
+                strokeWidth={1.7}
+                filter="url(#slide06-luminous-glow)"
+              />
+            </g>
 
             {/* Target Extra Clearance |AH| Bracket & Equal-Radius Rays XG / XA */}
             {ahPreviewOpacity > 0.01 ? (
@@ -564,22 +581,6 @@ export function Slide06Formula(): ReactElement {
               strokeDasharray="4 4"
             />
 
-            {/* Hero Sports Coupe Reversing Past G and Freezing Parallel to Kerb */}
-            <g transform={`translate(${carCenter.x}, ${carCenter.y}) rotate(${headingDeg})`}>
-              <CutPlaneCar
-                variant={CarSectionVariants.Hero}
-                kerbSide={KerbSides.Right}
-                showBoundingBox={false}
-                showVertexLabels={false}
-                showAxlePlaneLines={true}
-                frontLeftSteerDeg={ACKERMANN.frontLeftSteerDeg}
-                frontRightSteerDeg={ACKERMANN.frontRightSteerDeg}
-                wheelRollDistance={wheelRollDistance}
-                isReversing={isReversing}
-                isBraking={isBraking}
-              />
-            </g>
-
             {/* Turning Center X Hexagonal Node */}
             <g transform={`translate(${TURNING_CENTER.x}, ${TURNING_CENTER.y})`}>
               <polygon
@@ -623,8 +624,8 @@ export function Slide06Formula(): ReactElement {
                 filter="url(#slide06-luminous-glow)"
               />
               <text
-                x={-13}
-                y={-9}
+                x={-14}
+                y={-12}
                 textAnchor="end"
                 stroke="oklch(0.15 0 0 / 0.94)"
                 strokeWidth={4}

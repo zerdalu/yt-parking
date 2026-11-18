@@ -297,9 +297,6 @@ export function Slide14AngledApproach(): ReactElement {
   const showAckermannRays = elapsedSeconds >= 15.8 && elapsedSeconds < 20.6;
   const activeCircleGlow = pulseEnvelope(elapsedSeconds, 17.2, 18.0, 20.4, 21.3);
 
-  // Ghost car at G during Beat 3 (21.3s - 31.0s) so approach angle θ & tangents coexist clearly
-  const grazeGhostOpacity = easeOutCubic(progressBetween(elapsedSeconds, 21.2, 22.1)) * 0.32;
-
   // Tangent lines & angle callouts at G and A (22.6s - 31.0s)
   const tangentGDraw = easeInOutCubic(progressBetween(elapsedSeconds, 22.8, 24.4));
   const tangentGGlow = pulseEnvelope(elapsedSeconds, 23.0, 23.8, 26.8, 27.6);
@@ -570,22 +567,6 @@ export function Slide14AngledApproach(): ReactElement {
             >
               θ
             </text>
-          </g>
-        ) : null}
-
-        {/* Ghost Outline of Car Snapping to Lock at G During Beat 3 */}
-        {grazeGhostOpacity > 0.01 ? (
-          <g
-            transform={`translate(${CENTER_AT_G.x}, ${CENTER_AT_G.y}) rotate(${GRAZE_HEADING_DEG})`}
-            opacity={grazeGhostOpacity}
-          >
-            <CutPlaneCar
-              variant={CarSectionVariants.Ghost}
-              kerbSide={KerbSides.Right}
-              showBoundingBox={false}
-              showVertexLabels={false}
-              showAxlePlaneLines={false}
-            />
           </g>
         ) : null}
 

@@ -1,6 +1,8 @@
 import type { DriverControlSegment, Point2D } from "@/simulation/car-simulator";
 
 const FULL_LOCK_DEG = 32.987;
+const SLIDE_01_ENTRY_STEER_DEG = 30.8;
+const SLIDE_01_SHUTTLE_STEER_DEG = 30.8;
 
 export const SLIDE_01_INITIAL_POSE = {
   rearAxleX: 529.16,
@@ -11,31 +13,31 @@ export const SLIDE_01_INITIAL_POSE = {
 
 export const SLIDE_01_DRIVER_SEGMENTS: readonly DriverControlSegment[] = [
   // Phase 1 (0.0s - 7.8s): Pull up parallel to the front parked car and assess the tight gap
-  { startTime: 0.0, endTime: 4.4, targetSteerDeg: 0, targetSpeed: 79.432 },
+  { startTime: 0.0, endTime: 4.4, targetSteerDeg: 0, targetSpeed: 81.14 },
   { startTime: 4.4, endTime: 7.8, targetSteerDeg: 0, targetSpeed: 0 },
 
-  // Phase 2A (7.8s - 13.25s): Back into the tight space, ending parallel inside the bay but stranded away from the kerb
-  { startTime: 7.8, endTime: 10.15, targetSteerDeg: 27.5, targetSpeed: -55.0 },
-  { startTime: 10.15, endTime: 12.68, targetSteerDeg: -27.5, targetSpeed: -55.0 },
-  { startTime: 12.68, endTime: 13.25, targetSteerDeg: 0, targetSpeed: 0 },
+  // Phase 2A (7.8s - 13.25s): Back into the space centered safely clear of both cars, stranded away from the kerb
+  { startTime: 7.8, endTime: 10.05, targetSteerDeg: SLIDE_01_ENTRY_STEER_DEG, targetSpeed: -52.0 },
+  { startTime: 10.05, endTime: 12.61, targetSteerDeg: -SLIDE_01_ENTRY_STEER_DEG, targetSpeed: -52.0 },
+  { startTime: 12.61, endTime: 13.25, targetSteerDeg: 0, targetSpeed: 0 },
 
-  // Phase 2B (13.25s - 20.08s): 4 back-and-forth shuttling passes inside the bay, inching closer to the kerb each time
+  // Phase 2B (13.25s - 20.08s): 4 back-and-forth shuttling passes inside [328, 380], inching toward the kerb
   // Shuttle Pass 1 (Forward)
-  { startTime: 13.25, endTime: 13.95, targetSteerDeg: 26, targetSpeed: 38 },
-  { startTime: 13.95, endTime: 14.77, targetSteerDeg: -26, targetSpeed: 38 },
-  { startTime: 14.77, endTime: 14.92, targetSteerDeg: 0, targetSpeed: 0 },
+  { startTime: 13.25, endTime: 13.79, targetSteerDeg: SLIDE_01_SHUTTLE_STEER_DEG, targetSpeed: 37.5 },
+  { startTime: 13.79, endTime: 14.63, targetSteerDeg: -SLIDE_01_SHUTTLE_STEER_DEG, targetSpeed: 37.5 },
+  { startTime: 14.63, endTime: 14.9, targetSteerDeg: 0, targetSpeed: 0 },
   // Shuttle Pass 2 (Reverse)
-  { startTime: 14.92, endTime: 15.62, targetSteerDeg: 26, targetSpeed: -38 },
-  { startTime: 15.62, endTime: 16.44, targetSteerDeg: -26, targetSpeed: -38 },
-  { startTime: 16.44, endTime: 16.59, targetSteerDeg: 0, targetSpeed: 0 },
+  { startTime: 14.9, endTime: 15.44, targetSteerDeg: SLIDE_01_SHUTTLE_STEER_DEG, targetSpeed: -37.5 },
+  { startTime: 15.44, endTime: 16.28, targetSteerDeg: -SLIDE_01_SHUTTLE_STEER_DEG, targetSpeed: -37.5 },
+  { startTime: 16.28, endTime: 16.55, targetSteerDeg: 0, targetSpeed: 0 },
   // Shuttle Pass 3 (Forward)
-  { startTime: 16.59, endTime: 17.29, targetSteerDeg: 26, targetSpeed: 36 },
-  { startTime: 17.29, endTime: 18.11, targetSteerDeg: -26, targetSpeed: 36 },
-  { startTime: 18.11, endTime: 18.26, targetSteerDeg: 0, targetSpeed: 0 },
+  { startTime: 16.55, endTime: 17.09, targetSteerDeg: SLIDE_01_SHUTTLE_STEER_DEG, targetSpeed: 37.5 },
+  { startTime: 17.09, endTime: 17.93, targetSteerDeg: -SLIDE_01_SHUTTLE_STEER_DEG, targetSpeed: 37.5 },
+  { startTime: 17.93, endTime: 18.2, targetSteerDeg: 0, targetSpeed: 0 },
   // Shuttle Pass 4 (Reverse)
-  { startTime: 18.26, endTime: 18.96, targetSteerDeg: 26, targetSpeed: -36 },
-  { startTime: 18.96, endTime: 19.78, targetSteerDeg: -26, targetSpeed: -36 },
-  { startTime: 19.78, endTime: 20.08, targetSteerDeg: 0, targetSpeed: 0 },
+  { startTime: 18.2, endTime: 18.74, targetSteerDeg: SLIDE_01_SHUTTLE_STEER_DEG, targetSpeed: -37.5 },
+  { startTime: 18.74, endTime: 19.58, targetSteerDeg: -SLIDE_01_SHUTTLE_STEER_DEG, targetSpeed: -37.5 },
+  { startTime: 19.58, endTime: 20.08, targetSteerDeg: 0, targetSpeed: 0 },
 
   // Phase 3 (20.08s - 26.25s): Fade reset to parallel lane & execute ONE continuous uninterrupted reverse sweep + straight pull-up
   {
@@ -44,17 +46,17 @@ export const SLIDE_01_DRIVER_SEGMENTS: readonly DriverControlSegment[] = [
     targetSteerDeg: 0,
     targetSpeed: 0,
     resetPose: {
-      rearAxleX: 526.52,
-      rearAxleY: 151.46,
+      rearAxleX: 528,
+      rearAxleY: 138.9,
       headingDeg: 0,
       steerDeg: 0,
     },
   },
   { startTime: 20.35, endTime: 22.0, targetSteerDeg: FULL_LOCK_DEG, targetSpeed: -74.5 },
-  { startTime: 22.0, endTime: 23.99, targetSteerDeg: -FULL_LOCK_DEG, targetSpeed: -74.5 },
-  { startTime: 23.99, endTime: 24.5, targetSteerDeg: 0, targetSpeed: 0 },
-  { startTime: 24.5, endTime: 25.9, targetSteerDeg: 0, targetSpeed: 20.357 },
-  { startTime: 25.9, endTime: 36.0, targetSteerDeg: 0, targetSpeed: 0 },
+  { startTime: 22.0, endTime: 24.0, targetSteerDeg: -FULL_LOCK_DEG, targetSpeed: -74.5 },
+  { startTime: 24.0, endTime: 24.55, targetSteerDeg: 0, targetSpeed: 0 },
+  { startTime: 24.55, endTime: 25.95, targetSteerDeg: 0, targetSpeed: 20.357 },
+  { startTime: 25.95, endTime: 36.0, targetSteerDeg: 0, targetSpeed: 0 },
 ];
 
 export const SLIDE_02_INITIAL_POSE = {

@@ -38,8 +38,8 @@ const CLEARANCE_PX = 1.43 * PX_PER_METER; // 44.616 px
 
 // Road stage geometry positioned cleanly on right half of 960x620 stage
 const BAY_CENTER_X = 775;
-const BAY_FINAL_CENTER_Y = 250;
 const PHASE4_STOP_CENTER_Y = 260;
+const BAY_FINAL_CENTER_Y = PHASE4_STOP_CENTER_Y;
 
 const KERB_X = BAY_CENTER_X + HALF_CAR_WIDTH_PX; // 804.64
 const KERB_STONE_X = 808;
@@ -47,9 +47,9 @@ const PARKING_LINE_X = 738;
 const LANE_DIVIDER_X = 626;
 const ASPHALT_LEFT_X = 514;
 
-const HERO_FRONT_BUMPER_FINAL_Y = BAY_FINAL_CENTER_Y - HALF_CAR_LENGTH_PX; // 184.48
-const HERO_REAR_BUMPER_FINAL_Y = BAY_FINAL_CENTER_Y + HALF_CAR_LENGTH_PX; // 315.52
-const FRONT_CAR_REAR_Y = HERO_FRONT_BUMPER_FINAL_Y - CLEARANCE_PX; // 139.864
+const HERO_FRONT_BUMPER_FINAL_Y = BAY_FINAL_CENTER_Y - HALF_CAR_LENGTH_PX; // 194.48
+const HERO_REAR_BUMPER_FINAL_Y = BAY_FINAL_CENTER_Y + HALF_CAR_LENGTH_PX; // 325.52
+const FRONT_CAR_REAR_Y = HERO_FRONT_BUMPER_FINAL_Y - CLEARANCE_PX; // 149.864
 
 // Target parallel stop coordinates at end of reverse sweep (center at (775, 260))
 const STOP_FRONT_BUMPER_Y = PHASE4_STOP_CENTER_Y - HALF_CAR_LENGTH_PX; // 194.48
@@ -61,7 +61,7 @@ const FRONT_CAR_WIDTH_PX = 1.7 * PX_PER_METER; // 53.04 px
 const FRONT_CAR_SCALE = FRONT_CAR_WIDTH_PX / DEFAULT_VEHICLE_DIMENSIONS.width; // 0.6979
 const FRONT_CAR_HALF_L = DEFAULT_VEHICLE_DIMENSIONS.length * 0.5 * FRONT_CAR_SCALE; // 58.623 px
 const FRONT_CAR_CENTER_X = KERB_X - FRONT_CAR_WIDTH_PX * 0.5; // 778.12
-const FRONT_CAR_CENTER_Y = FRONT_CAR_REAR_Y - FRONT_CAR_HALF_L; // 81.241
+const FRONT_CAR_CENTER_Y = FRONT_CAR_REAR_Y - FRONT_CAR_HALF_L; // 91.241
 
 const REAR_CAR_CENTER_Y = 395.52;
 
@@ -187,7 +187,7 @@ function computeSlide12Pose(seconds: number): Slide12Pose {
     };
   }
 
-  // Continuous uninterrupted reverse S-sweep (19.8s - 28.2s)
+  // Continuous uninterrupted reverse S-sweep (19.8s - 28.2s) stopping parallel at rear of bay
   if (seconds < 28.2) {
     const u = easeInOutCubic(progressBetween(seconds, 19.8, 28.2));
     const isFirstArc = u <= 0.5;
@@ -228,45 +228,15 @@ function computeSlide12Pose(seconds: number): Slide12Pose {
     };
   }
 
-  // Brief pause before straight forward pull-up (28.2s - 28.5s)
-  if (seconds < 28.5) {
-    return {
-      centerX: BAY_CENTER_X,
-      centerY: PHASE4_STOP_CENTER_Y,
-      headingDeg: 0,
-      frontLeftSteerDeg: 0,
-      frontRightSteerDeg: 0,
-      wheelRollDistance: (pullUpDistance - 2 * singleArcLength) / CAR_SCALE,
-      isReversing: false,
-      isBraking: true,
-    };
-  }
-
-  if (seconds < 29.6) {
-    const u = easeInOutCubic(progressBetween(seconds, 28.5, 29.6));
-    const centerY = PHASE4_STOP_CENTER_Y + (BAY_FINAL_CENTER_Y - PHASE4_STOP_CENTER_Y) * u;
-    const forwardStep = PHASE4_STOP_CENTER_Y - centerY;
-    return {
-      centerX: BAY_CENTER_X,
-      centerY,
-      headingDeg: 0,
-      frontLeftSteerDeg: 0,
-      frontRightSteerDeg: 0,
-      wheelRollDistance: (pullUpDistance - 2 * singleArcLength + forwardStep) / CAR_SCALE,
-      isReversing: false,
-      isBraking: seconds >= 29.3,
-    };
-  }
-
   return {
     centerX: BAY_CENTER_X,
     centerY: BAY_FINAL_CENTER_Y,
     headingDeg: 0,
     frontLeftSteerDeg: 0,
     frontRightSteerDeg: 0,
-    wheelRollDistance: (pullUpDistance - 2 * singleArcLength + (PHASE4_STOP_CENTER_Y - BAY_FINAL_CENTER_Y)) / CAR_SCALE,
+    wheelRollDistance: (pullUpDistance - 2 * singleArcLength) / CAR_SCALE,
     isReversing: false,
-    isBraking: false,
+    isBraking: seconds < 29.2,
   };
 }
 
@@ -834,28 +804,38 @@ export function Slide12Numerical(): ReactElement {
         ) : null}
 
         {/* w = 1.7 m across rear bumper of front parked car */}
-        {wCaliperDraw > 0.01 ? (
-          <g opacity={wCaliperDraw * (1 - 0.45 * clearanceCallout)}>
+        {wCaliperDraw > 0.01 && clearanceCallout < 0.99 ? (
+          <g opacity={wCaliperDraw * (1 - clearanceCallout)}>
             <g stroke="oklch(0.84 0 0 / 0.58)" strokeWidth={1.1} strokeDasharray="3 3">
-              <line x1={KERB_X - FRONT_CAR_WIDTH_PX} y1={FRONT_CAR_REAR_Y} x2={KERB_X - FRONT_CAR_WIDTH_PX} y2={160} />
-              <line x1={KERB_X} y1={FRONT_CAR_REAR_Y} x2={KERB_X} y2={160} />
+              <line
+                x1={KERB_X - FRONT_CAR_WIDTH_PX}
+                y1={FRONT_CAR_REAR_Y}
+                x2={KERB_X - FRONT_CAR_WIDTH_PX}
+                y2={FRONT_CAR_REAR_Y + 20}
+              />
+              <line x1={KERB_X} y1={FRONT_CAR_REAR_Y} x2={KERB_X} y2={FRONT_CAR_REAR_Y + 20} />
             </g>
             <line
               x1={KERB_X - FRONT_CAR_WIDTH_PX}
-              y1={155}
+              y1={FRONT_CAR_REAR_Y + 15}
               x2={KERB_X}
-              y2={155}
+              y2={FRONT_CAR_REAR_Y + 15}
               stroke="oklch(0.98 0 0)"
               strokeWidth={1.75}
               filter={wGlow > 0.2 ? "url(#slide12-luminous-glow)" : undefined}
             />
             <g stroke="oklch(0.96 0 0)" strokeWidth={1.3}>
-              <line x1={KERB_X - FRONT_CAR_WIDTH_PX} y1={151} x2={KERB_X - FRONT_CAR_WIDTH_PX} y2={159} />
-              <line x1={KERB_X} y1={151} x2={KERB_X} y2={159} />
+              <line
+                x1={KERB_X - FRONT_CAR_WIDTH_PX}
+                y1={FRONT_CAR_REAR_Y + 11}
+                x2={KERB_X - FRONT_CAR_WIDTH_PX}
+                y2={FRONT_CAR_REAR_Y + 19}
+              />
+              <line x1={KERB_X} y1={FRONT_CAR_REAR_Y + 11} x2={KERB_X} y2={FRONT_CAR_REAR_Y + 19} />
             </g>
             <text
               x={FRONT_CAR_CENTER_X}
-              y={173}
+              y={FRONT_CAR_REAR_Y + 33}
               textAnchor="middle"
               stroke="oklch(0.15 0 0 / 0.94)"
               strokeWidth={4}

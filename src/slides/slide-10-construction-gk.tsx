@@ -1,4 +1,5 @@
 import { CutPlaneCar, CutPlaneCarDefs } from "@/components/cut-plane-car";
+import { RootR2MinusL2 } from "@/components/math-formula";
 import {
   CarSectionVariants,
   computeAckermannAngles,
@@ -210,7 +211,7 @@ export function Slide10ConstructionGk(): ReactElement {
   const finalEqOpacity = easeOutCubic(progressBetween(elapsedSeconds, 28.35, 29.0));
   const minusWHighlight = pulseFactor(elapsedSeconds, 29.55, 0.6);
 
-  const pillWidth = 236 + 56 * cardExpand;
+  const pillWidth = 236 + 74 * cardExpand;
 
   // Spoken-letter vertex pulses
   const pulseG = Math.max(pulseFactor(elapsedSeconds, 8.15, 0.55), pulseFactor(elapsedSeconds, 4.2, 0.5));
@@ -536,33 +537,8 @@ export function Slide10ConstructionGk(): ReactElement {
               <line x1={POINT_X.x} y1={447} x2={POINT_X.x} y2={457} />
               <line x1={POINT_F.x} y1={447} x2={POINT_F.x} y2={457} />
             </g>
-            <g transform="translate(490, 476)" opacity={easeOutCubic(progressBetween(fxFullSpanDraw, 0.45, 1))}>
-              <text x={-32} y={0} textAnchor="end" className="fill-text-secondary font-mono text-xs font-semibold">
-                |FX| =
-              </text>
-              <path
-                d="M -22 -1 L -19 -1 L -16 4 L -10 -13 L 38 -13 L 38 -10"
-                fill="none"
-                stroke="oklch(0.88 0 0)"
-                strokeWidth={1.25}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <text x={-1} y={1} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                r
-              </text>
-              <text x={6} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs">
-                2
-              </text>
-              <text x={15} y={1} textAnchor="middle" className="fill-text-secondary font-mono text-xs">
-                −
-              </text>
-              <text x={26} y={1} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                l
-              </text>
-              <text x={33} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs">
-                2
-              </text>
+            <g opacity={easeOutCubic(progressBetween(fxFullSpanDraw, 0.45, 1))} className="text-text-primary">
+              <RootR2MinusL2 x={517} y={474} prefixEqualsFx={true} />
             </g>
           </g>
         ) : null}
@@ -574,9 +550,9 @@ export function Slide10ConstructionGk(): ReactElement {
           <g transform="translate(490, 526)" opacity={cardEnterOpacity}>
             <rect
               x={-(pillWidth * 0.5)}
-              y={-26}
+              y={-27}
               width={pillWidth}
-              height={48}
+              height={50}
               rx={8}
               fill="oklch(0.21 0 0 / 0.92)"
               stroke="oklch(0.95 0 0 / 0.85)"
@@ -586,53 +562,62 @@ export function Slide10ConstructionGk(): ReactElement {
             {symbolicEqOpacity > 0.01 ? (
               <text
                 x={0}
-                y={5}
+                y={6}
                 textAnchor="middle"
                 opacity={symbolicEqOpacity}
-                className="fill-text-primary font-mono text-lg font-semibold"
+                className="fill-text-primary font-math text-xl font-semibold"
               >
-                |KX| = |FX| − w
+                <tspan>|KX|</tspan>
+                <tspan className="fill-text-secondary font-normal"> = </tspan>
+                <tspan>|FX|</tspan>
+                <tspan className="fill-text-secondary font-normal"> − </tspan>
+                <tspan className="italic">w</tspan>
               </text>
             ) : null}
 
             {finalEqOpacity > 0.01 ? (
               <g opacity={finalEqOpacity}>
-                <text x={-89} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+                <text x={-104} y={6} textAnchor="middle" className="fill-text-primary font-math text-xl font-semibold">
                   |KX|
                 </text>
-                <text x={-55} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={-68} y={6} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                   =
                 </text>
 
                 <path
-                  d="M -37 0 L -33 0 L -28 9 L -18 -18 L 53 -18 L 53 -13"
+                  d="M -50 0 L -46 0 L -41 10 L -29 -20 L 66 -20 L 66 -15"
                   fill="none"
                   stroke="oklch(0.98 0 0)"
-                  strokeWidth={1.7}
+                  strokeWidth={1.75}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <text x={-6} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-                  r
+                <text x={-10} y={6} textAnchor="middle" className="fill-text-primary font-math text-xl font-semibold">
+                  <tspan className="italic">r</tspan>
+                  <tspan dy={-8} className="text-xs font-semibold">
+                    2
+                  </tspan>
                 </text>
-                <text x={3} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                  2
-                </text>
-                <text x={17} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                <text x={17} y={6} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                   −
                 </text>
-                <text x={31} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
-                  l
-                </text>
-                <text x={40} y={-5} textAnchor="middle" className="fill-text-primary font-mono text-xs font-semibold">
-                  2
+                <text x={44} y={6} textAnchor="middle" className="fill-text-primary font-math text-xl font-semibold">
+                  <tspan className="italic">l</tspan>
+                  <tspan dy={-8} className="text-xs font-semibold">
+                    2
+                  </tspan>
                 </text>
 
                 <g filter={minusWHighlight > 0.25 ? "url(#slide10-luminous-glow)" : undefined}>
-                  <text x={75} y={5} textAnchor="middle" className="fill-text-secondary font-mono text-lg">
+                  <text x={88} y={6} textAnchor="middle" className="fill-text-secondary font-math text-xl">
                     −
                   </text>
-                  <text x={99} y={5} textAnchor="middle" className="fill-text-primary font-mono text-lg font-semibold">
+                  <text
+                    x={113}
+                    y={6}
+                    textAnchor="middle"
+                    className="fill-text-primary font-math text-xl font-semibold italic"
+                  >
                     w
                   </text>
                 </g>

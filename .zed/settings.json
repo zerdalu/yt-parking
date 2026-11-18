@@ -2,15 +2,9 @@
   "disable_ai": true,
   "format_on_save": "on",
   "jsx_tag_auto_close": {
-    "enabled": true,
+    "enabled": true
   },
-  "hidden_files": [
-    "node_modules",
-    ".wrangler",
-    "pnpm-lock.yaml",
-    "dist",
-    "worker-configuration.d.ts",
-  ],
+  "hidden_files": ["node_modules", ".wrangler", "pnpm-lock.yaml", "dist", "worker-configuration.d.ts"],
   "lsp": {
     "oxlint": {
       "initialization_options": {
@@ -19,193 +13,176 @@
           "run": "onType",
           "disableNestedConfig": false,
           "fixKind": "safe_fix",
-          "unusedDisableDirectives": "deny",
-        },
-      },
+          "unusedDisableDirectives": "deny"
+        }
+      }
     },
     "oxfmt": {
       "initialization_options": {
         "settings": {
           "fmt.configPath": null,
-          "run": "onSave",
-        },
-      },
+          "run": "onSave"
+        }
+      }
     },
     "tailwindcss-language-server": {
       "settings": {
         "classFunctions": ["cva", "cx"],
         "lint": {
-          "suggestCanonicalClasses": "warning",
-        },
-      },
+          "suggestCanonicalClasses": "warning"
+        }
+      }
     },
     "vtsls": {
       "settings": {
         "typescript": {
           "preferences": {
-            "autoImportFileExcludePatterns": [
-              "@base-ui/*",
-              "@base-ui/react",
-              "**/node_modules/@base-ui/**",
-            ],
-          },
+            "autoImportFileExcludePatterns": ["@base-ui/*", "@base-ui/react", "**/node_modules/@base-ui/**"]
+          }
         },
         "javascript": {
           "preferences": {
-            "autoImportFileExcludePatterns": [
-              "@base-ui/*",
-              "@base-ui/react",
-              "**/node_modules/@base-ui/**",
-            ],
-          },
-        },
-      },
+            "autoImportFileExcludePatterns": ["@base-ui/*", "@base-ui/react", "**/node_modules/@base-ui/**"]
+          }
+        }
+      }
     },
     "typescript-language-server": {
       "settings": {
         "typescript": {
           "preferences": {
-            "autoImportFileExcludePatterns": [
-              "@base-ui/*",
-              "@base-ui/react",
-              "**/node_modules/@base-ui/**",
-            ],
-          },
+            "autoImportFileExcludePatterns": ["@base-ui/*", "@base-ui/react", "**/node_modules/@base-ui/**"]
+          }
         },
         "javascript": {
           "preferences": {
-            "autoImportFileExcludePatterns": [
-              "@base-ui/*",
-              "@base-ui/react",
-              "**/node_modules/@base-ui/**",
-            ],
-          },
-        },
-      },
-    },
+            "autoImportFileExcludePatterns": ["@base-ui/*", "@base-ui/react", "**/node_modules/@base-ui/**"]
+          }
+        }
+      }
+    }
   },
   "languages": {
     "CSS": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
+            "name": "oxfmt"
+          }
+        }
       ],
-      "language_servers": [
-        "tailwindcss-intellisense-css",
-        "!vscode-css-language-server",
-        "...",
-      ],
+      "language_servers": ["tailwindcss-intellisense-css", "!vscode-css-language-server", "..."]
     },
     "HTML": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
-      ],
+            "name": "oxfmt"
+          }
+        }
+      ]
     },
     "JavaScript": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
+            "name": "oxfmt"
+          }
+        }
       ],
+      "language_servers": ["!eslint", "..."]
     },
     "JSON": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
-      ],
+            "name": "oxfmt"
+          }
+        }
+      ]
     },
     "JSONC": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
-      ],
+            "name": "oxfmt"
+          }
+        }
+      ]
     },
     "Markdown": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
-      ],
+            "name": "oxfmt"
+          }
+        }
+      ]
     },
     "TypeScript": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
+            "name": "oxfmt"
+          }
+        }
       ],
+      "language_servers": ["!eslint", "..."]
     },
     "TSX": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
+            "name": "oxfmt"
+          }
+        }
       ],
+      "language_servers": ["!eslint", "..."]
     },
     "YAML": {
       "format_on_save": "on",
       "prettier": {
-        "allowed": false,
+        "allowed": false
       },
       "formatter": [
         {
           "language_server": {
-            "name": "oxfmt",
-          },
-        },
-      ],
-    },
-  },
+            "name": "oxfmt"
+          }
+        }
+      ]
+    }
+  }
 }

@@ -96,7 +96,9 @@ export function Slide02PerfectParking(): ReactElement {
   const minSpaceOpacity = minSpaceIntro * (1 - 0.52 * sweepFocus);
 
   const phase1GhostOpacity =
-    elapsedSeconds >= 11.4 && elapsedSeconds < 19.9 ? 0.75 : sweepFocus > 0.01 ? 0.52 * sweepFocus : 0;
+    elapsedSeconds >= 11.4 && elapsedSeconds < 20.0
+      ? 0.75 * (1 - easeInOutCubic(progressBetween(elapsedSeconds, 19.2, 20.0)))
+      : 0;
   const heroOpacity = 1 - 0.42 * sweepFocus;
   const phase2Opacity = 1 - 0.78 * sweepFocus;
 
@@ -220,6 +222,23 @@ export function Slide02PerfectParking(): ReactElement {
             />
           </g>
         ) : null}
+
+        {/* Hero Car Driven by the 2D Simulator */}
+        <g transform={`translate(${pose.centerX}, ${pose.centerY}) rotate(${pose.headingDeg})`} opacity={heroOpacity}>
+          <CutPlaneCar
+            variant={CarSectionVariants.Hero}
+            kerbSide={KerbSides.Right}
+            showBoundingBox={false}
+            showVertexLabels={false}
+            showAxlePlaneLines={showPhase1Geometry}
+            frontLeftSteerDeg={pose.frontLeftSteerDeg}
+            frontRightSteerDeg={pose.frontRightSteerDeg}
+            wheelRollDistance={pose.wheelRollDistance}
+            isHazardLit={isHazardLit}
+            isReversing={isReversing}
+            isBraking={isBraking}
+          />
+        </g>
 
         {/* Phase 1 Trajectory Diagram: Turning Center X, Concentric Guides & Single Continuous Arc */}
         {showPhase1Geometry ? (
@@ -388,23 +407,6 @@ export function Slide02PerfectParking(): ReactElement {
             </text>
           </g>
         ) : null}
-
-        {/* Hero Car Driven by the 2D Simulator */}
-        <g transform={`translate(${pose.centerX}, ${pose.centerY}) rotate(${pose.headingDeg})`} opacity={heroOpacity}>
-          <CutPlaneCar
-            variant={CarSectionVariants.Hero}
-            kerbSide={KerbSides.Right}
-            showBoundingBox={false}
-            showVertexLabels={false}
-            showAxlePlaneLines={showPhase1Geometry}
-            frontLeftSteerDeg={pose.frontLeftSteerDeg}
-            frontRightSteerDeg={pose.frontRightSteerDeg}
-            wheelRollDistance={pose.wheelRollDistance}
-            isHazardLit={isHazardLit}
-            isReversing={isReversing}
-            isBraking={isBraking}
-          />
-        </g>
       </svg>
     </div>
   );

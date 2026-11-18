@@ -13,6 +13,8 @@ const CAR_SCALE = 0.8;
 const CAR_LENGTH = DEFAULT_VEHICLE_DIMENSIONS.length * CAR_SCALE; // 134.4
 const CAR_WIDTH = DEFAULT_VEHICLE_DIMENSIONS.width * CAR_SCALE; // 60.8
 const HALF_CAR_W = CAR_WIDTH * 0.5; // 30.4
+const WHEELBASE = DEFAULT_VEHICLE_DIMENSIONS.wheelbase * CAR_SCALE; // 83.2
+const HALF_WHEELBASE = WHEELBASE * 0.5; // 41.6
 
 // Multi-storey carpark bay EFGH geometry & vertical straight guide line EF
 const X_GUIDE = 540;
@@ -27,10 +29,14 @@ const POINT_G: Point2D = { x: X_GUIDE + BAY_WIDTH, y: BAY_BOT_Y };
 const POINT_H: Point2D = { x: X_GUIDE + BAY_WIDTH, y: BAY_TOP_Y };
 
 const BAY_DIVIDERS_X = [270, 360, 450, 540, 630, 720, 810] as const;
-const FAMILY_CIRCLE_ANGLES_DEG = [70, 58, 46, 36, 26, 18] as const;
+const FAMILY_CIRCLE_ANGLES_DEG = [50, 44, 38, 32, 26, 20] as const;
 
-const U_START_DEG = 74;
-const U_END_DEG = 18;
+const U_START_DEG = 52;
+const U_END_DEG = 20;
+
+const ENTRY_TURN_RADIUS = 145;
+const EXIT_TURN_RADIUS = 160;
+const EXIT_PEAK_HEADING_DEG = 32;
 
 interface TractrixFrame {
   readonly centerX: number;
@@ -103,6 +109,10 @@ function degToRad(deg: number): number {
   return (deg * Math.PI) / 180;
 }
 
+function radToDeg(rad: number): number {
+  return (rad * 180) / Math.PI;
+}
+
 /**
  * Exact orthogonal tractrix state parameterized by angle `uDeg` between car side BC
  * and straight vertical guide line EF (x = X_GUIDE).
@@ -139,38 +149,120 @@ function buildLeftSemicircleArc(center: Point2D, radius: number): string {
   return `M ${cx} ${topY} A ${r} ${r} 0 0 0 ${cx} ${botY}`;
 }
 
+function cornersFromCenter(
+  centerX: number,
+  centerY: number,
+  headingDeg: number,
+): {
+  readonly cornerB: Point2D;
+  readonly cornerC: Point2D;
+} {
+  const hRad = degToRad(headingDeg);
+  const cosH = Math.cos(hRad);
+  const sinH = Math.sin(hRad);
+  return {
+    cornerB: {
+      x: centerX + -HALF_CAR_W * cosH - -(CAR_LENGTH * 0.5) * sinH,
+      y: centerY + -HALF_CAR_W * sinH + -(CAR_LENGTH * 0.5) * cosH,
+    },
+    cornerC: {
+      x: centerX + -HALF_CAR_W * cosH - CAR_LENGTH * 0.5 * sinH,
+      y: centerY + -HALF_CAR_W * sinH + CAR_LENGTH * 0.5 * cosH,
+    },
+  };
+}
+
 const ENTRY_START_SAMPLE = sampleTractrixGeometry(U_START_DEG);
 const FINAL_END_SAMPLE = sampleTractrixGeometry(U_END_DEG);
+
+// Non-holonomic Phase 1 entry kinematics (straight aisle -> left turn onto tractrix entry at 52 deg)
+const ENTRY_REAR_AXLE: Point2D = {
+  x: ENTRY_START_SAMPLE.centerX - HALF_WHEELBASE * Math.sin(degToRad(U_START_DEG)),
+  y: ENTRY_START_SAMPLE.centerY + HALF_WHEELBASE * Math.cos(degToRad(U_START_DEG)),
+};
+const ENTRY_TURN_CENTER: Point2D = {
+  x: ENTRY_REAR_AXLE.x - ENTRY_TURN_RADIUS * Math.cos(degToRad(U_START_DEG)),
+  y: ENTRY_REAR_AXLE.y - ENTRY_TURN_RADIUS * Math.sin(degToRad(U_START_DEG)),
+};
+const ENTRY_STRAIGHT_DIST = 64;
+const ENTRY_TURN_ARC_LEN = ENTRY_TURN_RADIUS * degToRad(90 - U_START_DEG);
+const ENTRY_TURN_STEER_DEG = -radToDeg(Math.atan2(WHEELBASE, ENTRY_TURN_RADIUS));
+
+// Non-holonomic Phase 3 bay-centering kinematics (20 deg -> 32 deg -> 0 deg inside EFGH)
+const EXIT_REAR_AXLE_START: Point2D = {
+  x: FINAL_END_SAMPLE.centerX - HALF_WHEELBASE * Math.sin(degToRad(U_END_DEG)),
+  y: FINAL_END_SAMPLE.centerY + HALF_WHEELBASE * Math.cos(degToRad(U_END_DEG)),
+};
+const EXIT_RIGHT_CENTER: Point2D = {
+  x: EXIT_REAR_AXLE_START.x + EXIT_TURN_RADIUS * Math.cos(degToRad(U_END_DEG)),
+  y: EXIT_REAR_AXLE_START.y + EXIT_TURN_RADIUS * Math.sin(degToRad(U_END_DEG)),
+};
+const EXIT_REAR_AXLE_PEAK: Point2D = {
+  x: EXIT_RIGHT_CENTER.x - EXIT_TURN_RADIUS * Math.cos(degToRad(EXIT_PEAK_HEADING_DEG)),
+  y: EXIT_RIGHT_CENTER.y - EXIT_TURN_RADIUS * Math.sin(degToRad(EXIT_PEAK_HEADING_DEG)),
+};
+const EXIT_LEFT_CENTER: Point2D = {
+  x: EXIT_REAR_AXLE_PEAK.x + EXIT_TURN_RADIUS * Math.cos(degToRad(EXIT_PEAK_HEADING_DEG)),
+  y: EXIT_REAR_AXLE_PEAK.y + EXIT_TURN_RADIUS * Math.sin(degToRad(EXIT_PEAK_HEADING_DEG)),
+};
+const EXIT_ARC_1_LEN = EXIT_TURN_RADIUS * degToRad(EXIT_PEAK_HEADING_DEG - U_END_DEG);
+const EXIT_ARC_2_LEN = EXIT_TURN_RADIUS * degToRad(EXIT_PEAK_HEADING_DEG);
+const EXIT_TURN_STEER_DEG = radToDeg(Math.atan2(WHEELBASE, EXIT_TURN_RADIUS));
+
+const GUIDE_TOTAL_DIST = ENTRY_START_SAMPLE.cornerB.y - FINAL_END_SAMPLE.cornerB.y;
 
 function computeTractrixUDeg(seconds: number): number {
   if (seconds <= 4.55) {
     return U_START_DEG;
   }
-  if (seconds >= 11.8) {
+  if (seconds >= 11.4) {
     return U_END_DEG;
   }
-  return cubicHermite(seconds, 4.55, 11.8, U_START_DEG, U_END_DEG, -4.2, -6.5);
+  return cubicHermite(seconds, 4.55, 11.4, U_START_DEG, U_END_DEG, -6.4, -2.8);
+}
+
+function computeTractrixSteerDeg(uDeg: number): number {
+  const tanU = Math.tan(degToRad(uDeg));
+  const icrOffset = HALF_CAR_W + CAR_LENGTH / tanU;
+  const frontAxleToIcrY = CAR_LENGTH * 0.5 + HALF_WHEELBASE; // 108.8
+  return -Math.min(38, radToDeg(Math.atan2(frontAxleToIcrY, icrOffset)));
 }
 
 function computeSlide16Frame(seconds: number): TractrixFrame {
-  // Phase 1 (0.00s - 4.55s): Smooth C1 approach along aisle until front corner B meets EF at (540, 408)
+  // Phase 1A (0.00s - 1.65s): Straight drive along aisle (heading = 90 deg, steer = 0 deg)
+  if (seconds < 1.65) {
+    const u = cubicHermite(seconds, 0.0, 1.65, 0, 1, 0, 0.9);
+    const rx = ENTRY_TURN_CENTER.x - ENTRY_STRAIGHT_DIST * (1 - u);
+    const ry = ENTRY_TURN_CENTER.y + ENTRY_TURN_RADIUS;
+    const centerX = rx + HALF_WHEELBASE;
+    const centerY = ry;
+    const { cornerB, cornerC } = cornersFromCenter(centerX, centerY, 90);
+    return {
+      centerX,
+      centerY,
+      headingDeg: 90,
+      steerDeg: 0,
+      cornerB,
+      cornerC,
+      wheelRollDistance: (ENTRY_STRAIGHT_DIST * u) / CAR_SCALE,
+    };
+  }
+
+  // Phase 1B (1.65s - 4.55s): True Ackermann circular arc turning left 90 deg -> 52 deg onto guide line EF
   if (seconds < 4.55) {
-    const progress = cubicHermite(seconds, 0.0, 4.55, 0, 1, 0, 0.28);
-    const headingDeg = 86 + (U_START_DEG - 86) * progress;
-    const centerX = 278 + (ENTRY_START_SAMPLE.centerX - 278) * progress;
-    const centerY = 492 + (ENTRY_START_SAMPLE.centerY - 492) * progress;
+    const u = cubicHermite(seconds, 1.65, 4.55, 0, 1, 1.05, 0.57);
+    const headingDeg = 90 + (U_START_DEG - 90) * u;
     const hRad = degToRad(headingDeg);
-    const steerDeg = -28 * Math.sin(degToRad(U_START_DEG)) * easeInOutCubic(progressBetween(seconds, 2.2, 4.55));
-
-    const cornerB: Point2D = {
-      x: centerX + -HALF_CAR_W * Math.cos(hRad) - -(CAR_LENGTH * 0.5) * Math.sin(hRad),
-      y: centerY + -HALF_CAR_W * Math.sin(hRad) + -(CAR_LENGTH * 0.5) * Math.cos(hRad),
-    };
-    const cornerC: Point2D = {
-      x: centerX + -HALF_CAR_W * Math.cos(hRad) - CAR_LENGTH * 0.5 * Math.sin(hRad),
-      y: centerY + -HALF_CAR_W * Math.sin(hRad) + CAR_LENGTH * 0.5 * Math.cos(hRad),
-    };
-
+    const rx = ENTRY_TURN_CENTER.x + ENTRY_TURN_RADIUS * Math.cos(hRad);
+    const ry = ENTRY_TURN_CENTER.y + ENTRY_TURN_RADIUS * Math.sin(hRad);
+    const centerX = rx + HALF_WHEELBASE * Math.sin(hRad);
+    const centerY = ry - HALF_WHEELBASE * Math.cos(hRad);
+    const steerIn = easeInOutCubic(progressBetween(seconds, 1.65, 2.1));
+    const entryTractrixBlend = easeInOutCubic(progressBetween(seconds, 4.25, 4.55));
+    const targetTractrixSteer = computeTractrixSteerDeg(U_START_DEG);
+    const steerDeg =
+      ENTRY_TURN_STEER_DEG * steerIn * (1 - entryTractrixBlend) + targetTractrixSteer * entryTractrixBlend;
+    const { cornerB, cornerC } = cornersFromCenter(centerX, centerY, headingDeg);
     return {
       centerX,
       centerY,
@@ -178,15 +270,15 @@ function computeSlide16Frame(seconds: number): TractrixFrame {
       steerDeg,
       cornerB,
       cornerC,
-      wheelRollDistance: (209 * progress) / CAR_SCALE,
+      wheelRollDistance: (ENTRY_STRAIGHT_DIST + ENTRY_TURN_ARC_LEN * u) / CAR_SCALE,
     };
   }
 
-  // Phase 2 (4.55s - 11.80s): Corner B tracks vertical line EF while rear corner C traces the tractrix
-  if (seconds < 11.8) {
+  // Phase 2 (4.55s - 11.40s): Corner B tracks vertical line EF while rear corner C traces the orthogonal tractrix
+  if (seconds < 11.4) {
     const currentUDeg = computeTractrixUDeg(seconds);
     const geom = sampleTractrixGeometry(currentUDeg);
-    const steerDeg = -28 * Math.sin(degToRad(currentUDeg));
+    const steerDeg = computeTractrixSteerDeg(currentUDeg);
     const distanceAlongGuide = ENTRY_START_SAMPLE.cornerB.y - geom.cornerB.y;
     return {
       centerX: geom.centerX,
@@ -195,39 +287,71 @@ function computeSlide16Frame(seconds: number): TractrixFrame {
       steerDeg,
       cornerB: geom.cornerB,
       cornerC: geom.cornerC,
-      wheelRollDistance: (209 + distanceAlongGuide) / CAR_SCALE,
+      wheelRollDistance: (ENTRY_STRAIGHT_DIST + ENTRY_TURN_ARC_LEN + distanceAlongGuide) / CAR_SCALE,
     };
   }
 
-  // Phase 3 (11.80s - 14.20s): Continue driving forward into bay EFGH while straightening from 18 deg to 0 deg
-  const settle = cubicHermite(seconds, 11.8, 14.2, 0, 1, 0.45, 0);
-  const headingDeg = U_END_DEG * (1 - settle);
-  const targetCenterX = X_GUIDE + HALF_CAR_W + 14; // 584.4 (centered in 540..630 bay)
-  const targetCenterY = 182;
-  const centerX = FINAL_END_SAMPLE.centerX + (targetCenterX - FINAL_END_SAMPLE.centerX) * settle;
-  const centerY = FINAL_END_SAMPLE.centerY + (targetCenterY - FINAL_END_SAMPLE.centerY) * settle;
-  const hRad = degToRad(headingDeg);
+  // Phase 3A (11.40s - 12.40s): True Ackermann right swing 20 deg -> 32 deg to center inside bay EFGH
+  const baseRoll = ENTRY_STRAIGHT_DIST + ENTRY_TURN_ARC_LEN + GUIDE_TOTAL_DIST;
+  if (seconds < 12.4) {
+    const u = cubicHermite(seconds, 11.4, 12.4, 0, 1, 0.57, 0.96);
+    const headingDeg = U_END_DEG + (EXIT_PEAK_HEADING_DEG - U_END_DEG) * u;
+    const hRad = degToRad(headingDeg);
+    const rx = EXIT_RIGHT_CENTER.x - EXIT_TURN_RADIUS * Math.cos(hRad);
+    const ry = EXIT_RIGHT_CENTER.y - EXIT_TURN_RADIUS * Math.sin(hRad);
+    const centerX = rx + HALF_WHEELBASE * Math.sin(hRad);
+    const centerY = ry - HALF_WHEELBASE * Math.cos(hRad);
+    const startSteer = computeTractrixSteerDeg(U_END_DEG);
+    const steerBlend = easeInOutCubic(progressBetween(seconds, 11.4, 11.85));
+    const steerDeg = startSteer * (1 - steerBlend) + EXIT_TURN_STEER_DEG * steerBlend;
+    const { cornerB, cornerC } = cornersFromCenter(centerX, centerY, headingDeg);
+    return {
+      centerX,
+      centerY,
+      headingDeg,
+      steerDeg,
+      cornerB,
+      cornerC,
+      wheelRollDistance: (baseRoll + EXIT_ARC_1_LEN * u) / CAR_SCALE,
+    };
+  }
 
-  const cornerB: Point2D = {
-    x: centerX + -HALF_CAR_W * Math.cos(hRad) - -(CAR_LENGTH * 0.5) * Math.sin(hRad),
-    y: centerY + -HALF_CAR_W * Math.sin(hRad) + -(CAR_LENGTH * 0.5) * Math.cos(hRad),
-  };
-  const cornerC: Point2D = {
-    x: centerX + -HALF_CAR_W * Math.cos(hRad) - CAR_LENGTH * 0.5 * Math.sin(hRad),
-    y: centerY + -HALF_CAR_W * Math.sin(hRad) + CAR_LENGTH * 0.5 * Math.cos(hRad),
-  };
+  // Phase 3B (12.40s - 14.80s): True Ackermann left straighten 32 deg -> 0 deg cleanly inside bay EFGH
+  if (seconds < 14.8) {
+    const u = cubicHermite(seconds, 12.4, 14.8, 0, 1, 0.84, 0);
+    const headingDeg = EXIT_PEAK_HEADING_DEG * (1 - u);
+    const hRad = degToRad(headingDeg);
+    const rx = EXIT_LEFT_CENTER.x - EXIT_TURN_RADIUS * Math.cos(hRad);
+    const ry = EXIT_LEFT_CENTER.y - EXIT_TURN_RADIUS * Math.sin(hRad);
+    const centerX = rx + HALF_WHEELBASE * Math.sin(hRad);
+    const centerY = ry - HALF_WHEELBASE * Math.cos(hRad);
+    const flipBlend = easeInOutCubic(progressBetween(seconds, 12.4, 12.85));
+    const exitStraighten = 1 - easeInOutCubic(progressBetween(seconds, 14.35, 14.8));
+    const steerDeg = (EXIT_TURN_STEER_DEG * (1 - flipBlend) - EXIT_TURN_STEER_DEG * flipBlend) * exitStraighten;
+    const { cornerB, cornerC } = cornersFromCenter(centerX, centerY, headingDeg);
+    return {
+      centerX,
+      centerY,
+      headingDeg,
+      steerDeg,
+      cornerB,
+      cornerC,
+      wheelRollDistance: (baseRoll + EXIT_ARC_1_LEN + EXIT_ARC_2_LEN * u) / CAR_SCALE,
+    };
+  }
 
-  const guideTotal = ENTRY_START_SAMPLE.cornerB.y - FINAL_END_SAMPLE.cornerB.y; // 209.7
-  const pullInDist = FINAL_END_SAMPLE.centerY - centerY; // 89.6 * settle
-
+  // Parked cleanly parallel inside bay EFGH
+  const finalCenterX = EXIT_LEFT_CENTER.x - EXIT_TURN_RADIUS;
+  const finalCenterY = EXIT_LEFT_CENTER.y - HALF_WHEELBASE;
+  const { cornerB, cornerC } = cornersFromCenter(finalCenterX, finalCenterY, 0);
   return {
-    centerX,
-    centerY,
-    headingDeg,
-    steerDeg: -28 * Math.sin(degToRad(U_END_DEG)) * (1 - settle),
+    centerX: finalCenterX,
+    centerY: finalCenterY,
+    headingDeg: 0,
+    steerDeg: 0,
     cornerB,
     cornerC,
-    wheelRollDistance: (209 + guideTotal + pullInDist) / CAR_SCALE,
+    wheelRollDistance: (baseRoll + EXIT_ARC_1_LEN + EXIT_ARC_2_LEN) / CAR_SCALE,
   };
 }
 
@@ -266,7 +390,7 @@ export function Slide16Tractrix(): ReactElement {
 
   // Progress of uDeg along the tractrix for revealing the family of orthogonal circles
   const currentUDeg = computeTractrixUDeg(elapsedSeconds);
-  const showLiveOrthogonalRadius = elapsedSeconds >= 4.55 && elapsedSeconds < 12.1;
+  const showLiveOrthogonalRadius = elapsedSeconds >= 4.55 && elapsedSeconds < 11.65;
 
   // Orthogonal right-angle marker between live tangent radius C->B and circle arc at C
   const liveU = degToRad(currentUDeg);
@@ -504,7 +628,7 @@ export function Slide16Tractrix(): ReactElement {
             frontRightSteerDeg={ackermann.frontRightSteerDeg}
             wheelRollDistance={frame.wheelRollDistance}
             isReversing={false}
-            isBraking={elapsedSeconds >= 13.7}
+            isBraking={elapsedSeconds >= 14.3}
           />
         </g>
 

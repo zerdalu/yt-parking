@@ -463,7 +463,10 @@ export function Slide08TriangleEfx(): ReactElement {
 
         {/* Base |FX| Label (Transitions to √(r² − l²) once solved, matching Slide 09) */}
         {fxBaseLabelOpacity > 0.01 ? (
-          <g transform={`translate(${(POINT_X.x + POINT_F.x) * 0.5}, ${POINT_X.y + 30})`} opacity={fxBaseLabelOpacity}>
+          <g
+            transform={`translate(${(POINT_X.x + POINT_F.x) * 0.5 - 35}, ${POINT_X.y + 30})`}
+            opacity={fxBaseLabelOpacity}
+          >
             {fxBaseResolvedOpacity < 0.99 ? (
               <text
                 x={0}
