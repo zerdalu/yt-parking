@@ -1,3 +1,6 @@
+import { Short01MinimumSpace } from "@/shorts/short-01-minimum-space";
+import { Short02WidthParadox } from "@/shorts/short-02-width-paradox";
+import { Short03TightShuttling } from "@/shorts/short-03-tight-shuttling";
 import { Slide01Dilemma } from "@/slides/slide-01-dilemma";
 import { Slide02PerfectParking } from "@/slides/slide-02-perfect-parking";
 import { Slide03WheelPlane } from "@/slides/slide-03-wheel-plane";
@@ -16,8 +19,12 @@ import { Slide15Shuttling } from "@/slides/slide-15-shuttling";
 import { Slide16Tractrix } from "@/slides/slide-16-tractrix";
 import { SlideThumbnail } from "@/slides/slide-thumbnail";
 import {
+  isSlidePlayable,
   PRESENTATION_SLIDE_COUNT,
+  type ShortId,
   SLIDES_METADATA,
+  SlideKinds,
+  type SlideMetadata,
   THUMBNAIL_SLIDE_INDEX,
   TransitionKinds,
   usePresentationStore,
@@ -56,10 +63,44 @@ function formatSeconds(seconds: number): string {
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
+function renderShortById(shortId: ShortId): ReactElement {
+  switch (shortId) {
+    case "short-01":
+      return <Short01MinimumSpace />;
+    case "short-02":
+      return <Short02WidthParadox />;
+    case "short-03":
+      return <Short03TightShuttling />;
+    default: {
+      const _exhaustive: never = shortId;
+      throw new Error(`Unhandled short id: ${JSON.stringify(_exhaustive)}`);
+    }
+  }
+}
+
+function formatPillIndexLabel(slide: SlideMetadata | undefined): string {
+  if (!slide) {
+    return `01 / ${PRESENTATION_SLIDE_COUNT}`;
+  }
+  switch (slide.kind) {
+    case SlideKinds.Slide:
+      return `${slide.numberLabel} / ${PRESENTATION_SLIDE_COUNT}`;
+    case SlideKinds.Short:
+      return `SHORT ${slide.numberLabel.replace("S", "").padStart(2, "0")}`;
+    case SlideKinds.Thumbnail:
+      return "THUMBNAIL";
+    default: {
+      const _exhaustive: never = slide;
+      throw new Error(`Unhandled slide kind: ${JSON.stringify(_exhaustive)}`);
+    }
+  }
+}
+
 export function App(): ReactElement {
   const currentSlideIndex = usePresentationStore((state) => state.currentSlideIndex);
   const isPlaying = usePresentationStore((state) => state.isPlaying);
   const isContinuousPlayback = usePresentationStore((state) => state.isContinuousPlayback);
+  const isShortRotated = usePresentationStore((state) => state.isShortRotated);
   const elapsedSeconds = usePresentationStore((state) => state.elapsedSeconds);
   const replayGeneration = usePresentationStore((state) => state.replayGeneration);
   const isHudVisible = usePresentationStore((state) => state.isHudVisible);
@@ -67,6 +108,7 @@ export function App(): ReactElement {
   const togglePlay = usePresentationStore((state) => state.togglePlay);
   const setPlaying = usePresentationStore((state) => state.setPlaying);
   const toggleContinuousPlayback = usePresentationStore((state) => state.toggleContinuousPlayback);
+  const toggleShortRotation = usePresentationStore((state) => state.toggleShortRotation);
   const tickElapsed = usePresentationStore((state) => state.tickElapsed);
   const seekTo = usePresentationStore((state) => state.seekTo);
   const restartSlide = usePresentationStore((state) => state.restartSlide);
@@ -77,15 +119,16 @@ export function App(): ReactElement {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentSlide = SLIDES_METADATA[currentSlideIndex] ?? SLIDES_METADATA[0];
-  const isPresentationSlide = currentSlide ? currentSlide.isPresentationSlide : true;
+  const isPlayable = isSlidePlayable(currentSlide);
+  const isShort = currentSlide ? currentSlide.kind === SlideKinds.Short : false;
   const slideDuration = currentSlide ? currentSlide.durationSeconds : 35;
-  const slideNumberPadded = currentSlide ? currentSlide.numberLabel : "01";
-  const audioSrc = isPresentationSlide ? `/vo-slide-${slideNumberPadded}.mp3` : null;
+  const audioSrc = currentSlide ? currentSlide.audioSrc : null;
   const isExiting = transition.kind === TransitionKinds.Exiting;
   const exitingTargetIndex = transition.kind === TransitionKinds.Exiting ? transition.targetSlideIndex : null;
 
-  const presentationSlides = SLIDES_METADATA.filter((slide) => slide.isPresentationSlide);
-  const specialSlides = SLIDES_METADATA.filter((slide) => !slide.isPresentationSlide);
+  const presentationSlides = SLIDES_METADATA.filter((slide) => slide.kind === SlideKinds.Slide);
+  const shortSlides = SLIDES_METADATA.filter((slide) => slide.kind === SlideKinds.Short);
+  const specialSlides = SLIDES_METADATA.filter((slide) => slide.kind === SlideKinds.Thumbnail);
 
   const prevSyncRef = useRef<{ readonly audioSrc: string | null; readonly replayGeneration: number }>({
     audioSrc,
@@ -191,7 +234,7 @@ export function App(): ReactElement {
 
   // High-precision animation loop locked to voice-over audio clock when available
   useEffect(() => {
-    if (!isPlaying || !isPresentationSlide) {
+    if (!isPlaying || !isPlayable) {
       return;
     }
     let lastTime = performance.now();
@@ -220,7 +263,7 @@ export function App(): ReactElement {
     return () => {
       window.cancelAnimationFrame(frameId);
     };
-  }, [isPlaying, isPresentationSlide, tickElapsed]);
+  }, [isPlaying, isPlayable, tickElapsed]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -239,6 +282,9 @@ export function App(): ReactElement {
       } else if (event.key === "c" || event.key === "C") {
         event.preventDefault();
         toggleContinuousPlayback();
+      } else if (event.key === "o" || event.key === "O") {
+        event.preventDefault();
+        toggleShortRotation();
       } else if (event.key === "t" || event.key === "T") {
         event.preventDefault();
         setSlideIndex(THUMBNAIL_SLIDE_INDEX);
@@ -262,10 +308,19 @@ export function App(): ReactElement {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [currentSlideIndex, restartSlide, setSlideIndex, toggleContinuousPlayback, toggleHud, togglePlay, transition]);
+  }, [
+    currentSlideIndex,
+    restartSlide,
+    setSlideIndex,
+    toggleContinuousPlayback,
+    toggleHud,
+    togglePlay,
+    toggleShortRotation,
+    transition,
+  ]);
 
   const handleSeek = (value: number | readonly number[]): void => {
-    if (!isPresentationSlide) {
+    if (!isPlayable) {
       return;
     }
     const rawSeconds = typeof value === "number" ? value : (value[0] ?? 0);
@@ -293,7 +348,13 @@ export function App(): ReactElement {
   };
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-surface-canvas text-text-primary select-none">
+    <div
+      className={
+        isShort
+          ? "relative h-screen w-screen overflow-hidden bg-surface-sunken text-text-primary select-none"
+          : "relative h-screen w-screen overflow-hidden bg-surface-canvas text-text-primary select-none"
+      }
+    >
       <audio ref={audioRef} src={audioSrc ?? undefined} preload="auto">
         <track kind="captions" srcLang="en" label="Voice-over narration" />
       </audio>
@@ -306,8 +367,15 @@ export function App(): ReactElement {
             : "pointer-events-none h-full w-full opacity-100"
         }
       >
-        <div key={currentSlideIndex} className="slide-enter-fade h-full w-full">
-          {currentSlideIndex === 0 ? (
+        <div
+          key={currentSlideIndex}
+          className="slide-enter-fade relative flex h-full w-full items-center justify-center"
+        >
+          {currentSlide?.kind === SlideKinds.Short ? (
+            <div className={isShortRotated ? "short-stage-rotated" : "short-stage-portrait"}>
+              {renderShortById(currentSlide.id)}
+            </div>
+          ) : currentSlideIndex === 0 ? (
             <Slide01Dilemma />
           ) : currentSlideIndex === 1 ? (
             <Slide02PerfectParking />
@@ -348,7 +416,7 @@ export function App(): ReactElement {
       {/* Minimal Floating Control Pill (Toggle with 'H' key) */}
       {isHudVisible ? (
         <div className="fixed bottom-5 left-1/2 z-50 flex w-fit -translate-x-1/2 items-center gap-1.5 rounded-track border border-border-subtle bg-surface-100/90 px-2.5 py-1.5 shadow-floating backdrop-blur-floating">
-          {isPresentationSlide ? (
+          {isPlayable ? (
             <>
               <Button
                 variant={ButtonVariants.Ghost}
@@ -412,7 +480,7 @@ export function App(): ReactElement {
               aria-label="Select slide"
               className="inline-flex h-control-xs min-h-6 min-w-6 cursor-pointer items-center justify-center rounded-control px-1.5 font-mono text-xs whitespace-nowrap text-text-primary tabular-nums transition-colors duration-150 ease-ui hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
             >
-              {isPresentationSlide ? `${slideNumberPadded} / ${PRESENTATION_SLIDE_COUNT}` : "THUMBNAIL"}
+              {formatPillIndexLabel(currentSlide)}
             </MenuTrigger>
             <MenuContent side="top" align="center" sideOffset={10} className="w-72">
               <MenuGroup>
@@ -436,6 +504,20 @@ export function App(): ReactElement {
                       </span>
                     </MenuRadioItem>
                   ))}
+                  {shortSlides.length > 0 ? (
+                    <>
+                      <MenuSeparator />
+                      <MenuGroupLabel>Shorts</MenuGroupLabel>
+                      {shortSlides.map((slide) => (
+                        <MenuRadioItem key={slide.index} value={String(slide.index)}>
+                          <span className="flex items-center gap-2 truncate">
+                            <span className="font-mono text-text-muted tabular-nums">{slide.numberLabel}</span>
+                            <span className="truncate">{slide.title}</span>
+                          </span>
+                        </MenuRadioItem>
+                      ))}
+                    </>
+                  ) : null}
                   {specialSlides.length > 0 ? <MenuSeparator /> : null}
                   {specialSlides.map((slide) => (
                     <MenuRadioItem key={slide.index} value={String(slide.index)}>
@@ -465,6 +547,22 @@ export function App(): ReactElement {
           </Button>
 
           <div className="h-3.5 w-px bg-border-subtle" />
+
+          {isShort ? (
+            <>
+              <Button
+                variant={isShortRotated ? ButtonVariants.Secondary : ButtonVariants.Ghost}
+                size={ButtonSizes.Xs}
+                onClick={toggleShortRotation}
+                aria-pressed={isShortRotated}
+                aria-label="Toggle -90 degree capture rotation (O)"
+                className="tabular-nums"
+              >
+                {isShortRotated ? "-90°" : "0°"}
+              </Button>
+              <div className="h-3.5 w-px bg-border-subtle" />
+            </>
+          ) : null}
 
           <Button
             variant={isContinuousPlayback ? ButtonVariants.Secondary : ButtonVariants.Ghost}

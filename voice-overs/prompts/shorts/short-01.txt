@@ -1,0 +1,9 @@
+[curious] How much extra space — beyond the length of your own car — do you actually need to parallel park in one smooth sweep? ...
+
+[frustrated] Nobody enjoys shuffling back and forth... inching closer to the kerb a few centimeters at a time. ...
+
+[confident] Mathematician Simon Blackburn solved the exact geometry. For a typical car with a turning radius of five point four meters, a wheelbase of two point six meters, and a front overhang of one point three meters — parking behind a car that is one point seven meters wide —
+
+[thoughtful] his formula gives a surprisingly tight answer... just one point four three meters of extra room... less than five feet. ...
+
+[confident] Anything tighter than that... and geometry forces you to start shuffling.

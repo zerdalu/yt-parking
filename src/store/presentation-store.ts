@@ -10,6 +10,14 @@ export const SlidePhaseModes = {
 
 export type SlidePhaseMode = (typeof SlidePhaseModes)[keyof typeof SlidePhaseModes];
 
+export const SlideKinds = {
+  Slide: "slide",
+  Short: "short",
+  Thumbnail: "thumbnail",
+} as const;
+
+export type SlideKind = (typeof SlideKinds)[keyof typeof SlideKinds];
+
 export const TransitionKinds = {
   Idle: "idle",
   Exiting: "exiting",
@@ -23,7 +31,11 @@ export type SlideTransition =
       readonly autoPlayAfter: boolean;
     };
 
-export interface SlideMetadata {
+export type ShortId = "short-01" | "short-02" | "short-03";
+
+export interface StandardSlideMetadata {
+  readonly kind: typeof SlideKinds.Slide;
+  readonly id: string;
   readonly index: number;
   readonly numberLabel: string;
   readonly title: string;
@@ -31,14 +43,41 @@ export interface SlideMetadata {
   readonly durationSeconds: number;
   readonly cumulativeStart: string;
   readonly cumulativeEnd: string;
-  readonly isPresentationSlide: boolean;
+  readonly audioSrc: string;
 }
+
+export interface ShortSlideMetadata {
+  readonly kind: typeof SlideKinds.Short;
+  readonly id: ShortId;
+  readonly index: number;
+  readonly numberLabel: string;
+  readonly title: string;
+  readonly subtitle: string;
+  readonly durationSeconds: number;
+  readonly audioSrc: string;
+}
+
+export interface ThumbnailSlideMetadata {
+  readonly kind: typeof SlideKinds.Thumbnail;
+  readonly id: "thumbnail";
+  readonly index: number;
+  readonly numberLabel: string;
+  readonly title: string;
+  readonly subtitle: string;
+  readonly durationSeconds: 0;
+  readonly audioSrc: null;
+}
+
+export type SlideMetadata = StandardSlideMetadata | ShortSlideMetadata | ThumbnailSlideMetadata;
 
 export const PRESENTATION_SLIDE_COUNT = 16;
 export const THUMBNAIL_SLIDE_INDEX = 16;
+export const FIRST_SHORT_INDEX = 17;
 
 export const SLIDES_METADATA: readonly SlideMetadata[] = [
   {
+    kind: SlideKinds.Slide,
+    id: "slide-01",
     index: 0,
     numberLabel: "01",
     title: "The Parallel Parking Dilemma",
@@ -46,9 +85,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 35,
     cumulativeStart: "00:00",
     cumulativeEnd: "00:35",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-01.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-02",
     index: 1,
     numberLabel: "02",
     title: "Defining Perfect Parking",
@@ -56,9 +97,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 34,
     cumulativeStart: "00:35",
     cumulativeEnd: "01:09",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-02.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-03",
     index: 2,
     numberLabel: "03",
     title: "Slicing the Car: The Wheel-Center Plane",
@@ -66,9 +109,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 38,
     cumulativeStart: "01:09",
     cumulativeEnd: "01:47",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-03.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-04",
     index: 3,
     numberLabel: "04",
     title: "Ackermann Steering & The Turning Center X",
@@ -76,9 +121,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 40,
     cumulativeStart: "01:47",
     cumulativeEnd: "02:27",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-04.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-05",
     index: 4,
     numberLabel: "05",
     title: "The Four Measurable Inputs",
@@ -86,9 +133,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 38,
     cumulativeStart: "02:27",
     cumulativeEnd: "03:05",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-05.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-06",
     index: 5,
     numberLabel: "06",
     title: "Previewing the Master Formula",
@@ -96,9 +145,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 24,
     cumulativeStart: "03:05",
     cumulativeEnd: "03:29",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-06.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-07",
     index: 6,
     numberLabel: "07",
     title: "Concentric Turning Circles (Figure 2)",
@@ -106,9 +157,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 34,
     cumulativeStart: "03:29",
     cumulativeEnd: "04:03",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-07.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-08",
     index: 7,
     numberLabel: "08",
     title: "Proof Step 1: The Wheelbase Triangle EFX",
@@ -116,9 +169,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 31,
     cumulativeStart: "04:03",
     cumulativeEnd: "04:34",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-08.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-09",
     index: 8,
     numberLabel: "09",
     title: "Proof Steps 2 & 3: Front Corner Radius AX and GX",
@@ -126,9 +181,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 32,
     cumulativeStart: "04:34",
     cumulativeEnd: "05:06",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-09.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-10",
     index: 9,
     numberLabel: "10",
     title: "Proof Steps 4 & 5: Dropping Construction Line GK",
@@ -136,9 +193,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 32,
     cumulativeStart: "05:06",
     cumulativeEnd: "05:38",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-10.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-11",
     index: 10,
     numberLabel: "11",
     title: "Proof Steps 6 & 7: Solving Triangle GKX for AH",
@@ -146,9 +205,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 37,
     cumulativeStart: "05:38",
     cumulativeEnd: "06:15",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-11.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-12",
     index: 11,
     numberLabel: "12",
     title: "Plugging in Real-World Numbers",
@@ -156,9 +217,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 33,
     cumulativeStart: "06:15",
     cumulativeEnd: "06:48",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-12.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-13",
     index: 12,
     numberLabel: "13",
     title: "The Paradox: Why Doesn't Your Car's Width Matter?",
@@ -166,9 +229,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 36,
     cumulativeStart: "06:48",
     cumulativeEnd: "07:24",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-13.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-14",
     index: 13,
     numberLabel: "14",
     title: "Angled Approach & Late Full-Lock",
@@ -176,9 +241,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 31,
     cumulativeStart: "07:24",
     cumulativeEnd: "07:55",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-14.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-15",
     index: 14,
     numberLabel: "15",
     title: "Shuttling To and Fro in Tight Spaces (Figure 4)",
@@ -186,9 +253,11 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 33,
     cumulativeStart: "07:55",
     cumulativeEnd: "08:28",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-15.mp3",
   },
   {
+    kind: SlideKinds.Slide,
+    id: "slide-16",
     index: 15,
     numberLabel: "16",
     title: "Nose-First Bay Parking & The Tractrix (Figures 5 & 6)",
@@ -196,22 +265,53 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 18,
     cumulativeStart: "08:28",
     cumulativeEnd: "08:46",
-    isPresentationSlide: true,
+    audioSrc: "/vo-slide-16.mp3",
   },
   {
+    kind: SlideKinds.Thumbnail,
+    id: "thumbnail",
     index: 16,
     numberLabel: "TH",
     title: "YouTube Thumbnail",
     subtitle: "Static 16:9 thumbnail composition for full-screen capture",
     durationSeconds: 0,
-    cumulativeStart: "—",
-    cumulativeEnd: "—",
-    isPresentationSlide: false,
+    audioSrc: null,
+  },
+  {
+    kind: SlideKinds.Short,
+    id: "short-01",
+    index: 17,
+    numberLabel: "S1",
+    title: "How Much Extra Space?",
+    subtitle: "Portrait Short: 1.43 m minimum space for a single smooth sweep",
+    durationSeconds: 42.5,
+    audioSrc: "/vo-short-01.mp3",
+  },
+  {
+    kind: SlideKinds.Short,
+    id: "short-02",
+    index: 18,
+    numberLabel: "S2",
+    title: "Why Car Width Doesn't Matter",
+    subtitle: "Portrait Short: morphing edge B-C leaves corner A's path past G unchanged",
+    durationSeconds: 44.0,
+    audioSrc: "/vo-short-02.mp3",
+  },
+  {
+    kind: SlideKinds.Short,
+    id: "short-03",
+    index: 19,
+    numberLabel: "S3",
+    title: "Park in a 1 cm Extra Gap?",
+    subtitle: "Portrait Short: shuttling in any space c > 0 & why you must finish in reverse",
+    durationSeconds: 36.5,
+    audioSrc: "/vo-short-03.mp3",
   },
 ];
 
 const LAST_SLIDE_STORAGE_KEY = "parking:last-slide-index";
 const CONTINUOUS_PLAYBACK_STORAGE_KEY = "parking:continuous-playback";
+const SHORT_ROTATED_STORAGE_KEY = "parking:short-rotated";
 
 const StoredSlideIndexSchema = v.pipe(v.number(), v.integer(), v.minValue(0));
 const StoredBooleanSchema = v.boolean();
@@ -252,35 +352,52 @@ function saveLastSlideIndex(index: number): void {
   }
 }
 
-function readInitialContinuousPlayback(): boolean {
+function readInitialBooleanPref(storageKey: string, defaultValue: boolean): boolean {
   if (typeof window === "undefined") {
-    return true;
+    return defaultValue;
   }
   try {
-    const rawValue: string | null = window.localStorage.getItem(CONTINUOUS_PLAYBACK_STORAGE_KEY);
+    const rawValue: string | null = window.localStorage.getItem(storageKey);
     if (rawValue === null) {
-      return true;
+      return defaultValue;
     }
     const parsedJson: unknown = JSON.parse(rawValue);
     const result = v.safeParse(StoredBooleanSchema, parsedJson);
-    return result.success ? result.output : true;
+    return result.success ? result.output : defaultValue;
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.warn("Failed to read continuous playback preference from localStorage:", error.message);
+      console.warn(`Failed to read '${storageKey}' from localStorage:`, error.message);
     }
-    return true;
+    return defaultValue;
   }
 }
 
-function saveContinuousPlayback(enabled: boolean): void {
+function saveBooleanPref(storageKey: string, enabled: boolean): void {
   if (typeof window === "undefined") {
     return;
   }
   try {
-    window.localStorage.setItem(CONTINUOUS_PLAYBACK_STORAGE_KEY, JSON.stringify(enabled));
+    window.localStorage.setItem(storageKey, JSON.stringify(enabled));
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.warn("Failed to save continuous playback preference to localStorage:", error.message);
+      console.warn(`Failed to save '${storageKey}' to localStorage:`, error.message);
+    }
+  }
+}
+
+export function isSlidePlayable(slide: SlideMetadata | undefined): boolean {
+  if (!slide) {
+    return true;
+  }
+  switch (slide.kind) {
+    case SlideKinds.Slide:
+    case SlideKinds.Short:
+      return true;
+    case SlideKinds.Thumbnail:
+      return false;
+    default: {
+      const _exhaustive: never = slide;
+      throw new Error(`Unhandled slide kind: ${JSON.stringify(_exhaustive)}`);
     }
   }
 }
@@ -289,6 +406,7 @@ export interface PresentationState {
   readonly currentSlideIndex: number;
   readonly isPlaying: boolean;
   readonly isContinuousPlayback: boolean;
+  readonly isShortRotated: boolean;
   readonly elapsedSeconds: number;
   readonly replayGeneration: number;
   readonly isHudVisible: boolean;
@@ -299,6 +417,7 @@ export interface PresentationState {
   readonly togglePlay: () => void;
   readonly setPlaying: (playing: boolean) => void;
   readonly toggleContinuousPlayback: () => void;
+  readonly toggleShortRotation: () => void;
   readonly tickElapsed: (deltaSeconds: number) => void;
   readonly seekTo: (seconds: number) => void;
   readonly restartSlide: () => void;
@@ -307,12 +426,13 @@ export interface PresentationState {
 }
 
 const initialSlideIndex = readInitialSlideIndex();
-const initialIsPresentationSlide = SLIDES_METADATA[initialSlideIndex]?.isPresentationSlide ?? true;
+const initialIsPlayable = isSlidePlayable(SLIDES_METADATA[initialSlideIndex]);
 
 export const usePresentationStore = create<PresentationState>((set) => ({
   currentSlideIndex: initialSlideIndex,
-  isPlaying: initialIsPresentationSlide,
-  isContinuousPlayback: readInitialContinuousPlayback(),
+  isPlaying: initialIsPlayable,
+  isContinuousPlayback: readInitialBooleanPref(CONTINUOUS_PLAYBACK_STORAGE_KEY, true),
+  isShortRotated: readInitialBooleanPref(SHORT_ROTATED_STORAGE_KEY, true),
   elapsedSeconds: 0,
   replayGeneration: 0,
   isHudVisible: true,
@@ -322,7 +442,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   setSlideIndex: (index: number): void => {
     const safeIndex = Math.max(0, Math.min(index, SLIDES_METADATA.length - 1));
     const targetMeta = SLIDES_METADATA[safeIndex];
-    const shouldAutoPlay = targetMeta ? targetMeta.isPresentationSlide : false;
+    const shouldAutoPlay = isSlidePlayable(targetMeta);
 
     set((state) => {
       if (safeIndex === state.currentSlideIndex && state.transition.kind === TransitionKinds.Idle) {
@@ -370,7 +490,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
         };
       }
       const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
-      if (!currentMeta || !currentMeta.isPresentationSlide) {
+      if (!currentMeta || !isSlidePlayable(currentMeta)) {
         return { isPlaying: false };
       }
       if (!state.isPlaying && state.elapsedSeconds >= currentMeta.durationSeconds) {
@@ -392,8 +512,16 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   toggleContinuousPlayback: (): void => {
     set((state) => {
       const next = !state.isContinuousPlayback;
-      saveContinuousPlayback(next);
+      saveBooleanPref(CONTINUOUS_PLAYBACK_STORAGE_KEY, next);
       return { isContinuousPlayback: next };
+    });
+  },
+
+  toggleShortRotation: (): void => {
+    set((state) => {
+      const next = !state.isShortRotated;
+      saveBooleanPref(SHORT_ROTATED_STORAGE_KEY, next);
+      return { isShortRotated: next };
     });
   },
 
@@ -406,13 +534,17 @@ export const usePresentationStore = create<PresentationState>((set) => ({
         return state;
       }
       const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
-      if (!currentMeta || !currentMeta.isPresentationSlide) {
+      if (!currentMeta || !isSlidePlayable(currentMeta)) {
         return { isPlaying: false };
       }
       const maxDuration = currentMeta.durationSeconds;
       const nextElapsed = state.elapsedSeconds + deltaSeconds;
       if (nextElapsed >= maxDuration) {
-        if (state.isContinuousPlayback && state.currentSlideIndex < PRESENTATION_SLIDE_COUNT - 1) {
+        if (
+          currentMeta.kind === SlideKinds.Slide &&
+          state.isContinuousPlayback &&
+          state.currentSlideIndex < PRESENTATION_SLIDE_COUNT - 1
+        ) {
           return {
             elapsedSeconds: maxDuration,
             transition: {
@@ -436,7 +568,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   seekTo: (seconds: number): void => {
     set((state) => {
       const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
-      if (!currentMeta || !currentMeta.isPresentationSlide) {
+      if (!currentMeta || !isSlidePlayable(currentMeta)) {
         return state;
       }
       const maxDuration = currentMeta.durationSeconds;
@@ -452,7 +584,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   restartSlide: (): void => {
     set((state) => {
       const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
-      const shouldAutoPlay = currentMeta ? currentMeta.isPresentationSlide : false;
+      const shouldAutoPlay = isSlidePlayable(currentMeta);
       return {
         elapsedSeconds: 0,
         isPlaying: shouldAutoPlay,
