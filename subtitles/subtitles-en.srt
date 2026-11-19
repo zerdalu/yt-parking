@@ -1,0 +1,611 @@
+1
+00:00:00,333 --> 00:00:02,683
+You are driving down a busy street
+
+2
+00:00:02,953 --> 00:00:05,833
+and you finally spot a gap
+between two parked cars.
+
+3
+00:00:06,273 --> 00:00:09,483
+The road is wide, so you have
+plenty of room to swing out,
+
+4
+00:00:09,713 --> 00:00:13,283
+but the space itself
+looks uncomfortably tight.
+
+5
+00:00:14,153 --> 00:00:16,883
+Nobody enjoys shuffling back and forth,
+
+6
+00:00:17,113 --> 00:00:20,533
+inching closer to the curb
+a few centimeters at a time.
+
+7
+00:00:20,933 --> 00:00:24,433
+You want to reverse into the space
+in one smooth sweep
+
+8
+00:00:24,753 --> 00:00:26,233
+and pull straight forward to park.
+
+9
+00:00:26,253 --> 00:00:28,933
+So here is the mathematical question:
+
+10
+00:00:29,393 --> 00:00:32,533
+How much extra length,
+beyond the length of your own car,
+
+11
+00:00:32,813 --> 00:00:34,733
+does that parking space actually need?
+
+12
+00:00:35,933 --> 00:00:39,033
+In 2009, mathematician Simon Blackburn
+
+13
+00:00:39,033 --> 00:00:43,683
+formulated a precise model for what
+he called a perfect parking maneuver.
+
+14
+00:00:44,313 --> 00:00:48,283
+First, there is no handbrake skidding
+and no multi-point shuffling.
+
+15
+00:00:48,573 --> 00:00:53,133
+You reverse into the space at full
+steering lock in a single continuous arc,
+
+16
+00:00:53,413 --> 00:00:56,683
+stopping the exact moment
+your car is parallel to the curb.
+
+17
+00:00:57,113 --> 00:00:59,093
+Then, you straighten your front wheels
+
+18
+00:00:59,093 --> 00:01:02,183
+and drive straight forward
+into the middle of the space.
+
+19
+00:01:02,713 --> 00:01:04,633
+To find the minimum space required,
+
+20
+00:01:04,973 --> 00:01:08,433
+we only need to analyze the geometry
+of that reversing sweep.
+
+21
+00:01:10,533 --> 00:01:13,383
+To turn a real car into clean geometry,
+
+22
+00:01:14,073 --> 00:01:18,633
+imagine slicing the vehicle horizontally
+right through the centers of its four wheels,
+
+23
+00:01:18,993 --> 00:01:20,683
+looking straight down from above.
+
+24
+00:01:21,193 --> 00:01:24,283
+The extreme outer body
+forms a simple rectangle,
+
+25
+00:01:24,653 --> 00:01:26,933
+labeled A, B, C, D.
+
+26
+00:01:27,393 --> 00:01:31,883
+The curb runs along the straight line
+through A, E, F, and D.
+
+27
+00:01:32,173 --> 00:01:35,783
+Or, if you prefer never to scrape
+your alloy wheels on concrete,
+
+28
+00:01:36,093 --> 00:01:39,573
+an imaginary line a few centimeters
+to the left of the curb.
+
+29
+00:01:39,573 --> 00:01:43,933
+Notice that our curbside wheels,
+centered at points E and F,
+
+30
+00:01:44,253 --> 00:01:47,483
+line up closely with the right edge
+A to D of the car.
+
+31
+00:01:49,133 --> 00:01:52,033
+How does a car actually rotate
+when reversing?
+
+32
+00:01:52,573 --> 00:01:55,733
+Its rear wheels are fixed parallel
+to the sides of the car.
+
+33
+00:01:56,113 --> 00:02:00,053
+That means the imaginary line passing
+through both rear wheel centers
+
+34
+00:02:00,053 --> 00:02:04,783
+must always point directly at the center
+of the turning circle, labeled X.
+
+35
+00:02:05,333 --> 00:02:06,633
+What about the front wheels?
+
+36
+00:02:07,093 --> 00:02:11,413
+Because the inside front wheel travels along
+a tighter circle than the outside wheel,
+
+37
+00:02:11,693 --> 00:02:15,233
+it has to steer at a sharper angle
+to avoid dragging sideways.
+
+38
+00:02:15,793 --> 00:02:17,493
+This is called Ackermann steering —
+
+39
+00:02:17,493 --> 00:02:21,133
+patented back in 1818
+for horse-drawn carriages.
+
+40
+00:02:21,573 --> 00:02:24,733
+When all wheel axle lines
+meet at a single point X,
+
+41
+00:02:25,013 --> 00:02:27,933
+every part of the car
+turns cleanly around X.
+
+42
+00:02:29,733 --> 00:02:34,083
+Blackburn chose four measurements for his formula
+that you can easily look up on the web,
+
+43
+00:02:34,493 --> 00:02:36,433
+or measure yourself with a tape measure.
+
+44
+00:02:36,873 --> 00:02:40,373
+First is r — the radius of your car's
+curb-to-curb turning circle,
+
+45
+00:02:40,373 --> 00:02:45,383
+which is the distance from the front
+wheel E to the turning center X.
+
+46
+00:02:45,933 --> 00:02:50,983
+Second is l — the wheelbase
+between the front wheel E and rear wheel F.
+
+47
+00:02:51,473 --> 00:02:57,073
+Third is k — the front overhang from the
+front wheel E to the front bumper corner A.
+
+48
+00:02:57,073 --> 00:03:02,733
+And fourth is w — the width GH
+of the parked car in front of you.
+
+49
+00:03:03,193 --> 00:03:06,183
+Our goal is to find
+the extra distance AH.
+
+50
+00:03:08,333 --> 00:03:13,083
+Before we dive into the proof,
+here is the exact formula we are going to build.
+
+51
+00:03:13,633 --> 00:03:17,013
+At first glance, nested square roots
+might look intimidating,
+
+52
+00:03:17,353 --> 00:03:22,513
+but every single piece inside this expression
+comes directly from Pythagoras' theorem
+
+53
+00:03:22,513 --> 00:03:25,083
+applied to three right-angled triangles.
+
+54
+00:03:25,793 --> 00:03:30,083
+Let's freeze the parking maneuver
+at its most critical instant and see why.
+
+55
+00:03:32,933 --> 00:03:37,683
+Look directly down from above, just as
+we finish reversing parallel to the curb.
+
+56
+00:03:38,293 --> 00:03:44,483
+As the car reverses around center X, the wheels
+at E and F travel along the two dashed circles.
+
+57
+00:03:44,913 --> 00:03:49,213
+Meanwhile, the front-right corner A
+of our car sweeps along the outer circle.
+
+58
+00:03:49,633 --> 00:03:51,853
+In the tightest possible parking space,
+
+59
+00:03:52,033 --> 00:03:56,333
+that corner A will just barely miss
+the corner G of the car parked in front.
+
+60
+00:03:56,913 --> 00:04:00,973
+Because corner A passes right through
+point G along that outer circle,
+
+61
+00:04:00,973 --> 00:04:05,533
+both A and G lie at the exact same
+distance from the center X.
+
+62
+00:04:07,533 --> 00:04:12,083
+Step 1 of our proof focuses
+on the right-angled triangle EFX.
+
+63
+00:04:12,593 --> 00:04:16,173
+Because the rear axle line goes straight
+through the turning center X
+
+64
+00:04:16,173 --> 00:04:20,933
+at a right angle to the side of the car,
+the angle at F is 90 degrees.
+
+65
+00:04:21,573 --> 00:04:25,233
+We know the hypotenuse EX
+is the turning radius r,
+
+66
+00:04:25,373 --> 00:04:28,883
+and the vertical side EF
+is the wheelbase l.
+
+67
+00:04:29,513 --> 00:04:33,593
+Applying Pythagoras' theorem gives us
+the horizontal distance FX —
+
+68
+00:04:33,593 --> 00:04:36,933
+the square root of r² minus l².
+
+69
+00:04:39,133 --> 00:04:44,213
+For step two, look at the taller
+right-angled triangle AFX.
+
+70
+00:04:44,693 --> 00:04:50,233
+Its vertical side AF is simply
+the wheelbase l plus the front overhang k,
+
+71
+00:04:50,613 --> 00:04:53,433
+and we just found the base FX in step one.
+
+72
+00:04:53,893 --> 00:04:56,133
+Using Pythagoras' theorem a second time
+
+73
+00:04:56,133 --> 00:05:00,233
+gives us the hypotenuse AX,
+the radius of the outer circle.
+
+74
+00:05:00,713 --> 00:05:03,183
+And that leads immediately to step three.
+
+75
+00:05:03,633 --> 00:05:06,413
+Since point G lies on that exact same circle,
+
+76
+00:05:06,413 --> 00:05:09,583
+the distance GX is identical to AX.
+
+77
+00:05:11,733 --> 00:05:16,583
+Now for step four — the key geometric
+construction shown in Figure 3.
+
+78
+00:05:17,073 --> 00:05:21,553
+We draw a new line straight down
+from corner G, parallel to the curb,
+
+79
+00:05:21,753 --> 00:05:26,083
+until it meets the horizontal line FX
+at a new point, K.
+
+80
+00:05:26,593 --> 00:05:30,573
+In step five, notice that the distance
+FK at the bottom
+
+81
+00:05:30,573 --> 00:05:34,083
+is equal to the width w
+of the parked car at the top.
+
+82
+00:05:34,553 --> 00:05:37,233
+Since we already know the full length FX,
+
+83
+00:05:37,233 --> 00:05:41,783
+the remaining segment KX is simply FX minus w.
+
+84
+00:05:44,333 --> 00:05:48,433
+In step six, we apply Pythagoras'
+theorem one last time,
+
+85
+00:05:48,713 --> 00:05:51,583
+to the right-angled triangle GKX.
+
+86
+00:05:51,993 --> 00:05:57,933
+We know the hypotenuse GX from step three,
+and we know the base KX from step five.
+
+87
+00:05:58,393 --> 00:06:03,283
+Subtracting their squares and taking the
+square root gives us the vertical height GK.
+
+88
+00:06:03,773 --> 00:06:05,433
+Finally, step seven.
+
+89
+00:06:05,773 --> 00:06:11,173
+The vertical height GK is the exact same
+length as HF along the curb.
+
+90
+00:06:11,173 --> 00:06:14,883
+Subtract the wheelbase l
+and front overhang k,
+
+91
+00:06:15,233 --> 00:06:19,533
+and what remains is AH —
+the exact extra space we need.
+
+92
+00:06:21,933 --> 00:06:24,583
+Let's put some realistic numbers
+into the formula.
+
+93
+00:06:25,253 --> 00:06:29,833
+Suppose your car has a curb-to-curb
+turning circle diameter of 10.8 meters,
+
+94
+00:06:30,393 --> 00:06:33,383
+which means the radius r is 5.4 meters.
+
+95
+00:06:34,053 --> 00:06:40,053
+Let's say the wheelbase l is 2.6 meters,
+the front overhang k is 1.3 meters,
+
+96
+00:06:40,333 --> 00:06:44,433
+and the parked car in front
+has a width w of 1.7 meters.
+
+97
+00:06:44,913 --> 00:06:49,933
+When we crunch those numbers, the formula
+tells us the parking space must be at least
+
+98
+00:06:49,933 --> 00:06:53,283
+the length of your car plus 1.43 meters.
+
+99
+00:06:55,533 --> 00:06:59,733
+Looking closely at the formula,
+you might notice something surprising:
+
+100
+00:07:00,513 --> 00:07:03,533
+It depends on the width w
+of the parked car in front,
+
+101
+00:07:03,913 --> 00:07:06,833
+but it does not include
+the width of your own car at all.
+
+102
+00:07:07,293 --> 00:07:07,783
+Why?
+
+103
+00:07:08,193 --> 00:07:11,133
+Because in a single-sweep maneuver
+on a wide road,
+
+104
+00:07:11,353 --> 00:07:15,983
+the critical pinch point is your curbside
+front corner A clearing point G.
+
+105
+00:07:16,393 --> 00:07:20,713
+Making your car wider pushes
+edge BC closer to the center X,
+
+106
+00:07:20,993 --> 00:07:22,893
+without changing the path of corner A.
+
+107
+00:07:22,893 --> 00:07:27,583
+In real life, of course, a wider car
+does make a difference on narrow roads,
+
+108
+00:07:27,833 --> 00:07:29,683
+or when you have to shuffle back and forth.
+
+109
+00:07:32,133 --> 00:07:34,933
+What if you parallel park
+using a different method —
+
+110
+00:07:35,273 --> 00:07:37,583
+pointing your car toward
+the curb at an angle,
+
+111
+00:07:37,753 --> 00:07:41,883
+reversing straight back, and putting on
+full lock at the very last minute?
+
+112
+00:07:42,453 --> 00:07:45,633
+Blackburn's geometry still tells you
+the best angle of approach.
+
+113
+00:07:46,053 --> 00:07:49,683
+You apply full lock right as
+corner A passes point G,
+
+114
+00:07:49,973 --> 00:07:52,983
+placing your car onto the
+exact same turning circle.
+
+115
+00:07:53,413 --> 00:07:58,153
+The ideal angle of approach is simply
+the angle a tangent to the circle at G
+
+116
+00:07:58,153 --> 00:08:01,483
+makes with the curb,
+minus the tangent angle at A.
+
+117
+00:08:03,733 --> 00:08:08,013
+What if the extra space c
+is smaller than 1.43 meters
+
+118
+00:08:08,013 --> 00:08:10,833
+and you don't mind shuttling back and forth?
+
+119
+00:08:11,413 --> 00:08:15,413
+Mathematically, as long as the space
+is even slightly longer than your car,
+
+120
+00:08:15,673 --> 00:08:18,183
+you can always park
+if you use enough movements.
+
+121
+00:08:18,693 --> 00:08:21,583
+By tracking the midpoint
+between your two rear wheels,
+
+122
+00:08:21,913 --> 00:08:26,083
+each forward or backward movement
+follows two opposite circular arcs,
+
+123
+00:08:26,373 --> 00:08:29,983
+moving you closer to the curb
+by a distance of twice PA —
+
+124
+00:08:30,133 --> 00:08:32,313
+though you always have to finish by reversing
+
+125
+00:08:32,313 --> 00:08:34,933
+so your front bumper never swings
+over the pavement.
+
+126
+00:08:37,333 --> 00:08:41,893
+Finally, if you park nose-first
+into a multi-story car park bay
+
+127
+00:08:41,893 --> 00:08:44,883
+while steering your front corner B
+along a straight line,
+
+128
+00:08:45,293 --> 00:08:49,283
+your rear corner C traces a classic
+curve called a tractrix,
+
+129
+00:08:49,493 --> 00:08:53,233
+proving that wherever you park,
+geometry is in the driver's seat.

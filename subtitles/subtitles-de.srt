@@ -1,0 +1,611 @@
+1
+00:00:00,333 --> 00:00:02,683
+Du fährst durch eine belebte Straße
+
+2
+00:00:02,953 --> 00:00:05,833
+und entdeckst endlich eine Lücke
+zwischen zwei geparkten Autos.
+
+3
+00:00:06,273 --> 00:00:09,483
+Die Fahrbahn ist breit, du hast
+also genug Platz zum Ausholen,
+
+4
+00:00:09,713 --> 00:00:13,283
+aber die Parklücke selbst
+wirkt unangenehm eng.
+
+5
+00:00:14,153 --> 00:00:16,883
+Niemand rangiert gern hin und her
+
+6
+00:00:17,113 --> 00:00:20,533
+und tastet sich Zentimeter für Zentimeter
+näher an den Bordstein heran.
+
+7
+00:00:20,933 --> 00:00:24,433
+Du willst in einem einzigen Zug rückwärts
+in die Lücke einlenken
+
+8
+00:00:24,753 --> 00:00:26,233
+und geradeaus nach vorn einparken.
+
+9
+00:00:26,253 --> 00:00:28,933
+Hier ist also die mathematische Frage:
+
+10
+00:00:29,393 --> 00:00:32,533
+Wie viel zusätzliche Länge —
+über die Länge deines Autos hinaus —
+
+11
+00:00:32,813 --> 00:00:34,733
+braucht diese Parklücke wirklich?
+
+12
+00:00:35,933 --> 00:00:39,033
+2009 formulierte der Mathematiker Simon Blackburn
+
+13
+00:00:39,033 --> 00:00:43,683
+ein präzises Modell für das, was er
+ein perfektes Parkmanöver nannte.
+
+14
+00:00:44,313 --> 00:00:48,283
+Erstens gibt es kein Handbrems-Rutschen
+und kein mehrfaches Vor- und Zurücksetzen.
+
+15
+00:00:48,573 --> 00:00:53,133
+Du fährst bei vollem Lenkeinschlag in einem
+einzigen Bogen rückwärts in die Lücke
+
+16
+00:00:53,413 --> 00:00:56,683
+und hältst genau in dem Moment an,
+in dem dein Auto parallel zum Bordstein steht.
+
+17
+00:00:57,113 --> 00:00:59,093
+Dann stellst du die Vorderräder gerade
+
+18
+00:00:59,093 --> 00:01:02,183
+und fährst geradeaus nach vorn
+in die Mitte der Parklücke.
+
+19
+00:01:02,713 --> 00:01:04,633
+Um den minimalen Platzbedarf zu finden,
+
+20
+00:01:04,973 --> 00:01:08,433
+müssen wir nur die Geometrie
+dieses Rückwärtsbogens analysieren.
+
+21
+00:01:10,533 --> 00:01:13,383
+Um aus einem echten Auto klare Geometrie zu machen,
+
+22
+00:01:14,073 --> 00:01:18,633
+schneide das Fahrzeug gedanklich waagerecht
+genau durch die Zentren seiner vier Räder,
+
+23
+00:01:18,993 --> 00:01:20,683
+mit Blick senkrecht von oben.
+
+24
+00:01:21,193 --> 00:01:24,283
+Die äußerste Karosserieform
+bildet ein einfaches Rechteck,
+
+25
+00:01:24,653 --> 00:01:26,933
+beschriftet mit A, B, C, D.
+
+26
+00:01:27,393 --> 00:01:31,883
+Der Bordstein verläuft entlang der Geraden
+durch A, E, F und D.
+
+27
+00:01:32,173 --> 00:01:35,783
+Oder, falls du deine Alufelgen lieber nie
+am Beton zerkratzen möchtest,
+
+28
+00:01:36,093 --> 00:01:39,573
+eine gedachte Linie wenige Zentimeter
+links vom Bordstein.
+
+29
+00:01:39,573 --> 00:01:43,933
+Beachte, dass unsere bordsteinseitigen Räder,
+zentriert bei E und F,
+
+30
+00:01:44,253 --> 00:01:47,483
+nahezu auf einer Linie mit der rechten
+Fahrzeugkante A–D liegen.
+
+31
+00:01:49,133 --> 00:01:52,033
+Wie dreht sich ein Auto eigentlich
+beim Rückwärtsfahren?
+
+32
+00:01:52,573 --> 00:01:55,733
+Die Hinterräder sind fest parallel
+zu den Fahrzeugseiten ausgerichtet.
+
+33
+00:01:56,113 --> 00:02:00,053
+Das bedeutet, die gedachte Linie durch
+beide Hinterradzentren
+
+34
+00:02:00,053 --> 00:02:04,783
+muss stets direkt auf den Mittelpunkt
+des Wendekreises zeigen, genannt X.
+
+35
+00:02:05,333 --> 00:02:06,633
+Und was ist mit den Vorderrädern?
+
+36
+00:02:07,093 --> 00:02:11,413
+Da das innere Vorderrad einen engeren
+Kreis beschreibt als das äußere Rad,
+
+37
+00:02:11,693 --> 00:02:15,233
+muss es stärker einlenken,
+damit es nicht seitlich radiert.
+
+38
+00:02:15,793 --> 00:02:17,493
+Das nennt man Ackermann-Lenkung —
+
+39
+00:02:17,493 --> 00:02:21,133
+bereits 1818 für
+Pferdekutschen patentiert.
+
+40
+00:02:21,573 --> 00:02:24,733
+Wenn sich alle Radachslinien
+in einem einzigen Punkt X treffen,
+
+41
+00:02:25,013 --> 00:02:27,933
+dreht sich jeder Teil des Autos
+sauber um X.
+
+42
+00:02:29,733 --> 00:02:34,083
+Blackburn wählte vier Maße für seine Formel,
+die du leicht online nachschlagen
+
+43
+00:02:34,493 --> 00:02:36,433
+oder selbst mit dem Maßband messen kannst.
+
+44
+00:02:36,873 --> 00:02:40,373
+Erstens r — der Radius des Bordstein-Wendekreises
+deines Autos,
+
+45
+00:02:40,373 --> 00:02:45,383
+also der Abstand vom Vorderrad E
+zum Drehzentrum X.
+
+46
+00:02:45,933 --> 00:02:50,983
+Zweitens l — der Radstand zwischen
+dem Vorderrad E und dem Hinterrad F.
+
+47
+00:02:51,473 --> 00:02:57,073
+Drittens k — der vordere Überhang vom
+Vorderrad E bis zur Stoßstangenecke A.
+
+48
+00:02:57,073 --> 00:03:02,733
+Und viertens w — die Breite GH
+des vor dir geparkten Autos.
+
+49
+00:03:03,193 --> 00:03:06,183
+Unser Ziel ist es, den zusätzlichen
+Abstand AH zu bestimmen.
+
+50
+00:03:08,333 --> 00:03:13,083
+Bevor wir in den Beweis einsteigen,
+ist hier die genaue Formel, die wir herleiten.
+
+51
+00:03:13,633 --> 00:03:17,013
+Auf den ersten Blick wirken verschachtelte
+Quadratwurzeln vielleicht einschüchternd,
+
+52
+00:03:17,353 --> 00:03:22,513
+doch jeder einzelne Teil dieses Ausdrucks
+stammt direkt vom Satz des Pythagoras,
+
+53
+00:03:22,513 --> 00:03:25,083
+angewendet auf drei rechtwinklige Dreiecke.
+
+54
+00:03:25,793 --> 00:03:30,083
+Frieren wir das Parkmanöver im
+kritischsten Moment ein und sehen warum.
+
+55
+00:03:32,933 --> 00:03:37,683
+Schau genau von oben herab, gerade als wir
+parallel zum Bordstein zum Stehen kommen.
+
+56
+00:03:38,293 --> 00:03:44,483
+Während das Auto um X zurücksetzt, folgen die
+Räder E und F den beiden gestrichelten Kreisen.
+
+57
+00:03:44,913 --> 00:03:49,213
+Gleichzeitig zieht die vordere rechte Ecke A
+unseres Autos entlang des äußeren Kreises.
+
+58
+00:03:49,633 --> 00:03:51,853
+In der engsten möglichen Parklücke
+
+59
+00:03:52,033 --> 00:03:56,333
+verfehlt Ecke A gerade noch so
+die Ecke G des vorderen geparkten Autos.
+
+60
+00:03:56,913 --> 00:04:00,973
+Da Ecke A auf diesem äußeren Kreis
+genau durch den Punkt G läuft,
+
+61
+00:04:00,973 --> 00:04:05,533
+haben sowohl A als auch G exakt
+denselben Abstand zum Zentrum X.
+
+62
+00:04:07,533 --> 00:04:12,083
+Schritt 1 unseres Beweises betrachtet
+das rechtwinklige Dreieck EFX.
+
+63
+00:04:12,593 --> 00:04:16,173
+Da die Hinterachslinie senkrecht zur
+Fahrzeugseite verläuft
+
+64
+00:04:16,173 --> 00:04:20,933
+und direkt durch das Drehzentrum X geht,
+beträgt der Winkel bei F 90 Grad.
+
+65
+00:04:21,573 --> 00:04:25,233
+Wir wissen, dass die Hypotenuse EX
+der Wenderadius r ist,
+
+66
+00:04:25,373 --> 00:04:28,883
+und die senkrechte Seite EF
+der Radstand l.
+
+67
+00:04:29,513 --> 00:04:33,593
+Der Satz des Pythagoras liefert uns
+die waagerechte Strecke FX —
+
+68
+00:04:33,593 --> 00:04:36,933
+die Quadratwurzel aus r² minus l².
+
+69
+00:04:39,133 --> 00:04:44,213
+Für Schritt zwei schau auf das höhere
+rechtwinklige Dreieck AFX.
+
+70
+00:04:44,693 --> 00:04:50,233
+Seine vertikale Seite AF ist einfach
+der Radstand l plus der Überhang k,
+
+71
+00:04:50,613 --> 00:04:53,433
+und die Basis FX kennen wir aus Schritt eins.
+
+72
+00:04:53,893 --> 00:04:56,133
+Mit dem Satz des Pythagoras zum zweiten Mal
+
+73
+00:04:56,133 --> 00:05:00,233
+erhalten wir die Hypotenuse AX,
+den Radius des äußeren Kreises.
+
+74
+00:05:00,713 --> 00:05:03,183
+Und das führt sofort zu Schritt drei.
+
+75
+00:05:03,633 --> 00:05:06,413
+Da Punkt G genau auf demselben Kreis liegt,
+
+76
+00:05:06,413 --> 00:05:09,583
+ist die Strecke GX identisch mit AX.
+
+77
+00:05:11,733 --> 00:05:16,583
+Nun Schritt vier — die zentrale
+Hilfskonstruktion aus Abbildung 3.
+
+78
+00:05:17,073 --> 00:05:21,553
+Wir fällen von Ecke G eine neue Linie
+parallel zum Bordstein nach unten,
+
+79
+00:05:21,753 --> 00:05:26,083
+bis sie die waagerechte Linie FX
+in einem neuen Punkt K trifft.
+
+80
+00:05:26,593 --> 00:05:30,573
+In Schritt fünf erkennst du, dass der
+Abstand FK unten
+
+81
+00:05:30,573 --> 00:05:34,083
+gleich der Breite w
+des geparkten Autos oben ist.
+
+82
+00:05:34,553 --> 00:05:37,233
+Da wir die Gesamtlänge FX schon kennen,
+
+83
+00:05:37,233 --> 00:05:41,783
+ist das Reststück KX einfach FX minus w.
+
+84
+00:05:44,333 --> 00:05:48,433
+In Schritt sechs wenden wir ein letztes Mal
+den Satz des Pythagoras an,
+
+85
+00:05:48,713 --> 00:05:51,583
+auf das rechtwinklige Dreieck GKX.
+
+86
+00:05:51,993 --> 00:05:57,933
+Wir kennen die Hypotenuse GX aus Schritt drei
+und die Basis KX aus Schritt fünf.
+
+87
+00:05:58,393 --> 00:06:03,283
+Subtrahieren der Quadrate und Wurzelziehen
+ergibt die vertikale Höhe GK.
+
+88
+00:06:03,773 --> 00:06:05,433
+Schließlich Schritt sieben.
+
+89
+00:06:05,773 --> 00:06:11,173
+Die vertikale Höhe GK hat genau dieselbe
+Länge wie HF entlang des Bordsteins.
+
+90
+00:06:11,173 --> 00:06:14,883
+Ziehe den Radstand l
+und den vorderen Überhang k ab,
+
+91
+00:06:15,233 --> 00:06:19,533
+und übrig bleibt AH —
+genau der zusätzliche Platz, den wir brauchen.
+
+92
+00:06:21,933 --> 00:06:24,583
+Setzen wir ein paar realistische Zahlen
+in die Formel ein.
+
+93
+00:06:25,253 --> 00:06:29,833
+Angenommen, dein Auto hat einen Bordstein-
+Wendekreisdurchmesser von 10,8 Metern,
+
+94
+00:06:30,393 --> 00:06:33,383
+was einem Radius r von 5,4 Metern entspricht.
+
+95
+00:06:34,053 --> 00:06:40,053
+Nehmen wir einen Radstand l von 2,6 Metern,
+einen vorderen Überhang k von 1,3 Metern,
+
+96
+00:06:40,333 --> 00:06:44,433
+und für das vordere geparkte Auto
+eine Breite w von 1,7 Metern.
+
+97
+00:06:44,913 --> 00:06:49,933
+Wenn wir diese Zahlen durchrechnen, sagt
+die Formel, dass die Lücke mindestens
+
+98
+00:06:49,933 --> 00:06:53,283
+so lang wie dein Auto plus 1,43 Meter sein muss.
+
+99
+00:06:55,533 --> 00:06:59,733
+Schaut man genau auf die Formel,
+fällt etwas Überraschendes auf:
+
+100
+00:07:00,513 --> 00:07:03,533
+Sie hängt von der Breite w
+des vorderen geparkten Autos ab,
+
+101
+00:07:03,913 --> 00:07:06,833
+enthält aber überhaupt nicht
+die Breite deines eigenen Autos.
+
+102
+00:07:07,293 --> 00:07:07,783
+Warum?
+
+103
+00:07:08,193 --> 00:07:11,133
+Weil bei einem Einparkmanöver in einem Zug
+auf breiter Straße
+
+104
+00:07:11,353 --> 00:07:15,983
+der kritische Engpass deine bordsteinseitige
+Vorderecke A beim Passieren von G ist.
+
+105
+00:07:16,393 --> 00:07:20,713
+Ein breiteres Auto schiebt die Kante BC
+nur näher an das Zentrum X,
+
+106
+00:07:20,993 --> 00:07:22,893
+ohne die Bahn von Ecke A zu verändern.
+
+107
+00:07:22,893 --> 00:07:27,583
+Im echten Leben macht ein breiteres Auto
+auf engen Straßen natürlich einen Unterschied,
+
+108
+00:07:27,833 --> 00:07:29,683
+oder wenn man vor und zurück rangieren muss.
+
+109
+00:07:32,133 --> 00:07:34,933
+Was, wenn du auf andere Weise
+längs einparkst —
+
+110
+00:07:35,273 --> 00:07:37,583
+das Auto schräg Richtung
+Bordstein ausrichtest,
+
+111
+00:07:37,753 --> 00:07:41,883
+gerade zurücksetzt und erst im
+allerletzten Moment voll einschlägst?
+
+112
+00:07:42,453 --> 00:07:45,633
+Blackburns Geometrie liefert dir auch dann
+den besten Anfahrwinkel.
+
+113
+00:07:46,053 --> 00:07:49,683
+Du schlägst genau dann voll ein, wenn
+Ecke A am Punkt G vorbeizieht,
+
+114
+00:07:49,973 --> 00:07:52,983
+und setzt dein Auto exakt
+auf denselben Wendekreis.
+
+115
+00:07:53,413 --> 00:07:58,153
+Der ideale Anfahrwinkel ist einfach der
+Winkel der Kreistangente in G
+
+116
+00:07:58,153 --> 00:08:01,483
+zum Bordstein, minus
+dem Tangentenwinkel bei A.
+
+117
+00:08:03,733 --> 00:08:08,013
+Was, wenn der Zusatzplatz c
+kleiner als 1,43 Meter ist
+
+118
+00:08:08,013 --> 00:08:10,833
+und du kein Problem mit dem Rangieren hast?
+
+119
+00:08:11,413 --> 00:08:15,413
+Mathematisch gilt: Solange die Lücke auch nur
+minimal länger ist als dein Auto,
+
+120
+00:08:15,673 --> 00:08:18,183
+kannst du mit genügend Zügen
+immer einparken.
+
+121
+00:08:18,693 --> 00:08:21,583
+Verfolgt man den Mittelpunkt
+zwischen deinen beiden Hinterrädern,
+
+122
+00:08:21,913 --> 00:08:26,083
+folgt jeder Zug vor oder zurück
+zwei entgegengesetzten Kreisbögen
+
+123
+00:08:26,373 --> 00:08:29,983
+und bringt dich um das Doppelte von PA
+näher an den Bordstein —
+
+124
+00:08:30,133 --> 00:08:32,313
+wobei du stets rückwärts abschließen musst,
+
+125
+00:08:32,313 --> 00:08:34,933
+damit die vordere Stoßstange
+nie über den Gehweg schwenkt.
+
+126
+00:08:37,333 --> 00:08:41,893
+Schließlich, wenn du vorwärts in eine
+Parkbucht im Parkhaus einfährst
+
+127
+00:08:41,893 --> 00:08:44,883
+und deine vordere Ecke B
+entlang einer Geraden steuerst,
+
+128
+00:08:45,293 --> 00:08:49,283
+zieht deine hintere Ecke C eine klassische
+Kurve namens Traktrix —
+
+129
+00:08:49,493 --> 00:08:53,233
+und beweist, dass beim Parken überall
+die Geometrie am Steuer sitzt.

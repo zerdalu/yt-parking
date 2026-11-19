@@ -1,0 +1,611 @@
+1
+00:00:00,333 --> 00:00:02,683
+Você está dirigindo por uma rua movimentada
+
+2
+00:00:02,953 --> 00:00:05,833
+e finalmente encontra uma vaga
+entre dois carros estacionados.
+
+3
+00:00:06,273 --> 00:00:09,483
+A rua é larga, então você tem
+espaço de sobra para abrir a curva,
+
+4
+00:00:09,713 --> 00:00:13,283
+mas a vaga em si
+parece desconfortavelmente apertada.
+
+5
+00:00:14,153 --> 00:00:16,883
+Ninguém gosta de ficar manobrando para frente e para trás,
+
+6
+00:00:17,113 --> 00:00:20,533
+chegando perto do meio-fio
+alguns centímetros de cada vez.
+
+7
+00:00:20,933 --> 00:00:24,433
+Você quer entrar de ré na vaga
+em um único movimento suave
+
+8
+00:00:24,753 --> 00:00:26,233
+e puxar reto para frente para estacionar.
+
+9
+00:00:26,253 --> 00:00:28,933
+Então, eis a pergunta matemática:
+
+10
+00:00:29,393 --> 00:00:32,533
+De quanto comprimento extra,
+além do tamanho do seu próprio carro,
+
+11
+00:00:32,813 --> 00:00:34,733
+essa vaga realmente precisa?
+
+12
+00:00:35,933 --> 00:00:39,033
+Em 2009, o matemático Simon Blackburn
+
+13
+00:00:39,033 --> 00:00:43,683
+formulou um modelo preciso para o que
+chamou de manobra perfeita de baliza.
+
+14
+00:00:44,313 --> 00:00:48,283
+Primeiro, sem derrapar com o freio de mão
+nem fazer várias manobras curtas.
+
+15
+00:00:48,573 --> 00:00:53,133
+Você entra de ré na vaga com esterço total
+em um único arco contínuo,
+
+16
+00:00:53,413 --> 00:00:56,683
+parando no exato momento em que
+seu carro fica paralelo ao meio-fio.
+
+17
+00:00:57,113 --> 00:00:59,093
+Depois, você alinha as rodas dianteiras
+
+18
+00:00:59,093 --> 00:01:02,183
+e dirige reto para frente
+até o meio da vaga.
+
+19
+00:01:02,713 --> 00:01:04,633
+Para encontrar o espaço mínimo necessário,
+
+20
+00:01:04,973 --> 00:01:08,433
+só precisamos analisar a geometria
+dessa curva de entrada de ré.
+
+21
+00:01:10,533 --> 00:01:13,383
+Para transformar um carro real em geometria limpa,
+
+22
+00:01:14,073 --> 00:01:18,633
+imagine fatiar o veículo horizontalmente
+bem pelos centros das quatro rodas,
+
+23
+00:01:18,993 --> 00:01:20,683
+olhando diretamente de cima.
+
+24
+00:01:21,193 --> 00:01:24,283
+A parte externa da carroceria
+forma um retângulo simples,
+
+25
+00:01:24,653 --> 00:01:26,933
+rotulado A, B, C, D.
+
+26
+00:01:27,393 --> 00:01:31,883
+O meio-fio segue a linha reta
+que passa por A, E, F e D.
+
+27
+00:01:32,173 --> 00:01:35,783
+Ou, se você preferir nunca raspar
+suas rodas de liga leve no concreto,
+
+28
+00:01:36,093 --> 00:01:39,573
+uma linha imaginária alguns centímetros
+à esquerda do meio-fio.
+
+29
+00:01:39,573 --> 00:01:43,933
+Note que as rodas do lado do meio-fio,
+centradas nos pontos E e F,
+
+30
+00:01:44,253 --> 00:01:47,483
+ficam bem alinhadas com a borda direita
+A–D do carro.
+
+31
+00:01:49,133 --> 00:01:52,033
+Como um carro realmente gira
+ao andar de ré?
+
+32
+00:01:52,573 --> 00:01:55,733
+Suas rodas traseiras são fixas e paralelas
+às laterais do carro.
+
+33
+00:01:56,113 --> 00:02:00,053
+Isso significa que a linha imaginária que passa
+pelos centros das duas rodas traseiras
+
+34
+00:02:00,053 --> 00:02:04,783
+deve sempre apontar direto para o centro
+do círculo de giro, chamado X.
+
+35
+00:02:05,333 --> 00:02:06,633
+E quanto às rodas dianteiras?
+
+36
+00:02:07,093 --> 00:02:11,413
+Como a roda dianteira interna percorre
+um círculo mais fechado que a externa,
+
+37
+00:02:11,693 --> 00:02:15,233
+ela precisa virar em um ângulo maior
+para não arrastar de lado.
+
+38
+00:02:15,793 --> 00:02:17,493
+Isso se chama direção de Ackermann —
+
+39
+00:02:17,493 --> 00:02:21,133
+patenteada em 1818
+para carruagens puxadas por cavalos.
+
+40
+00:02:21,573 --> 00:02:24,733
+Quando todas as linhas dos eixos
+se encontram em um único ponto X,
+
+41
+00:02:25,013 --> 00:02:27,933
+cada parte do carro
+gira suavemente em torno de X.
+
+42
+00:02:29,733 --> 00:02:34,083
+Blackburn escolheu quatro medidas para sua fórmula
+que você encontra fácil na internet,
+
+43
+00:02:34,493 --> 00:02:36,433
+ou pode medir com uma trena.
+
+44
+00:02:36,873 --> 00:02:40,373
+Primeiro está r — o raio do círculo de giro
+entre meios-fios do seu carro,
+
+45
+00:02:40,373 --> 00:02:45,383
+que é a distância da roda dianteira E
+até o centro de giro X.
+
+46
+00:02:45,933 --> 00:02:50,983
+Segundo está l — a distância entre-eixos
+entre a roda dianteira E e a traseira F.
+
+47
+00:02:51,473 --> 00:02:57,073
+Terceiro está k — o balanço dianteiro da
+roda E até o canto do para-choque A.
+
+48
+00:02:57,073 --> 00:03:02,733
+E quarto está w — a largura GH
+do carro estacionado à sua frente.
+
+49
+00:03:03,193 --> 00:03:06,183
+Nosso objetivo é encontrar
+a distância extra AH.
+
+50
+00:03:08,333 --> 00:03:13,083
+Antes de entrarmos na demonstração,
+aqui está a fórmula exata que vamos construir.
+
+51
+00:03:13,633 --> 00:03:17,013
+À primeira vista, raízes quadradas aninhadas
+podem parecer intimidadoras,
+
+52
+00:03:17,353 --> 00:03:22,513
+mas cada pedaço dentro desta expressão
+vem diretamente do teorema de Pitágoras
+
+53
+00:03:22,513 --> 00:03:25,083
+aplicado a três triângulos retângulos.
+
+54
+00:03:25,793 --> 00:03:30,083
+Vamos congelar a manobra de baliza
+em seu instante mais crítico e ver o porquê.
+
+55
+00:03:32,933 --> 00:03:37,683
+Olhe diretamente de cima, bem quando
+terminamos de entrar de ré paralelos ao meio-fio.
+
+56
+00:03:38,293 --> 00:03:44,483
+Conforme o carro dá ré ao redor de X, as rodas
+em E e F percorrem os dois círculos tracejados.
+
+57
+00:03:44,913 --> 00:03:49,213
+Enquanto isso, o canto dianteiro direito A
+do nosso carro varre o círculo externo.
+
+58
+00:03:49,633 --> 00:03:51,853
+Na vaga mais apertada possível,
+
+59
+00:03:52,033 --> 00:03:56,333
+esse canto A passará raspando pelo
+canto G do carro estacionado na frente.
+
+60
+00:03:56,913 --> 00:04:00,973
+Como o canto A passa bem pelo ponto G
+ao longo desse círculo externo,
+
+61
+00:04:00,973 --> 00:04:05,533
+tanto A quanto G estão exatamente
+à mesma distância do centro X.
+
+62
+00:04:07,533 --> 00:04:12,083
+O passo 1 da nossa prova foca
+no triângulo retângulo EFX.
+
+63
+00:04:12,593 --> 00:04:16,173
+Como a linha do eixo traseiro vai reta
+até o centro de giro X
+
+64
+00:04:16,173 --> 00:04:20,933
+em ângulo reto com a lateral do carro,
+o ângulo em F é de 90 graus.
+
+65
+00:04:21,573 --> 00:04:25,233
+Sabemos que a hipotenusa EX
+é o raio de giro r,
+
+66
+00:04:25,373 --> 00:04:28,883
+e o lado vertical EF
+é o entre-eixos l.
+
+67
+00:04:29,513 --> 00:04:33,593
+Aplicar o teorema de Pitágoras nos dá
+a distância horizontal FX —
+
+68
+00:04:33,593 --> 00:04:36,933
+a raiz quadrada de r² menos l².
+
+69
+00:04:39,133 --> 00:04:44,213
+Para o passo dois, olhe para o triângulo
+retângulo mais alto, AFX.
+
+70
+00:04:44,693 --> 00:04:50,233
+Seu lado vertical AF é simplesmente
+o entre-eixos l mais o balanço dianteiro k,
+
+71
+00:04:50,613 --> 00:04:53,433
+e já achamos a base FX no passo um.
+
+72
+00:04:53,893 --> 00:04:56,133
+Usar o teorema de Pitágoras pela segunda vez
+
+73
+00:04:56,133 --> 00:05:00,233
+nos dá a hipotenusa AX,
+o raio do círculo externo.
+
+74
+00:05:00,713 --> 00:05:03,183
+E isso leva direto ao passo três.
+
+75
+00:05:03,633 --> 00:05:06,413
+Como o ponto G fica exatamente nesse mesmo círculo,
+
+76
+00:05:06,413 --> 00:05:09,583
+a distância GX é idêntica a AX.
+
+77
+00:05:11,733 --> 00:05:16,583
+Agora o passo quatro — a construção
+geométrica-chave mostrada na Figura 3.
+
+78
+00:05:17,073 --> 00:05:21,553
+Traçamos uma linha reta para baixo desde G,
+paralela ao meio-fio,
+
+79
+00:05:21,753 --> 00:05:26,083
+até encontrar a horizontal FX
+em um novo ponto, K.
+
+80
+00:05:26,593 --> 00:05:30,573
+No passo cinco, note que a distância
+FK na parte de baixo
+
+81
+00:05:30,573 --> 00:05:34,083
+é igual à largura w
+do carro estacionado no topo.
+
+82
+00:05:34,553 --> 00:05:37,233
+Como já sabemos o comprimento total FX,
+
+83
+00:05:37,233 --> 00:05:41,783
+o segmento restante KX é simplesmente FX menos w.
+
+84
+00:05:44,333 --> 00:05:48,433
+No passo seis, aplicamos o teorema
+de Pitágoras uma última vez,
+
+85
+00:05:48,713 --> 00:05:51,583
+ao triângulo retângulo GKX.
+
+86
+00:05:51,993 --> 00:05:57,933
+Sabemos a hipotenusa GX do passo três,
+e sabemos a base KX do passo cinco.
+
+87
+00:05:58,393 --> 00:06:03,283
+Subtraindo seus quadrados e tirando a raiz
+quadrada obtemos a altura vertical GK.
+
+88
+00:06:03,773 --> 00:06:05,433
+Por fim, o passo sete.
+
+89
+00:06:05,773 --> 00:06:11,173
+A altura vertical GK tem o mesmo
+comprimento que HF ao longo do meio-fio.
+
+90
+00:06:11,173 --> 00:06:14,883
+Subtraia o entre-eixos l
+e o balanço dianteiro k,
+
+91
+00:06:15,233 --> 00:06:19,533
+e o que sobra é AH —
+o espaço extra exato de que precisamos.
+
+92
+00:06:21,933 --> 00:06:24,583
+Vamos colocar números realistas
+na fórmula.
+
+93
+00:06:25,253 --> 00:06:29,833
+Suponha que seu carro tenha um diâmetro de giro
+entre meios-fios de 10,8 metros,
+
+94
+00:06:30,393 --> 00:06:33,383
+o que significa que o raio r é 5,4 metros.
+
+95
+00:06:34,053 --> 00:06:40,053
+Digamos que o entre-eixos l seja 2,6 metros,
+o balanço dianteiro k seja 1,3 metro,
+
+96
+00:06:40,333 --> 00:06:44,433
+e o carro estacionado à frente
+tenha largura w de 1,7 metro.
+
+97
+00:06:44,913 --> 00:06:49,933
+Ao fazer essas contas, a fórmula
+diz que a vaga deve ter pelo menos
+
+98
+00:06:49,933 --> 00:06:53,283
+o comprimento do seu carro mais 1,43 metro.
+
+99
+00:06:55,533 --> 00:06:59,733
+Olhando bem para a fórmula,
+você pode notar algo surpreendente:
+
+100
+00:07:00,513 --> 00:07:03,533
+Ela depende da largura w
+do carro estacionado à frente,
+
+101
+00:07:03,913 --> 00:07:06,833
+mas não inclui a largura
+do seu próprio carro de jeito nenhum.
+
+102
+00:07:07,293 --> 00:07:07,783
+Por quê?
+
+103
+00:07:08,193 --> 00:07:11,133
+Porque em uma baliza de giro único
+em uma rua larga,
+
+104
+00:07:11,353 --> 00:07:15,983
+o ponto crítico é o canto dianteiro A
+passar raspando pelo ponto G.
+
+105
+00:07:16,393 --> 00:07:20,713
+Deixar seu carro mais largo empurra
+a borda BC para mais perto do centro X,
+
+106
+00:07:20,993 --> 00:07:22,893
+sem mudar a trajetória do canto A.
+
+107
+00:07:22,893 --> 00:07:27,583
+Na vida real, claro, um carro mais largo
+faz diferença em ruas estreitas,
+
+108
+00:07:27,833 --> 00:07:29,683
+ou quando é preciso manobrar para frente e para trás.
+
+109
+00:07:32,133 --> 00:07:34,933
+E se você fizer baliza
+usando outro método —
+
+110
+00:07:35,273 --> 00:07:37,583
+apontando o carro para
+o meio-fio em ângulo,
+
+111
+00:07:37,753 --> 00:07:41,883
+dando ré em linha reta e esterçando
+tudo no último instante?
+
+112
+00:07:42,453 --> 00:07:45,633
+A geometria de Blackburn ainda indica
+o melhor ângulo de aproximação.
+
+113
+00:07:46,053 --> 00:07:49,683
+Você aplica esterço total bem quando
+o canto A passa pelo ponto G,
+
+114
+00:07:49,973 --> 00:07:52,983
+colocando seu carro exatamente
+no mesmo círculo de giro.
+
+115
+00:07:53,413 --> 00:07:58,153
+O ângulo ideal de aproximação é apenas
+o ângulo que a tangente ao círculo em G
+
+116
+00:07:58,153 --> 00:08:01,483
+forma com o meio-fio,
+menos o ângulo da tangente em A.
+
+117
+00:08:03,733 --> 00:08:08,013
+E se o espaço extra c
+for menor que 1,43 metro
+
+118
+00:08:08,013 --> 00:08:10,833
+e você não se importar em manobrar várias vezes?
+
+119
+00:08:11,413 --> 00:08:15,413
+Matematicamente, desde que a vaga seja
+só um pouco maior que o seu carro,
+
+120
+00:08:15,673 --> 00:08:18,183
+sempre é possível estacionar
+usando movimentos suficientes.
+
+121
+00:08:18,693 --> 00:08:21,583
+Acompanhando o ponto médio
+entre as duas rodas traseiras,
+
+122
+00:08:21,913 --> 00:08:26,083
+cada movimento para frente ou para trás
+segue dois arcos circulares opostos,
+
+123
+00:08:26,373 --> 00:08:29,983
+aproximando você do meio-fio
+por uma distância igual ao dobro de PA —
+
+124
+00:08:30,133 --> 00:08:32,313
+embora sempre seja preciso terminar de ré
+
+125
+00:08:32,313 --> 00:08:34,933
+para que seu para-choque dianteiro
+nunca invada a calçada.
+
+126
+00:08:37,333 --> 00:08:41,893
+Por fim, se você entrar de frente em uma
+vaga de um edifício-garagem de vários andares
+
+127
+00:08:41,893 --> 00:08:44,883
+guiando seu canto dianteiro B
+ao longo de uma linha reta,
+
+128
+00:08:45,293 --> 00:08:49,283
+seu canto traseiro C traça uma curva
+clássica chamada tratriz,
+
+129
+00:08:49,493 --> 00:08:53,233
+provando que, onde quer que você estacione,
+a geometria está no banco do motorista.

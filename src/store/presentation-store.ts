@@ -10,6 +10,19 @@ export const SlidePhaseModes = {
 
 export type SlidePhaseMode = (typeof SlidePhaseModes)[keyof typeof SlidePhaseModes];
 
+export const TransitionKinds = {
+  Idle: "idle",
+  Exiting: "exiting",
+} as const;
+
+export type SlideTransition =
+  | { readonly kind: typeof TransitionKinds.Idle }
+  | {
+      readonly kind: typeof TransitionKinds.Exiting;
+      readonly targetSlideIndex: number;
+      readonly autoPlayAfter: boolean;
+    };
+
 export interface SlideMetadata {
   readonly index: number;
   readonly numberLabel: string;
@@ -18,7 +31,11 @@ export interface SlideMetadata {
   readonly durationSeconds: number;
   readonly cumulativeStart: string;
   readonly cumulativeEnd: string;
+  readonly isPresentationSlide: boolean;
 }
+
+export const PRESENTATION_SLIDE_COUNT = 16;
+export const THUMBNAIL_SLIDE_INDEX = 16;
 
 export const SLIDES_METADATA: readonly SlideMetadata[] = [
   {
@@ -29,6 +46,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 35,
     cumulativeStart: "00:00",
     cumulativeEnd: "00:35",
+    isPresentationSlide: true,
   },
   {
     index: 1,
@@ -38,6 +56,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 34,
     cumulativeStart: "00:35",
     cumulativeEnd: "01:09",
+    isPresentationSlide: true,
   },
   {
     index: 2,
@@ -47,6 +66,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 38,
     cumulativeStart: "01:09",
     cumulativeEnd: "01:47",
+    isPresentationSlide: true,
   },
   {
     index: 3,
@@ -56,6 +76,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 40,
     cumulativeStart: "01:47",
     cumulativeEnd: "02:27",
+    isPresentationSlide: true,
   },
   {
     index: 4,
@@ -65,6 +86,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 38,
     cumulativeStart: "02:27",
     cumulativeEnd: "03:05",
+    isPresentationSlide: true,
   },
   {
     index: 5,
@@ -74,6 +96,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 24,
     cumulativeStart: "03:05",
     cumulativeEnd: "03:29",
+    isPresentationSlide: true,
   },
   {
     index: 6,
@@ -83,6 +106,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 34,
     cumulativeStart: "03:29",
     cumulativeEnd: "04:03",
+    isPresentationSlide: true,
   },
   {
     index: 7,
@@ -92,6 +116,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 31,
     cumulativeStart: "04:03",
     cumulativeEnd: "04:34",
+    isPresentationSlide: true,
   },
   {
     index: 8,
@@ -101,6 +126,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 32,
     cumulativeStart: "04:34",
     cumulativeEnd: "05:06",
+    isPresentationSlide: true,
   },
   {
     index: 9,
@@ -110,6 +136,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 32,
     cumulativeStart: "05:06",
     cumulativeEnd: "05:38",
+    isPresentationSlide: true,
   },
   {
     index: 10,
@@ -119,6 +146,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 37,
     cumulativeStart: "05:38",
     cumulativeEnd: "06:15",
+    isPresentationSlide: true,
   },
   {
     index: 11,
@@ -128,6 +156,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 33,
     cumulativeStart: "06:15",
     cumulativeEnd: "06:48",
+    isPresentationSlide: true,
   },
   {
     index: 12,
@@ -137,6 +166,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 36,
     cumulativeStart: "06:48",
     cumulativeEnd: "07:24",
+    isPresentationSlide: true,
   },
   {
     index: 13,
@@ -146,6 +176,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 31,
     cumulativeStart: "07:24",
     cumulativeEnd: "07:55",
+    isPresentationSlide: true,
   },
   {
     index: 14,
@@ -155,6 +186,7 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 33,
     cumulativeStart: "07:55",
     cumulativeEnd: "08:28",
+    isPresentationSlide: true,
   },
   {
     index: 15,
@@ -164,12 +196,25 @@ export const SLIDES_METADATA: readonly SlideMetadata[] = [
     durationSeconds: 18,
     cumulativeStart: "08:28",
     cumulativeEnd: "08:46",
+    isPresentationSlide: true,
+  },
+  {
+    index: 16,
+    numberLabel: "TH",
+    title: "YouTube Thumbnail",
+    subtitle: "Static 16:9 thumbnail composition for full-screen capture",
+    durationSeconds: 0,
+    cumulativeStart: "—",
+    cumulativeEnd: "—",
+    isPresentationSlide: false,
   },
 ];
 
 const LAST_SLIDE_STORAGE_KEY = "parking:last-slide-index";
+const CONTINUOUS_PLAYBACK_STORAGE_KEY = "parking:continuous-playback";
 
 const StoredSlideIndexSchema = v.pipe(v.number(), v.integer(), v.minValue(0));
+const StoredBooleanSchema = v.boolean();
 
 function readInitialSlideIndex(): number {
   if (typeof window === "undefined") {
@@ -207,16 +252,53 @@ function saveLastSlideIndex(index: number): void {
   }
 }
 
+function readInitialContinuousPlayback(): boolean {
+  if (typeof window === "undefined") {
+    return true;
+  }
+  try {
+    const rawValue: string | null = window.localStorage.getItem(CONTINUOUS_PLAYBACK_STORAGE_KEY);
+    if (rawValue === null) {
+      return true;
+    }
+    const parsedJson: unknown = JSON.parse(rawValue);
+    const result = v.safeParse(StoredBooleanSchema, parsedJson);
+    return result.success ? result.output : true;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.warn("Failed to read continuous playback preference from localStorage:", error.message);
+    }
+    return true;
+  }
+}
+
+function saveContinuousPlayback(enabled: boolean): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(CONTINUOUS_PLAYBACK_STORAGE_KEY, JSON.stringify(enabled));
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.warn("Failed to save continuous playback preference to localStorage:", error.message);
+    }
+  }
+}
+
 export interface PresentationState {
   readonly currentSlideIndex: number;
   readonly isPlaying: boolean;
+  readonly isContinuousPlayback: boolean;
   readonly elapsedSeconds: number;
   readonly replayGeneration: number;
   readonly isHudVisible: boolean;
   readonly phaseMode: SlidePhaseMode;
+  readonly transition: SlideTransition;
   readonly setSlideIndex: (index: number) => void;
+  readonly completeSlideTransition: () => void;
   readonly togglePlay: () => void;
   readonly setPlaying: (playing: boolean) => void;
+  readonly toggleContinuousPlayback: () => void;
   readonly tickElapsed: (deltaSeconds: number) => void;
   readonly seekTo: (seconds: number) => void;
   readonly restartSlide: () => void;
@@ -224,30 +306,74 @@ export interface PresentationState {
   readonly setPhaseMode: (mode: SlidePhaseMode) => void;
 }
 
+const initialSlideIndex = readInitialSlideIndex();
+const initialIsPresentationSlide = SLIDES_METADATA[initialSlideIndex]?.isPresentationSlide ?? true;
+
 export const usePresentationStore = create<PresentationState>((set) => ({
-  currentSlideIndex: readInitialSlideIndex(),
-  isPlaying: true,
+  currentSlideIndex: initialSlideIndex,
+  isPlaying: initialIsPresentationSlide,
+  isContinuousPlayback: readInitialContinuousPlayback(),
   elapsedSeconds: 0,
   replayGeneration: 0,
   isHudVisible: true,
   phaseMode: SlidePhaseModes.Auto,
+  transition: { kind: TransitionKinds.Idle },
 
   setSlideIndex: (index: number): void => {
     const safeIndex = Math.max(0, Math.min(index, SLIDES_METADATA.length - 1));
-    saveLastSlideIndex(safeIndex);
-    set((state) => ({
-      currentSlideIndex: safeIndex,
-      elapsedSeconds: 0,
-      isPlaying: true,
-      phaseMode: SlidePhaseModes.Auto,
-      replayGeneration: state.replayGeneration + 1,
-    }));
+    const targetMeta = SLIDES_METADATA[safeIndex];
+    const shouldAutoPlay = targetMeta ? targetMeta.isPresentationSlide : false;
+
+    set((state) => {
+      if (safeIndex === state.currentSlideIndex && state.transition.kind === TransitionKinds.Idle) {
+        return {
+          elapsedSeconds: 0,
+          isPlaying: shouldAutoPlay,
+          phaseMode: SlidePhaseModes.Auto,
+          replayGeneration: state.replayGeneration + 1,
+        };
+      }
+      return {
+        transition: {
+          kind: TransitionKinds.Exiting,
+          targetSlideIndex: safeIndex,
+          autoPlayAfter: shouldAutoPlay,
+        },
+      };
+    });
+  },
+
+  completeSlideTransition: (): void => {
+    set((state) => {
+      if (state.transition.kind !== TransitionKinds.Exiting) {
+        return state;
+      }
+      const nextIndex = state.transition.targetSlideIndex;
+      saveLastSlideIndex(nextIndex);
+      return {
+        currentSlideIndex: nextIndex,
+        elapsedSeconds: 0,
+        isPlaying: state.transition.autoPlayAfter,
+        phaseMode: SlidePhaseModes.Auto,
+        transition: { kind: TransitionKinds.Idle },
+        replayGeneration: state.replayGeneration + 1,
+      };
+    });
   },
 
   togglePlay: (): void => {
     set((state) => {
+      if (state.transition.kind === TransitionKinds.Exiting) {
+        return {
+          isPlaying: false,
+          transition: { kind: TransitionKinds.Idle },
+        };
+      }
       const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
-      if (!state.isPlaying && currentMeta && state.elapsedSeconds >= currentMeta.durationSeconds) {
+      if (!currentMeta || !currentMeta.isPresentationSlide) {
+        return { isPlaying: false };
+      }
+      if (!state.isPlaying && state.elapsedSeconds >= currentMeta.durationSeconds) {
         return {
           isPlaying: true,
           elapsedSeconds: 0,
@@ -263,15 +389,39 @@ export const usePresentationStore = create<PresentationState>((set) => ({
     set({ isPlaying: playing });
   },
 
+  toggleContinuousPlayback: (): void => {
+    set((state) => {
+      const next = !state.isContinuousPlayback;
+      saveContinuousPlayback(next);
+      return { isContinuousPlayback: next };
+    });
+  },
+
   tickElapsed: (deltaSeconds: number): void => {
     set((state) => {
       if (!state.isPlaying || state.phaseMode !== SlidePhaseModes.Auto) {
         return state;
       }
+      if (state.transition.kind !== TransitionKinds.Idle) {
+        return state;
+      }
       const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
-      const maxDuration = currentMeta ? currentMeta.durationSeconds : 35;
+      if (!currentMeta || !currentMeta.isPresentationSlide) {
+        return { isPlaying: false };
+      }
+      const maxDuration = currentMeta.durationSeconds;
       const nextElapsed = state.elapsedSeconds + deltaSeconds;
       if (nextElapsed >= maxDuration) {
+        if (state.isContinuousPlayback && state.currentSlideIndex < PRESENTATION_SLIDE_COUNT - 1) {
+          return {
+            elapsedSeconds: maxDuration,
+            transition: {
+              kind: TransitionKinds.Exiting,
+              targetSlideIndex: state.currentSlideIndex + 1,
+              autoPlayAfter: true,
+            },
+          };
+        }
         return {
           elapsedSeconds: maxDuration,
           isPlaying: false,
@@ -286,22 +436,31 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   seekTo: (seconds: number): void => {
     set((state) => {
       const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
-      const maxDuration = currentMeta ? currentMeta.durationSeconds : 35;
+      if (!currentMeta || !currentMeta.isPresentationSlide) {
+        return state;
+      }
+      const maxDuration = currentMeta.durationSeconds;
       const clamped = Math.max(0, Math.min(seconds, maxDuration));
       return {
         elapsedSeconds: clamped,
         phaseMode: SlidePhaseModes.Auto,
+        transition: { kind: TransitionKinds.Idle },
       };
     });
   },
 
   restartSlide: (): void => {
-    set((state) => ({
-      elapsedSeconds: 0,
-      isPlaying: true,
-      phaseMode: SlidePhaseModes.Auto,
-      replayGeneration: state.replayGeneration + 1,
-    }));
+    set((state) => {
+      const currentMeta = SLIDES_METADATA[state.currentSlideIndex] ?? SLIDES_METADATA[0];
+      const shouldAutoPlay = currentMeta ? currentMeta.isPresentationSlide : false;
+      return {
+        elapsedSeconds: 0,
+        isPlaying: shouldAutoPlay,
+        phaseMode: SlidePhaseModes.Auto,
+        transition: { kind: TransitionKinds.Idle },
+        replayGeneration: state.replayGeneration + 1,
+      };
+    });
   },
 
   toggleHud: (): void => {
@@ -315,6 +474,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
           phaseMode: SlidePhaseModes.Auto,
           elapsedSeconds: 0,
           isPlaying: true,
+          transition: { kind: TransitionKinds.Idle },
           replayGeneration: state.replayGeneration + 1,
         };
       }
@@ -323,6 +483,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
         phaseMode: mode,
         elapsedSeconds: phaseTimestamp,
         isPlaying: true,
+        transition: { kind: TransitionKinds.Idle },
       };
     });
   },

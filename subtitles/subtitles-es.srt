@@ -1,0 +1,611 @@
+1
+00:00:00,333 --> 00:00:02,683
+Conduces por una calle concurrida
+
+2
+00:00:02,953 --> 00:00:05,833
+y por fin encuentras un hueco
+entre dos autos estacionados.
+
+3
+00:00:06,273 --> 00:00:09,483
+La calzada es ancha, así que tienes
+espacio de sobra para abrirte,
+
+4
+00:00:09,713 --> 00:00:13,283
+pero el hueco en sí
+parece incómodamente justo.
+
+5
+00:00:14,153 --> 00:00:16,883
+A nadie le gusta maniobrar adelante y atrás,
+
+6
+00:00:17,113 --> 00:00:20,533
+acercándose al bordillo
+unos pocos centímetros cada vez.
+
+7
+00:00:20,933 --> 00:00:24,433
+Quieres entrar marcha atrás en el hueco
+de una sola pasada suave
+
+8
+00:00:24,753 --> 00:00:26,233
+y avanzar recto para quedar estacionado.
+
+9
+00:00:26,253 --> 00:00:28,933
+Así que la pregunta matemática es:
+
+10
+00:00:29,393 --> 00:00:32,533
+¿Cuánta longitud extra,
+más allá del largo de tu propio auto,
+
+11
+00:00:32,813 --> 00:00:34,733
+necesita realmente ese espacio?
+
+12
+00:00:35,933 --> 00:00:39,033
+En 2009, el matemático Simon Blackburn
+
+13
+00:00:39,033 --> 00:00:43,683
+formuló un modelo preciso para lo que
+llamó una maniobra perfecta de aparcamiento.
+
+14
+00:00:44,313 --> 00:00:48,283
+Primero, sin derrapar con el freno de mano
+ni hacer múltiples maniobras.
+
+15
+00:00:48,573 --> 00:00:53,133
+Entras marcha atrás con la dirección al tope
+en un único arco continuo,
+
+16
+00:00:53,413 --> 00:00:56,683
+deteniéndote en el instante exacto
+en que tu auto queda paralelo al bordillo.
+
+17
+00:00:57,113 --> 00:00:59,093
+Luego, enderezas las ruedas delanteras
+
+18
+00:00:59,093 --> 00:01:02,183
+y avanzas en línea recta
+hasta el centro del espacio.
+
+19
+00:01:02,713 --> 00:01:04,633
+Para hallar el espacio mínimo necesario,
+
+20
+00:01:04,973 --> 00:01:08,433
+solo debemos analizar la geometría
+de ese giro en marcha atrás.
+
+21
+00:01:10,533 --> 00:01:13,383
+Para convertir un auto real en geometría pura,
+
+22
+00:01:14,073 --> 00:01:18,633
+imagina cortar el vehículo horizontalmente
+justo por los centros de sus cuatro ruedas,
+
+23
+00:01:18,993 --> 00:01:20,683
+mirando directamente desde arriba.
+
+24
+00:01:21,193 --> 00:01:24,283
+El contorno exterior máximo
+forma un simple rectángulo,
+
+25
+00:01:24,653 --> 00:01:26,933
+etiquetado A, B, C, D.
+
+26
+00:01:27,393 --> 00:01:31,883
+El bordillo sigue la línea recta
+que pasa por A, E, F y D.
+
+27
+00:01:32,173 --> 00:01:35,783
+O, si prefieres no rayar jamás
+tus llantas de aleación contra el concreto,
+
+28
+00:01:36,093 --> 00:01:39,573
+una línea imaginaria unos centímetros
+a la izquierda del bordillo.
+
+29
+00:01:39,573 --> 00:01:43,933
+Observa que las ruedas del lado del bordillo,
+centradas en los puntos E y F,
+
+30
+00:01:44,253 --> 00:01:47,483
+se alinean muy cerca del borde derecho
+A–D del auto.
+
+31
+00:01:49,133 --> 00:01:52,033
+¿Cómo gira realmente un auto
+al dar marcha atrás?
+
+32
+00:01:52,573 --> 00:01:55,733
+Sus ruedas traseras están fijas y paralelas
+a los costados del vehículo.
+
+33
+00:01:56,113 --> 00:02:00,053
+Eso implica que la línea imaginaria que pasa
+por ambos centros de las ruedas traseras
+
+34
+00:02:00,053 --> 00:02:04,783
+debe apuntar siempre directamente al centro
+del círculo de giro, llamado X.
+
+35
+00:02:05,333 --> 00:02:06,633
+¿Y qué ocurre con las ruedas delanteras?
+
+36
+00:02:07,093 --> 00:02:11,413
+Como la rueda delantera interior recorre
+un círculo más cerrado que la exterior,
+
+37
+00:02:11,693 --> 00:02:15,233
+debe girar en un ángulo más pronunciado
+para evitar arrastrarse de lado.
+
+38
+00:02:15,793 --> 00:02:17,493
+Esto se llama dirección Ackermann —
+
+39
+00:02:17,493 --> 00:02:21,133
+patentada en 1818
+para carruajes tirados por caballos.
+
+40
+00:02:21,573 --> 00:02:24,733
+Cuando las líneas de todos los ejes
+se cruzan en un único punto X,
+
+41
+00:02:25,013 --> 00:02:27,933
+cada parte del auto
+gira limpiamente alrededor de X.
+
+42
+00:02:29,733 --> 00:02:34,083
+Blackburn eligió cuatro medidas para su fórmula
+que puedes consultar fácilmente en línea,
+
+43
+00:02:34,493 --> 00:02:36,433
+o medir tú mismo con una cinta métrica.
+
+44
+00:02:36,873 --> 00:02:40,373
+Primero está r — el radio del círculo de giro
+entre bordillos de tu auto,
+
+45
+00:02:40,373 --> 00:02:45,383
+que es la distancia desde la rueda delantera E
+hasta el centro de giro X.
+
+46
+00:02:45,933 --> 00:02:50,983
+Segundo está l — la distancia entre ejes
+entre la rueda delantera E y la trasera F.
+
+47
+00:02:51,473 --> 00:02:57,073
+Tercero está k — el voladizo delantero desde
+la rueda E hasta la esquina del parachoques A.
+
+48
+00:02:57,073 --> 00:03:02,733
+Y cuarto está w — el ancho GH
+del auto estacionado delante de ti.
+
+49
+00:03:03,193 --> 00:03:06,183
+Nuestro objetivo es hallar
+la distancia extra AH.
+
+50
+00:03:08,333 --> 00:03:13,083
+Antes de entrar en la demostración,
+esta es la fórmula exacta que construiremos.
+
+51
+00:03:13,633 --> 00:03:17,013
+A primera vista, estas raíces cuadradas
+anidadas pueden parecer intimidantes,
+
+52
+00:03:17,353 --> 00:03:22,513
+pero cada parte dentro de esta expresión
+proviene directamente del teorema de Pitágoras
+
+53
+00:03:22,513 --> 00:03:25,083
+aplicado a tres triángulos rectángulos.
+
+54
+00:03:25,793 --> 00:03:30,083
+Congelemos la maniobra de aparcamiento
+en su instante más crítico y veamos por qué.
+
+55
+00:03:32,933 --> 00:03:37,683
+Mira directamente desde arriba, justo cuando
+terminamos de retroceder paralelos al bordillo.
+
+56
+00:03:38,293 --> 00:03:44,483
+Al girar el auto alrededor de X, las ruedas
+en E y F recorren los dos círculos discontinuos.
+
+57
+00:03:44,913 --> 00:03:49,213
+Mientras tanto, la esquina delantera derecha A
+barre a lo largo del círculo exterior.
+
+58
+00:03:49,633 --> 00:03:51,853
+En el espacio más ajustado posible,
+
+59
+00:03:52,033 --> 00:03:56,333
+esa esquina A rozará por muy poco
+la esquina G del auto aparcado delante.
+
+60
+00:03:56,913 --> 00:04:00,973
+Como la esquina A pasa justo por el punto G
+a lo largo de ese círculo exterior,
+
+61
+00:04:00,973 --> 00:04:05,533
+tanto A como G están exactamente
+a la misma distancia del centro X.
+
+62
+00:04:07,533 --> 00:04:12,083
+El paso 1 de nuestra prueba se centra
+en el triángulo rectángulo EFX.
+
+63
+00:04:12,593 --> 00:04:16,173
+Como la línea del eje trasero pasa recta
+por el centro de giro X
+
+64
+00:04:16,173 --> 00:04:20,933
+formando ángulo recto con el costado del auto,
+el ángulo en F mide 90 grados.
+
+65
+00:04:21,573 --> 00:04:25,233
+Sabemos que la hipotenusa EX
+es el radio de giro r,
+
+66
+00:04:25,373 --> 00:04:28,883
+y el cateto vertical EF
+es la distancia entre ejes l.
+
+67
+00:04:29,513 --> 00:04:33,593
+Aplicar el teorema de Pitágoras nos da
+la distancia horizontal FX —
+
+68
+00:04:33,593 --> 00:04:36,933
+la raíz cuadrada de r² menos l².
+
+69
+00:04:39,133 --> 00:04:44,213
+Para el paso dos, observa el triángulo
+rectángulo más alto, AFX.
+
+70
+00:04:44,693 --> 00:04:50,233
+Su lado vertical AF es simplemente
+la batalla l más el voladizo delantero k,
+
+71
+00:04:50,613 --> 00:04:53,433
+y ya hallamos la base FX en el paso uno.
+
+72
+00:04:53,893 --> 00:04:56,133
+Usar el teorema de Pitágoras por segunda vez
+
+73
+00:04:56,133 --> 00:05:00,233
+nos da la hipotenusa AX,
+el radio del círculo exterior.
+
+74
+00:05:00,713 --> 00:05:03,183
+Y eso nos lleva de inmediato al paso tres.
+
+75
+00:05:03,633 --> 00:05:06,413
+Como el punto G está en ese mismo círculo,
+
+76
+00:05:06,413 --> 00:05:09,583
+la distancia GX es idéntica a AX.
+
+77
+00:05:11,733 --> 00:05:16,583
+Ahora el paso cuatro — la construcción
+geométrica clave de la Figura 3.
+
+78
+00:05:17,073 --> 00:05:21,553
+Trazamos una nueva línea recta desde G,
+paralela al bordillo,
+
+79
+00:05:21,753 --> 00:05:26,083
+hasta cortar la horizontal FX
+en un nuevo punto, K.
+
+80
+00:05:26,593 --> 00:05:30,573
+En el paso cinco, observa que la distancia
+FK en la parte inferior
+
+81
+00:05:30,573 --> 00:05:34,083
+es igual al ancho w
+del auto aparcado arriba.
+
+82
+00:05:34,553 --> 00:05:37,233
+Como ya conocemos la longitud total FX,
+
+83
+00:05:37,233 --> 00:05:41,783
+el segmento restante KX es simplemente FX menos w.
+
+84
+00:05:44,333 --> 00:05:48,433
+En el paso seis, aplicamos el teorema
+de Pitágoras una última vez,
+
+85
+00:05:48,713 --> 00:05:51,583
+al triángulo rectángulo GKX.
+
+86
+00:05:51,993 --> 00:05:57,933
+Conocemos la hipotenusa GX del paso tres,
+y conocemos la base KX del paso cinco.
+
+87
+00:05:58,393 --> 00:06:03,283
+Restando sus cuadrados y sacando la raíz
+cuadrada obtenemos la altura vertical GK.
+
+88
+00:06:03,773 --> 00:06:05,433
+Por último, el paso siete.
+
+89
+00:06:05,773 --> 00:06:11,173
+La altura vertical GK mide exactamente
+lo mismo que HF a lo largo del bordillo.
+
+90
+00:06:11,173 --> 00:06:14,883
+Resta la distancia entre ejes l
+y el voladizo delantero k,
+
+91
+00:06:15,233 --> 00:06:19,533
+y lo que queda es AH —
+el espacio extra exacto que necesitamos.
+
+92
+00:06:21,933 --> 00:06:24,583
+Pongamos números realistas
+en la fórmula.
+
+93
+00:06:25,253 --> 00:06:29,833
+Supón que tu auto tiene un diámetro de giro
+entre bordillos de 10,8 metros,
+
+94
+00:06:30,393 --> 00:06:33,383
+lo que significa que el radio r es de 5,4 metros.
+
+95
+00:06:34,053 --> 00:06:40,053
+Digamos que la batalla l es 2,6 metros,
+el voladizo delantero k es 1,3 metros,
+
+96
+00:06:40,333 --> 00:06:44,433
+y el auto estacionado delante
+tiene un ancho w de 1,7 metros.
+
+97
+00:06:44,913 --> 00:06:49,933
+Al calcular esos valores, la fórmula
+nos indica que el hueco debe medir al menos
+
+98
+00:06:49,933 --> 00:06:53,283
+el largo de tu auto más 1,43 metros.
+
+99
+00:06:55,533 --> 00:06:59,733
+Al mirar la fórmula de cerca,
+notarás algo sorprendente:
+
+100
+00:07:00,513 --> 00:07:03,533
+Depende del ancho w
+del auto aparcado delante,
+
+101
+00:07:03,913 --> 00:07:06,833
+pero no incluye para nada
+el ancho de tu propio auto.
+
+102
+00:07:07,293 --> 00:07:07,783
+¿Por qué?
+
+103
+00:07:08,193 --> 00:07:11,133
+Porque en una maniobra de un solo giro
+en una calle ancha,
+
+104
+00:07:11,353 --> 00:07:15,983
+el punto crítico es que tu esquina delantera A
+libre por poco el punto G.
+
+105
+00:07:16,393 --> 00:07:20,713
+Hacer tu auto más ancho acerca
+el borde BC al centro X,
+
+106
+00:07:20,993 --> 00:07:22,893
+sin cambiar la trayectoria de la esquina A.
+
+107
+00:07:22,893 --> 00:07:27,583
+En la vida real, claro, un auto más ancho
+sí importa en calles estrechas,
+
+108
+00:07:27,833 --> 00:07:29,683
+o cuando tienes que maniobrar adelante y atrás.
+
+109
+00:07:32,133 --> 00:07:34,933
+¿Y si estacionas en paralelo
+usando otro método —
+
+110
+00:07:35,273 --> 00:07:37,583
+apuntando el auto hacia
+el bordillo en ángulo,
+
+111
+00:07:37,753 --> 00:07:41,883
+retrocediendo recto y girando
+el volante al tope en el último instante?
+
+112
+00:07:42,453 --> 00:07:45,633
+La geometría de Blackburn igual te da
+el mejor ángulo de aproximación.
+
+113
+00:07:46,053 --> 00:07:49,683
+Giras al tope justo cuando
+la esquina A pasa por el punto G,
+
+114
+00:07:49,973 --> 00:07:52,983
+situando tu auto exactamente
+sobre el mismo círculo de giro.
+
+115
+00:07:53,413 --> 00:07:58,153
+El ángulo ideal de aproximación es simplemente
+el ángulo que la tangente al círculo en G
+
+116
+00:07:58,153 --> 00:08:01,483
+forma con el bordillo,
+menos el ángulo de la tangente en A.
+
+117
+00:08:03,733 --> 00:08:08,013
+¿Y si el espacio extra c
+es menor que 1,43 metros
+
+118
+00:08:08,013 --> 00:08:10,833
+y no te importa maniobrar adelante y atrás?
+
+119
+00:08:11,413 --> 00:08:15,413
+Matemáticamente, mientras el hueco sea
+apenas un poco más largo que tu auto,
+
+120
+00:08:15,673 --> 00:08:18,183
+siempre podrás estacionar
+si haces suficientes movimientos.
+
+121
+00:08:18,693 --> 00:08:21,583
+Siguiendo el punto medio
+entre tus dos ruedas traseras,
+
+122
+00:08:21,913 --> 00:08:26,083
+cada avance o retroceso
+sigue dos arcos circulares opuestos,
+
+123
+00:08:26,373 --> 00:08:29,983
+acercándote al bordillo
+una distancia igual al doble de PA —
+
+124
+00:08:30,133 --> 00:08:32,313
+aunque siempre debes terminar marcha atrás
+
+125
+00:08:32,313 --> 00:08:34,933
+para que el parachoques delantero
+nunca invada la acera.
+
+126
+00:08:37,333 --> 00:08:41,893
+Por último, si aparcas de frente en una plaza
+de un estacionamiento de varios pisos
+
+127
+00:08:41,893 --> 00:08:44,883
+guiando tu esquina delantera B
+a lo largo de una línea recta,
+
+128
+00:08:45,293 --> 00:08:49,283
+tu esquina trasera C traza una curva
+clásica llamada tractriz,
+
+129
+00:08:49,493 --> 00:08:53,233
+demostrando que aparques donde aparques,
+la geometría lleva el volante.
